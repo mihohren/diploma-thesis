@@ -34,6 +34,9 @@ Section Peano.
       RelS := PeanoRelT;
       RelArr := PeanoRelArr
     |}.
+
+  Coercion PeanoFuncT_FuncS (f : PeanoFuncT) : FuncS PeanoSig := f.
+  Coercion PeanoRelT_RelS (R : PeanoRelT) : RelS PeanoSig := R.
 End Peano.
 
 Module V := Vector.
@@ -48,24 +51,29 @@ Section term.
   | func : forall f : FuncS σ, Vec term (FuncArr f) -> term.
 End term.
 
+Arguments var {σ}.
+Arguments func {σ}.
+
 Arguments V.nil {A}.
 Arguments V.cons {A} h {n}.
 
 Section term_examples.
   Example peano_zero :=
-    func PeanoSig o V.nil.
+    func o V.nil.
 
   Example peano_one :=
-    func PeanoSig s (V.cons peano_zero V.nil).
+    func s (V.cons peano_zero V.nil).
 
   Example peano_plus :=
-    func PeanoSig plus (V.cons peano_zero (V.cons peano_one V.nil)).
+    func plus (V.cons peano_zero (V.cons peano_one V.nil)).
 End term_examples.
 (* As we can see, manually defining terms is a bit clunky.
    The problem is, if we define a signature to be implicit for
    [var] and [func], Coq can not deduce that [o] is of type
    [FuncS PeanoSig] - it thinks that [o] is of type [PeanoFuncT]
-   (and indeed it is). Perhaps a [Coercion] would help us here.
+   (and indeed it is).
+
+   By addiong [Coercion]s, readability has improved a bit.
  *)
 
 Section formula.
