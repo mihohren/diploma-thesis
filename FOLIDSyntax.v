@@ -1,15 +1,19 @@
 Require Import Coq.Unicode.Utf8.
 Require Coq.Vectors.Vector.
 
-Record Signature := mkSignature {
+Record signature := mkSig {
                         FuncS : Type;
                         FuncArr : FuncS -> nat;
-                        RelS : Type;
-                        RelArr : RelS -> nat
+                        PredS : Type; (* ordinary predicate symbols *)
+                        PredArr : PredS -> nat;
+                        IndPredS : Type; (* inductive predicate symbols *)
+                        IndPredArr : IndPredS -> nat
                       }.
 
-Arguments FuncArr [_].
-Arguments RelArr [_].
+
+Arguments FuncArr {Σ} : rename.
+Arguments PredArr {Σ} : rename.
+Arguments IndPredArr {Σ} : rename.
 
 Section Peano.
   Inductive PeanoFuncT := o | s | plus | mult.
@@ -21,51 +25,55 @@ Section Peano.
     | mult => 2
     end.
 
-  Inductive PeanoRelT := eq.
-  Definition PeanoRelArr (f : PeanoRelT) : nat :=
+  Inductive PeanoPredT := eq.
+  Definition PeanoPredArr (f : PeanoPredT) : nat :=
     match f with
     | eq => 2
     end.
 
-  Definition PeanoSig : Signature :=
+  Definition PeanoSig : signature :=
     {|
       FuncS := PeanoFuncT;
       FuncArr := PeanoFuncArr;
-      RelS := PeanoRelT;
-      RelArr := PeanoRelArr
+      PredS := PeanoPredT;
+      PredArr := PeanoPredArr;
+      IndPredS := Empty_set;
+      IndPredArr := fun e => match e with end
     |}.
 
   Coercion PeanoFuncT_FuncS (f : PeanoFuncT) : FuncS PeanoSig := f.
-  Coercion PeanoRelT_RelS (R : PeanoRelT) : RelS PeanoSig := R.
+  Coercion PeanoPredT_PredS (R : PeanoPredT) : PredS PeanoSig := R.
 End Peano.
 
 Module V := Vector.
-Definition Vec := V.t.
+Definition vec := V.t.
 Print V.t.
 
 Section term.
-  Variable σ : Signature.
+  Variable Σ : signature.
+  Definition var := nat.
 
   Inductive term : Type :=
-  | var : nat -> term
-  | func : forall f : FuncS σ, Vec term (FuncArr f) -> term.
+  | TVar : var -> term
+  | TFunc : forall f : FuncS Σ, vec term (FuncArr f) -> term.
+  (* constant symbols are function symbols with arity 0 *)
 End term.
 
-Arguments var {σ}.
-Arguments func {σ}.
+Arguments TVar {Σ}.
+Arguments TFunc {Σ}.
 
 Arguments V.nil {A}.
-Arguments V.cons {A} h {n}.
+Arguments V.cons {A} _ {n}.
 
 Section term_examples.
   Example peano_zero :=
-    func o V.nil.
+    TFunc o V.nil.
 
   Example peano_one :=
-    func s (V.cons peano_zero V.nil).
+    TFunc s (V.cons peano_zero V.nil).
 
   Example peano_plus :=
-    func plus (V.cons peano_zero (V.cons peano_one V.nil)).
+    TFunc plus (V.cons peano_zero (V.cons peano_one V.nil)).
 End term_examples.
 (* As we can see, manually defining terms is a bit clunky.
    The problem is, if we define a signature to be implicit for
@@ -77,16 +85,15 @@ End term_examples.
  *)
 
 Section formula.
-  Variable σ : Signature.
+  Variable Σ : signature.
 
-  (* A FOL formula.  To make this a FOL_ID formula,
-     we need to differentiate between normal relational symbols
-     and inductive relational symbols. *)
   Inductive formula : Type :=
-  | formRel : forall R : RelS σ, Vec (term σ) (RelArr R) -> formula
-  | formAnd : formula -> formula -> formula
-  | formOr  : formula -> formula -> formula
-  | formImp : formula -> formula -> formula
-  | formNeg : formula -> formula
-  | formAll : (nat -> formula) -> formula.
+  | FPred : forall R : PredS Σ, vec (term Σ) (PredArr R) -> formula
+  | FIndPred : forall R : IndPredS Σ, vec (term Σ) (IndPredArr R) -> formula
+  | FAnd : formula -> formula -> formula
+  | FOr  : formula -> formula -> formula
+  | FImp : formula -> formula -> formula
+  | FNeg : formula -> formula
+  | FAll : (var -> formula) -> formula
+  | FExist : (var -> formula) -> formula.  
 End formula.
