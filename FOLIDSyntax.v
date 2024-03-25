@@ -1,14 +1,14 @@
 Require Import Coq.Unicode.Utf8.
 Require Coq.Vectors.Vector.
 
-Record signature := mkSig {
-                        FuncS : Type;
-                        FuncArr : FuncS -> nat;
-                        PredS : Type; (* ordinary predicate symbols *)
-                        PredArr : PredS -> nat;
-                        IndPredS : Type; (* inductive predicate symbols *)
-                        IndPredArr : IndPredS -> nat
-                      }.
+Record signature := {
+    FuncS : Type;
+    FuncArr : FuncS -> nat;
+    PredS : Type; (* ordinary predicate symbols *)
+    PredArr : PredS -> nat;
+    IndPredS : Type; (* inductive predicate symbols *)
+    IndPredArr : IndPredS -> nat
+  }.
 
 
 Arguments FuncArr {Σ} : rename.
