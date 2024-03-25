@@ -1,0 +1,7 @@
+.git
+*.aux
+*.vo
+*.vok
+*.vos
+*.glob
+*Makefile*
