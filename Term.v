@@ -24,14 +24,28 @@ Section term.
         Vector.Forall (fun st => P st) args -> P (TFunc f args).
     
     Definition term_better_ind : forall t : term, P t.
-      fix IND_PRINCIPLE 1. intros t. induction t.
+      fix IND_PRINCIPLE 1; intros [v | f args].
       - apply Pbase.
-      - apply Pind. induction v; constructor.
+      - apply Pind. induction args; constructor.
         + apply IND_PRINCIPLE.
         + assumption.
     Defined.
   End term_better_ind.
 
+  Section term_better_ind2.
+    Variable P : term -> Prop.
+    Hypothesis Pbase : forall v, P (TVar v).
+    Hypothesis Pind : forall (f : FuncS Σ) (args : vec term (FuncArr f)),
+        (forall st : term, Vector.In st args -> P st) -> P (TFunc f args).
+
+    Definition term_better_ind2 : forall t : term, P t.
+      induction t as [v | f args IH] using term_better_ind.
+      - apply Pbase.
+      - apply Pind. intros st Hin. rewrite Forall_forall in IH.
+        apply IH. apply Hin.
+    Defined.
+  End term_better_ind2.    
+          
   (* In term [t], substitutes all occurrences
      of the variable [x] with the term [u] *)
   Fixpoint term_var_subst (t : term) (u : term) (x : var) : term :=
@@ -67,15 +81,24 @@ Section term_facts.
     intros v x H. intros eq. apply H. subst; constructor.
   Qed.
 
-  Lemma var_not_in_Func_not_in_sub :
+  Lemma vec_In_Ex : forall (A : Type) (n : nat) (v : vec A n) (a : A) (P : A -> Prop),
+      Vector.In a v -> P a -> Exists (fun e => P e) v.
+  Proof.
+    intros A n v a P Hin HP. induction v.
+    - inversion Hin.
+    - apply In_cons_iff in Hin; destruct Hin as [Hhead | Hcons].
+      + apply Exists_cons_hd. rewrite Hhead. apply HP.
+      + apply Exists_cons_tl. intuition.
+  Qed.
+  
+  Lemma var_not_in_Func_not_in_args :
     forall (f : FuncS Σ) (args : vec (term Σ) (FuncArr f)) (x : var),
       ~ In _ (Var (TFunc f args)) x -> Vector.Forall (fun st => ~ In _ (Var st) x) args.
   Proof.
-    intros f args x H.
-    unfold In in *.
-    generalize dependent args.
-    Fail induction args.
-  Admitted.
+    intros f args x Hnotin; rewrite Forall_forall; unfold In in *.
+    intros t Hin Hvar. apply Hnotin. constructor.
+    apply vec_In_Ex with t; assumption.
+  Qed.
     
   Lemma term_var_subst_id : forall (t : term Σ) (x : var),
       t [x => TVar x] = t.
@@ -90,15 +113,19 @@ Section term_facts.
         * apply H.
         * apply IHIH.
   Qed.
-
+    
   Lemma term_var_subst_no_occ : forall (t u : term Σ) (x : var),
       ~ In _ (Var t) x -> t [x => u] = t.
   Proof.
-    intros t; induction t as [v | f args IH] using term_better_ind;
-      intros u x x_not_in_t.
-    - simpl; destruct (v =? x) eqn:Eqvx.
-      + exfalso; apply x_not_in_t.
-        rewrite Nat.eqb_eq in Eqvx. subst; constructor.
+    intros t; induction t as [v | f args IH] using term_better_ind2;
+      intros u x Hnotin; cbn.
+    - destruct (v =? x) eqn:E.
+      + exfalso; apply Hnotin; rewrite Nat.eqb_eq in E; subst; constructor.
       + reflexivity.
-  Admitted.
+    - f_equal. rewrite <- map_id. apply map_ext_in.
+      intros st Hstin. apply IH.
+      + assumption.
+      + intros Hinvar.
+        apply Hnotin. constructor. apply vec_In_Ex with st; assumption.
+  Qed.
 End term_facts.
