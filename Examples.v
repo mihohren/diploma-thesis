@@ -33,25 +33,21 @@ End Peano.
 
 Arguments nil {A}.
 Arguments cons {A} _ {n}.
+Import VectorNotations.
 
 Section term_examples.
-  Example peano_zero :=
-    TFunc o nil.
+  Open Scope term_scope.
+  Example peano_zero := TFunc o [].
+  Example peano_one := TFunc s [peano_zero].
+  Example peano_plus := TFunc plus [peano_zero; peano_one].
 
-  Example peano_one :=
-    TFunc s (cons peano_zero nil).
-
-  Example peano_plus :=
-    TFunc plus (cons peano_zero (cons peano_one nil)).
+  Definition x : var := 1.
+  Example x_plus_one := TFunc plus [TVar x; peano_one].
+  Example substitution_ex :
+    term_var_subst x_plus_one peano_zero x = peano_plus.
+  Proof. reflexivity. Qed.
 End term_examples.
-(* As we can see, manually defining terms is a bit clunky.
-   The problem is, if we define a signature to be implicit for
-   [var] and [func], Coq can not deduce that [o] is of type
-   [FuncS PeanoSig] - it thinks that [o] is of type [PeanoFuncT]
-   (and indeed it is).
 
-   By adding [Coercion]s, readability has improved a bit.
- *)
 
 Section Peano.
   Arguments nil {A}.
@@ -75,7 +71,7 @@ Section Peano.
   Definition b := cons 3 _ (cons 4 _ nil).
   Compute lift_vec2 Nat.add b.  (* = 7 : nat *)
   
-  Definition M_PA : structure :=
+  Definition M_PA : structure Σ_PA :=
     {|
       domain := nat;
       interpF := fun (f : FuncS Σ_PA) =>

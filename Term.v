@@ -53,9 +53,13 @@ Arguments term_better_ind {Σ} _ _ _ _.
 Arguments term_var_subst {Σ} _ _ _.
 Arguments Var {Σ} _.
 
-Notation " t '[' x '=>' u ']' " := (term_var_subst t u x) (at level 100).
+Declare Scope term_scope.
+Delimit Scope term_scope with term.
+Notation " t '[' x '=>' u ']' " :=
+  (term_var_subst t u x) (at level 100) : term_scope.
 
 Section term_facts.
+  Open Scope term_scope.
   Variable Σ : signature.
 
   Lemma var_not_in_Var_not_eq : forall v x, ~ In _ (@Var Σ( TVar v)) x -> v <> x.
