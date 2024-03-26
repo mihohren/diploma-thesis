@@ -1,1 +1,4 @@
-Require Export CFOLID.Signature CFOLID.Term CFOLID.Formula.
+Require Export CFOLID.Signature.
+Require Export CFOLID.Term.
+Require Export CFOLID.Formula.
+Require Export CFOLID.Structure.
