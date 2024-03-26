@@ -9,8 +9,8 @@ Require Import CFOLID.Term.
 Section structure.
   Variable Σ : signature.
 
-  Structure structure := {
-      domain : Type;
+  Structure structure := {      (* struktura *)
+      domain : Type;            (* nosač *)
       interpF : forall f : FuncS Σ, vec domain (FuncArr f) -> domain;
       interpP : forall P : PredS Σ, vec domain (PredArr P) -> Prop;
       interpIP : forall P : IndPredS Σ, vec domain (IndPredArr P) -> Prop;
@@ -55,21 +55,36 @@ Section environment.
   Section lemma_2_1_5.
     Variable ρvar : env_var.
     Definition ρ := env ρvar.
+    Variable t : term Σ.
+    Variable x : var.
 
-    Lemma env_subst_sanity1 : forall (t : term Σ) (x : var) (d : |M|),
+    Lemma env_subst_sanity1 : forall (d : |M|),
         ~ In _ (Var t) x -> env_subst ρvar t x d = env ρvar t.
     Proof.
-      intros t; induction t as [v | f args IH] using term_better_ind;
-        intros x d x_not_in_t.
+      induction t as [v | f args IH] using term_better_ind;
+        intros d x_not_in_t.
       - simpl; unfold env_var_subst; destruct (v =? x) eqn:eq_vx.
         + exfalso. apply x_not_in_t. rewrite Nat.eqb_eq in eq_vx; subst.
           constructor.
         + reflexivity.
-      - simpl. f_equal. inversion IH; subst.
-        + reflexivity.
-        + admit.
-          (* TODO this is a big mess because of Vector  *)
-    Admitted.
-                      
+      - simpl. f_equal. apply Vector.map_ext_in.
+        intros st Hin. rewrite Vector.Forall_forall in IH.
+        apply IH.
+        + assumption.
+        + intros x_in_var_st. apply x_not_in_t.
+          constructor. apply vec_In_Ex with st; assumption.
+    Qed. 
+
+    Lemma env_subst_sanity2 : forall (u : term Σ),
+        env_subst ρvar t x (ρ u) = ρ (term_var_subst t u x).
+    Proof.
+      intros u. induction t as [v | f args IH] using term_better_ind2.
+      - cbn. unfold env_var_subst. destruct (v =? x) eqn:E;
+          reflexivity.
+      - simpl. f_equal. rewrite Vector.map_map.
+        apply Vector.map_ext_in. intros st Hst.
+        apply IH. assumption.
+    Qed.
+      
   End lemma_2_1_5.
 End environment.
