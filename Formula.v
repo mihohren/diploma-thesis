@@ -1,5 +1,4 @@
-Require Import Coq.Unicode.Utf8.
-Require Import CFOLID.Signature CFOLID.Term.
+Require Import Base Signature Term.
 
 Section formula.
   Variable Σ : signature.

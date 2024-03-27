@@ -1,5 +1,5 @@
-Require Import Coq.Vectors.Vector.
-Require Import CFOLID.Signature CFOLID.Term CFOLID.Formula CFOLID.Structure.
+Require Import Base.
+Require Import Signature Term Formula Structure.
 
 Section Peano.
   Inductive PeanoFuncT := o | s | plus | mult.
@@ -31,9 +31,7 @@ Section Peano.
   Coercion PeanoPredT_PredS (R : PeanoPredT) : PredS Σ_PA := R.
 End Peano.
 
-Arguments nil {A}.
-Arguments cons {A} _ {n}.
-Import VectorNotations.
+Import V.VectorNotations.
 
 Section term_examples.
   Open Scope term_scope.
@@ -53,22 +51,24 @@ Section Peano.
   Arguments nil {A}.
   Arguments cons {A}.
 
+  Import V.VectorNotations.
+  
   Definition lift_vec1 (f : nat -> nat) : vec nat 1 -> nat :=
     fun v => match v with
-          | cons h 0 nil => f h
+          | [h] => f h
           | _ => 0
           end.
 
-  Definition a := cons 3 _ nil.
+  Definition a := [3].
   Compute lift_vec1 S a.        (* = 4 : nat *)
 
   Definition lift_vec2 (f : nat -> nat -> nat) : vec nat 2 -> nat :=
     fun v => match v with
-          | cons x 1 (cons y 0 nil) => f x y
+          | [x; y] => f x y
           | _ => 0
           end.
 
-  Definition b := cons 3 _ (cons 4 _ nil).
+  Definition b := [3; 4].
   Compute lift_vec2 Nat.add b.  (* = 7 : nat *)
   
   Definition M_PA : structure Σ_PA :=
@@ -85,7 +85,7 @@ Section Peano.
                    match P with
                    | eq => fun v =>
                             match v with
-                            | cons x _ (cons y _ nil) => x = y
+                            | [x; y] => x = y
                             | _ => False
                             end
                    end;

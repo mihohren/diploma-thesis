@@ -1,4 +1,4 @@
-Require Import Coq.Unicode.Utf8.
+Require Import Base.
 
 Structure signature := {
     FuncS : Type;
@@ -9,6 +9,6 @@ Structure signature := {
     IndPredArr : IndPredS -> nat
   }.
 
-Arguments FuncArr {Σ} : rename.
-Arguments PredArr {Σ} : rename.
-Arguments IndPredArr {Σ} : rename.
+Arguments FuncArr {Σ} _ : rename.
+Arguments PredArr {Σ} _ : rename.
+Arguments IndPredArr {Σ} _ : rename.
