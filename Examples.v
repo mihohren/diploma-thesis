@@ -20,11 +20,11 @@ Section Peano.
   Definition Σ_PA : signature :=
     {|
       FuncS := PeanoFuncT;
-      FuncArr := PeanoFuncArr;
+      fun_ar := PeanoFuncArr;
       PredS := PeanoPredT;
-      PredArr := PeanoPredArr;
+      pred_ar := PeanoPredArr;
       IndPredS := Empty_set;
-      IndPredArr := fun e => match e with end
+      indpred_ar := fun e => match e with end
     |}.
 
   Coercion PeanoFuncT_FuncS (f : PeanoFuncT) : FuncS Σ_PA := f.
@@ -42,7 +42,7 @@ Section term_examples.
   Definition x : var := 1.
   Example x_plus_one := TFunc plus [TVar x; peano_one].
   Example substitution_ex :
-    term_var_subst x_plus_one peano_zero x = peano_plus.
+    term_var_subst x_plus_one x peano_zero = peano_plus.
   Proof. reflexivity. Qed.
 End term_examples.
 
@@ -93,9 +93,9 @@ Section Peano.
                     match IP with end;
       |}.
 
-  Compute interpF M_PA o _ : nat.
+  Compute @interpF Σ_PA M_PA o _ : nat.
   (* = 0 : nat *)
-  Compute interpF M_PA plus b : nat.
+  Compute @interpF Σ_PA M_PA plus b : nat.
   (* = 7 : nat *)
   Compute |M_PA|.
   (* = nat : Type *)
