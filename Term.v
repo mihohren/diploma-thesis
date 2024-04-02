@@ -31,12 +31,6 @@ Section term.
   Inductive Var : term -> E.Ensemble var :=
   | VarVar : forall v, Var (TVar v) v
   | VarFunc : forall f args v, V.Exists (fun t => Var t v) args -> Var (TFunc f args) v.
-
-  (* The set of all unused variables of a given term. *)
-  Inductive UnusedVar : term -> E.Ensemble var :=
-  | FV_Var : forall v w, v <> w -> UnusedVar (TVar v) w
-  | FV_Func : forall f args v, V.Forall (fun t => UnusedVar t v) args ->
-                          UnusedVar (TFunc f args) v.
 End term.
 
 Arguments term Σ : clear implicits.
@@ -92,9 +86,9 @@ Section term_facts.
   Qed.
   
   Lemma var_not_in_Func_not_in_args : forall (f : FuncS Σ) args x,
-      ~ Var (TFunc f args) x -> V.Forall (fun st => ~ Var st x) args.
+      ~ Var (TFunc f args) x -> forall st, V.In st args -> ~ Var st x.
   Proof.
-    intros f args x Hnotin; rewrite V.Forall_forall; unfold E.In in *.
+    intros f args x Hnotin; unfold E.In in *.
     intros t Hin Hvar. apply Hnotin. constructor.
     apply Exists_exists.
     exists t; intuition.
@@ -122,50 +116,5 @@ Section term_facts.
       + assumption.
       + intros Hinvar. apply Hnotin. constructor.
         apply Exists_exists. exists st; intuition.
-  Qed.
-
-
-  
-  Lemma Var_not_Unused : forall (t : term Σ) v, Var t v -> ~ UnusedVar t v.
-  (* Uses axiom [Eqdep.Eq_rect_eq.eq_rect_eq] *)
-  Proof.
-    intros t v Hvar Hunused. induction t using term_ind2.
-    - inversion Hvar; inversion Hunused; intuition.
-    - dependent induction Hvar. dependent induction Hunused.
-      rewrite Exists_exists in H. rewrite V.Forall_forall in H0.
-      destruct H as [st [Hin Hvar]].
-      apply H1 with st; intuition.
-  Qed.
-
-  Lemma not_Var_Unused : forall (t : term Σ) v, ~ Var t v -> UnusedVar t v.
-  Proof.
-    intros t v Hnot; induction t using term_ind2; constructor.
-    - intros Heq; subst. apply Hnot; constructor.
-    - rewrite V.Forall_forall. intros st Hinst.
-      apply H; auto. intros Hvar. apply Hnot.
-      constructor. rewrite Exists_exists. exists st; auto.
-  Qed.
-
-  Lemma Unused_not_Var : forall (t : term Σ) v, UnusedVar t v -> ~ Var t v.
-  (* Uses axiom [Eqdep.Eq_rect_eq.eq_rect_eq] *)
-  Proof.  
-    intros t v Hunused Hvar; induction t using term_ind2.
-    - inversion Hvar; inversion Hunused; intuition.
-    - dependent destruction Hvar. rewrite Exists_exists in H. destruct H as [st [Hinst Hvarsr]].
-      apply H0 with st; auto.
-      dependent destruction Hunused.
-      rewrite V.Forall_forall in H. apply H; auto.
-  Qed.
-
-  Lemma not_Unused_Var : forall (t : term Σ) v, ~ UnusedVar t v -> Var t v.
-  Proof.
-    intros t v Hnot; induction t using term_ind2.
-    - destruct (v =? v0) eqn:E.
-      + apply Nat.eqb_eq in E; subst; constructor.
-      + apply Nat.eqb_neq in E. exfalso. apply Hnot. constructor. intuition.
-    - constructor. exfalso. apply Hnot. constructor.
-      rewrite V.Forall_forall. admit.
-  Admitted.
-  
-                                             
+  Qed.                                             
 End term_facts.
