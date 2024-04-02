@@ -52,15 +52,14 @@ Section lemma_2_1_5.
   Lemma eval_subst_sanity1 : forall (d : |M|),
       ~ Var t x -> eval_subst ρ t x d = eval ρ t.
   Proof.
-    induction t as [v | f args IH] using term_ind1;
+    induction t as [v | f args IH];
       intros d x_not_in_t.
     - simpl; unfold env_subst; destruct (v =? x) eqn:eq_vx.
       + exfalso. apply x_not_in_t. rewrite Nat.eqb_eq in eq_vx; subst.
         constructor.
       + reflexivity.
     - simpl. f_equal. apply V.map_ext_in.
-      intros st Hin. rewrite V.Forall_forall in IH.
-      apply IH.
+      intros st Hin. apply IH.
       + assumption.
       + intros x_in_var_st. apply x_not_in_t.
         constructor. apply Exists_exists; exists st; intuition.
@@ -69,7 +68,7 @@ Section lemma_2_1_5.
   Lemma eval_subst_sanity2 : forall (u : term Σ),
       eval_subst ρ t x (eval ρ u) = eval ρ (term_var_subst t x u).
   Proof.
-    intros u. induction t as [v | f args IH] using term_ind2.
+    intros u. induction t as [v | f args IH].
     - cbn. unfold env_subst. destruct (v =? x) eqn:E;
         reflexivity.
     - simpl. f_equal. rewrite V.map_map.

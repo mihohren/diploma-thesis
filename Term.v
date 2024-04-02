@@ -43,38 +43,22 @@ Module TermNotations.
   Open Scope term_scope.
 End TermNotations.
 
-Section term_ind1.
-  Context {Σ : signature} (P : term Σ -> Prop).
-  
-  Hypothesis Pbase : forall v, P (TVar v).
-  Hypothesis Pind : forall (f : FuncS Σ) args,
-      V.Forall (fun st => P st) args -> P (TFunc f args).
-  
-  Definition term_ind1 : forall t, P t.
-    fix IND_PRINCIPLE 1; intros [v | f args].
-    - apply Pbase.
-    - apply Pind. induction args; constructor.
-      + apply IND_PRINCIPLE.
-      + assumption.
-  Defined.
-End term_ind1.
-
-Require Import Coq.Program.Equality.
-
-Section term_ind2.
+Section term_ind.
   Context {Σ : signature} (P : term Σ -> Prop).
   
   Hypothesis Pbase : forall v, P (TVar v).
   Hypothesis Pind : forall (f : FuncS Σ) args,
       (forall st, V.In st args -> P st) -> P (TFunc f args).
 
-  Definition term_ind2 : forall t, P t.
-    induction t as [v | f args IH] using term_ind1.
+  Definition term_ind : forall t, P t.
+    fix IND_PRINCIPLE 1; intros [v | f args].
     - apply Pbase.
-    - apply Pind. intros st Hin. rewrite V.Forall_forall in IH.
-      apply IH. apply Hin.
+    - apply Pind. apply V.Forall_forall.         
+      induction args; constructor.
+      + apply IND_PRINCIPLE.
+      + assumption.
   Defined.
-End term_ind2.
+End term_ind.
 
 Section term_facts.
   Import TermNotations.
@@ -97,7 +81,7 @@ Section term_facts.
   Lemma term_subst_id : forall (t : term Σ) (x : var),
       t [fun x => TVar x] = t.
   Proof.
-    induction t as [v | f args IH] using term_ind2; intros x.
+    induction t as [v | f args IH]; intros x.
     - reflexivity.
     - simpl. f_equal. rewrite <- V.map_id; apply V.map_ext_in.
       intuition.
@@ -106,7 +90,7 @@ Section term_facts.
   Lemma term_var_subst_no_occ : forall (t u : term Σ) (x : var),
       ~ Var t x -> term_var_subst t x u = t.
   Proof.
-    intros t; induction t as [v | f args IH] using term_ind2;
+    intros t; induction t as [v | f args IH];
       intros u x Hnotin; cbn.
     - destruct (v =? x) eqn:E.
       + exfalso; apply Hnotin; rewrite Nat.eqb_eq in E; subst; constructor.
