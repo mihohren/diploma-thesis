@@ -1,39 +1,71 @@
 Require Import Base.
 Require Import Signature.
+Require Program.
 
-Notation var := nat.
+Section variables.
+  Record Vars := mkVars {
+    typ :> Type;
+    eq_dec: ∀ (x y : typ), {x = y} + {x ≠ y}
+  }.
+  
+  Program Definition Extend (X : Vars) := {| typ := option (typ X) |}.
+  Next Obligation.
+    destruct x as [x|]; destruct y as [y|]; 
+      try solve [right; discriminate | left; reflexivity].
+    destruct (eq_dec _ x y).
+    * left; f_equal; assumption.
+    * right; intro.
+      inversion H; subst.
+      apply n; reflexivity.
+  Defined.  
+End variables.
+
+
+Module VarNotations.
+  Declare Scope var_scope.
+  Delimit Scope var_scope with var.
+  Notation "X ⁺" := (Extend X) (at level 1, format "X ⁺") : var_scope.
+  Notation "x == y" := (eq_dec _ x y) (at level 50) : var_scope.
+  Open Scope var_scope.
+End VarNotations.
+
+
 
 Section term.
   Context {Σ : signature}.
 
   Unset Elimination Schemes.
   
-  (* Definition 2.1.2 *)
-  Inductive term : Type :=
-  | TVar : var -> term
+  (* Term over a set of (possible) free variables X. *)
+  Inductive term (X : Vars): Type :=
+  | TVar : X -> term X
   (* constant symbols are function symbols with arity 0 *)
-  | TFunc : forall f : FuncS Σ, vec term (fun_ar f) -> term.
+  | TFunc : forall f : FuncS Σ, vec (term X) (fun_ar f) -> (term X).
+
+  Arguments TVar [X] _.
+  Arguments TFunc [X] _.
 
   Set Elimination Schemes.
 
-  Fixpoint term_subst (s : var -> term) (t : term) : term :=
+  Fixpoint term_subst [X Y : Vars] (s : X -> term Y) (t : term X) : term Y :=
     match t with
     | TVar v => s v
     | TFunc f args => TFunc f (V.map (term_subst s) args)
     end.
   
+  Import VarNotations.
+  
   (* In term [t], substitutes all occurrences
      of the variable [x] with the term [u] *)
-  Definition term_var_subst (t : term) (x : var) (u : term) : term :=
-    term_subst (fun v => if v =? x then u else TVar v) t.
+  Definition term_var_subst [X : Vars] (t : term X) (x : X) (u : term X) : term X :=
+    term_subst (fun v => if v == x then u else TVar v) t.
 
-  (* The set of all used variables of a given term. *)
-  Inductive Var : term -> E.Ensemble var :=
-  | VarVar : forall v, Var (TVar v) v
-  | VarFunc : forall f args v, V.Exists (fun t => Var t v) args -> Var (TFunc f args) v.
+
 End term.
 
-Arguments term Σ : clear implicits.
+Arguments term : clear implicits.
+Arguments TVar [Σ X].
+Arguments TFunc [Σ X].
 
 Module TermNotations.
   Declare Scope term_scope.
@@ -43,10 +75,12 @@ Module TermNotations.
   Open Scope term_scope.
 End TermNotations.
 
+
+
 Section term_ind.
-  Context {Σ : signature} (P : term Σ -> Prop).
+  Context {Σ : signature} {X : Vars} (P : term Σ X -> Prop).
   
-  Hypothesis Pbase : forall v, P (TVar v).
+  Hypothesis Pbase : forall (v : X), P (TVar v).
   Hypothesis Pind : forall (f : FuncS Σ) args,
       (forall st, V.In st args -> P st) -> P (TFunc f args).
 
@@ -63,22 +97,9 @@ End term_ind.
 Section term_facts.
   Import TermNotations.
   Context {Σ : signature}.
-
-  Lemma var_not_in_Var_not_eq : forall v x, ~ @Var Σ (TVar v) x -> v <> x.
-  Proof.
-    intros v x H. intros eq. apply H. subst; constructor.
-  Qed.
   
-  Lemma var_not_in_Func_not_in_args : forall (f : FuncS Σ) args x,
-      ~ Var (TFunc f args) x -> forall st, V.In st args -> ~ Var st x.
-  Proof.
-    intros f args x Hnotin; unfold E.In in *.
-    intros t Hin Hvar. apply Hnotin. constructor.
-    apply Exists_exists.
-    exists t; intuition.
-  Qed.
     
-  Lemma term_subst_id : forall (t : term Σ) (x : var),
+  Lemma term_subst_id [X] : forall (t : term Σ X) (x : X),
       t [fun x => TVar x] = t.
   Proof.
     induction t as [v | f args IH]; intros x.
@@ -87,18 +108,4 @@ Section term_facts.
       intuition.
   Qed.
     
-  Lemma term_var_subst_no_occ : forall (t u : term Σ) (x : var),
-      ~ Var t x -> term_var_subst t x u = t.
-  Proof.
-    intros t; induction t as [v | f args IH];
-      intros u x Hnotin; cbn.
-    - destruct (v =? x) eqn:E.
-      + exfalso; apply Hnotin; rewrite Nat.eqb_eq in E; subst; constructor.
-      + reflexivity.
-    - f_equal. rewrite <- V.map_id. apply V.map_ext_in.
-      intros st Hstin. apply IH.
-      + assumption.
-      + intros Hinvar. apply Hnotin. constructor.
-        apply Exists_exists. exists st; intuition.
-  Qed.                                             
 End term_facts.

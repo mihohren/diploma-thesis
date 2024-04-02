@@ -35,10 +35,11 @@ Import V.VectorNotations.
 
 Section term_examples.
   Open Scope term_scope.
-  Example peano_zero := TFunc o [].
-  Example peano_one := TFunc s [peano_zero].
-  Example peano_plus := TFunc plus [peano_zero; peano_one].
+  Example peano_zero {X : Vars} : term Σ_PA X := TFunc o [].
+  Example peano_one  {X : Vars} : term Σ_PA X := TFunc s [peano_zero].
+  Example peano_plus {X : Vars} : term Σ_PA X := TFunc plus [peano_zero; peano_one].
 
+  Definition var := {| typ := nat; eq_dec := Nat.eq_dec |}.
   Definition x : var := 1.
   Example x_plus_one := TFunc plus [TVar x; peano_one].
   Example substitution_ex :
