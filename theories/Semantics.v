@@ -85,7 +85,27 @@ Section eval_facts.
     - apply Eq.
     - f_equal. apply V.map_ext_in; apply IH.
   Qed.
-  
+
+  Lemma eval_ext_scons : forall (ρ ξ : env M) t,
+      (forall x, ρ x = ξ x) -> forall d, eval (d .: ρ) t = eval (d .: ξ) t.
+  Proof.
+    intros ρ ξ t Eq d. induction t as [v | f args IH].
+    - simpl; destruct v; simpl; auto.
+    - simpl; f_equal; apply V.map_ext_in; apply IH.
+  Qed.
+
+  Lemma eval_scons : forall (ρ ξ : env M),
+      (forall t, eval ρ t = eval ξ t) ->
+      forall d t, eval (d .: ρ) t = eval (d .: ξ) t.
+  Proof.
+    intros ρ ξ Eq d t. induction t as [v | f args IH].
+    - simpl. destruct v.
+      + reflexivity.
+      + simpl. pose proof (Eq (var_term v)) as Eq'. simpl in Eq'.
+        assumption.
+    - simpl. f_equal. apply V.map_ext_in; apply IH.
+  Qed.
+    
   Open Scope subst_scope.
 
   (* strong version of eval_subst_sanity2 *)
@@ -197,6 +217,34 @@ End Sat_ind.
   
 Notation "ρ ⊨ F" := (Sat ρ F) (at level 10).
 
+Section Sat_facts.
+  Context {Σ : signature}.
+  Context {M : structure Σ}.
+
+  Lemma Sat_ext : forall (ρ ξ : env M),
+      (forall t, eval ρ t = eval ξ t) ->
+      forall F, ρ ⊨ F <-> ξ ⊨ F.
+  Proof.
+    intros ρ ξ Eq F; generalize dependent ξ; generalize dependent ρ.
+    induction F; intros ρ ξ Eq;  split; intros Hsat; simpl in *;
+      try (erewrite V.map_ext; [eassumption | congruence]);
+      try intuition;
+      try (apply Hsat; erewrite IHF; eauto).
+    - erewrite IHF2.
+      + eapply Hsat; erewrite IHF1; eauto.
+      + intuition.
+    - erewrite IHF2.
+      + eapply Hsat; erewrite IHF1; eauto.
+      + intuition.
+    - apply IHF with (d .: ρ).
+      + intros u; apply eval_scons; intuition.
+      + apply Hsat.
+    - apply IHF with (d .: ξ).
+      + intros u; apply eval_scons; intuition.
+      + apply Hsat.
+  Qed.
+End Sat_facts.
+
 Section lemma_2_1_9.
   Context {x : var}.
   Context {Σ : signature}.
@@ -220,10 +268,10 @@ Section lemma_2_1_9.
         * intros st Hin. rewrite <- eval_subst_env_subst.
           apply eval_subst_sanity1. intros Htv.
           apply Hfv. constructor. exists st; intuition.
-      + simpl in *. intros Hsat1. admit.
+      + admit.
       + simpl in *. intros Hsat1. apply IHf2.
         * intros Hfv1. apply Hfv. apply FV_Imp_r. assumption.
-        * apply Hsat. admit.
+        * apply Hsat. 
   Admitted.
 
   Open Scope subst_scope.
@@ -258,3 +306,4 @@ Section lemma_2_1_9.
   Qed.
     
 End lemma_2_1_9.
+
