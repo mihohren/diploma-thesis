@@ -1,13 +1,13 @@
-Require Import Base Signature Term.
+Require Import Base Syntax.
 
 Section structure.
   Context {Σ : signature}.
 
   Structure structure := {
       domain : Type;
-      interpF : forall f : FuncS Σ, vec domain (fun_ar f) -> domain;
-      interpP : forall P : PredS Σ, vec domain (pred_ar P) -> Prop;
-      interpIP : forall P : IndPredS Σ, vec domain (indpred_ar P) -> Prop;
+      interpF (f : FuncS Σ) : vec domain (fun_ar f) -> domain;
+      interpP (P : PredS Σ) : vec domain (pred_ar P) -> Prop;
+      interpIP (P : IndPredS Σ) : vec domain (indpred_ar P) -> Prop;
     }.
 End structure.
 
@@ -27,7 +27,7 @@ Section environment.
 
   Fixpoint eval (ρ : env) (t : term Σ) : |M| :=
     match t with
-    | TVar x => ρ x
+    | var_term x => ρ x
     | TFunc f args => interpF f (V.map (eval ρ) args)
     end.
 
@@ -36,7 +36,7 @@ Section environment.
 
   Fixpoint eval_subst (ρ : env) (t : term Σ) (x : var) (d : |M|) : |M| :=
     match t with
-    | TVar y => env_subst ρ x d y
+    | var_term y => env_subst ρ x d y
     | TFunc f args => interpF f (V.map (fun st => eval_subst ρ st x d) args)
     end.
 End environment.
@@ -50,7 +50,7 @@ Section lemma_2_1_5.
   Variable x : var.
 
   Lemma eval_subst_sanity1 : forall (d : |M|),
-      ~ Var t x -> eval_subst ρ t x d = eval ρ t.
+      ~ TV t x -> eval_subst ρ t x d = eval ρ t.
   Proof.
     induction t as [v | f args IH];
       intros d x_not_in_t.
@@ -62,7 +62,7 @@ Section lemma_2_1_5.
       intros st Hin. apply IH.
       + assumption.
       + intros x_in_var_st. apply x_not_in_t.
-        constructor. apply Exists_exists; exists st; intuition.
+        constructor. exists st; intuition.
   Qed.
 
   Lemma eval_subst_sanity2 : forall (u : term Σ),

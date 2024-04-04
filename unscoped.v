@@ -191,7 +191,7 @@ Ltac fsimplc :=
 Tactic Notation "fsimpl" "in" "*" :=
   fsimpl; fsimplc.
 
-Notation "s , sigma" := (scons s sigma) (at level 60, format "s ,  sigma", right associativity) : subst_scope.
+(* Notation "s , sigma" := (scons s sigma) (at level 60, format "s ,  sigma", right associativity) : subst_scope. *)
 
 Notation "s '..'" := (scons s ids) (at level 1, format "s ..") : subst_scope.
 Instance idsRen : Var nat nat := id.
@@ -212,3 +212,4 @@ Ltac unfold_funcomp := match goal with
 Tactic Notation "auto_case" tactic(t) :=  (match goal with
                                            | [|- forall (i : nat), _] => intros []; t
                                            end).
+Close Scope subst_scope.

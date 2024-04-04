@@ -1,5 +1,4 @@
 Require Export CFOLID.Base.
-Require Export CFOLID.Signature.
-Require Export CFOLID.Term.
-Require Export CFOLID.Formula.
+Require Export CFOLID.axioms CFOLID.unscoped.
+Require Export CFOLID.Syntax.
 Require Export CFOLID.Structure.
