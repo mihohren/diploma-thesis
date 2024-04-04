@@ -13,22 +13,23 @@ Arguments fun_ar {Σ} f : rename.
 Arguments pred_ar {Σ} P : rename.
 Arguments indpred_ar {Σ} P : rename.
 
-Notation var := fin.
+Notation var := nat.
+
 Section term.
   Context {Σ : signature}.
 
   Unset Elimination Schemes.
   
   Inductive term  : Type :=
-  | var_term : fin -> term 
+  | var_term : var -> term 
   | TFunc : forall (f : FuncS Σ), vec term (fun_ar f) -> term .
   
   Set Elimination Schemes.
 
   Inductive TV : term -> E.Ensemble var :=
   | TVVar : forall v, TV (var_term v) v
-  | TVFunc : forall f args v, (exists st, V.In st args /\ TV st v) ->
-                          TV (TFunc f args) v.
+  | TVFunc : forall f args v,
+      (exists st, V.In st args /\ TV st v) -> TV (TFunc f args) v.
   
   Lemma congr_TFunc
     {f : FuncS Σ}
@@ -37,67 +38,83 @@ Section term.
     (H1 : s0 = t0)
     : TFunc  f s0 = TFunc  f t0 .
   Proof. congruence. Qed.
-
-  Fixpoint subst_term  (sigmaterm : fin -> term) (s : term) : term :=
-    match s return term with
-    | var_term s => sigmaterm s
-    | TFunc f s0 => TFunc f (V.map (subst_term sigmaterm) s0)
+  
+  Fixpoint subst_term  (σ : var -> term) (t : term) : term :=
+    match t with
+    | var_term v => σ v
+    | TFunc f args => TFunc f (V.map (subst_term σ) args)
     end.
 
   Definition term_var_subst (t : term) (x : var) (u : term) : term :=
     subst_term (fun v => if v =? x then u else var_term v) t.
   
-  Definition up_term_term  (sigma : fin -> term) : fin -> term  :=
-    (scons) ((var_term ) (var_zero)) ((funcomp) (subst_term ((funcomp) (var_term ) (shift))) sigma).
+  Definition up_term_term  (σ : var -> term) : var -> term  :=    
+    scons
+      (var_term var_zero)
+      (funcomp (subst_term (funcomp var_term shift)) σ).
 
-  Definition upId_term_term  (sigma : fin -> term ) (Eq : forall x, sigma x = (var_term ) x) : forall x, (up_term_term sigma) x = (var_term ) x :=
+  Definition upId_term_term
+    (σ : var -> term) (Eq : forall x, σ x = var_term x)
+    : forall x, (up_term_term σ) x = var_term x :=
     fun n => match n with
-          | S fin_n => (ap) (subst_term ((funcomp) (var_term ) (shift))) (Eq fin_n)
+          | S var_n => (ap) (subst_term ((funcomp) (var_term ) (shift))) (Eq var_n)
           | 0  => eq_refl
           end.
   
-  Fixpoint idSubst_term  (sigmaterm : fin -> term ) (Eqterm : forall x, sigmaterm x = (var_term ) x) (s : term ) : subst_term sigmaterm s = s :=
-    match s return subst_term sigmaterm s = s with
-    | var_term  s => Eqterm s
-    | TFunc  f s0 => congr_TFunc ((vec_id (idSubst_term sigmaterm Eqterm)) s0)
+  Fixpoint idSubst_term
+    (σ : var -> term) (Eq : forall x, σ x = var_term x) (s : term)
+    : subst_term σ s = s :=
+    match s return subst_term σ s = s with
+    | var_term  s => Eq s
+    | TFunc  f s0 => congr_TFunc ((vec_id (idSubst_term σ Eq)) s0)
     end.
-
-  Definition upExt_term_term   (sigma : fin -> term ) (tau : fin -> term ) (Eq : forall x, sigma x = tau x) : forall x, (up_term_term sigma) x = (up_term_term tau) x :=
+ 
+  Definition upExt_term_term
+    (σ : var -> term) (τ : var -> term) (Eq : forall x, σ x = τ x)
+    : forall x, (up_term_term σ) x = (up_term_term τ) x :=
     fun n => match n with
-             | S fin_n => (ap) (subst_term ((funcomp) (var_term ) (shift))) (Eq fin_n)
+             | S var_n => (ap) (subst_term ((funcomp) (var_term ) (shift))) (Eq var_n)
              | 0  => eq_refl
              end.
 
   
-  Fixpoint ext_term   (sigmaterm : fin -> term ) (tauterm : fin -> term ) (Eqterm : forall x, sigmaterm x = tauterm x) (s : term ) : subst_term sigmaterm s = subst_term tauterm s :=
-    match s return subst_term sigmaterm s = subst_term tauterm s with
-    | var_term  s => Eqterm s
-    | TFunc  f s0 => congr_TFunc ((vec_ext (ext_term sigmaterm tauterm Eqterm)) s0)
+  Fixpoint ext_term
+    (σ : var -> term ) (τ : var -> term ) (Eq : forall x, σ x = τ x) (s : term)
+    : subst_term σ s = subst_term τ s :=
+    match s return subst_term σ s = subst_term τ s with
+    | var_term  s => Eq s
+    | TFunc  f s0 => congr_TFunc ((vec_ext (ext_term σ τ Eq)) s0)
     end.
 
-  Fixpoint compSubstSubst_term    (sigmaterm : fin -> term ) (tauterm : fin -> term ) (thetaterm : fin -> term ) (Eqterm : forall x, ((funcomp) (subst_term tauterm) sigmaterm) x = thetaterm x) (s : term ) : subst_term tauterm (subst_term sigmaterm s) = subst_term thetaterm s :=
-    match s return subst_term tauterm (subst_term sigmaterm s) = subst_term thetaterm s with
-    | var_term  s => Eqterm s
-    | TFunc  f s0 => congr_TFunc ((vec_comp (compSubstSubst_term sigmaterm tauterm thetaterm Eqterm)) s0)
+  Fixpoint compSubstSubst_term
+    (σ : var -> term ) (τ : var -> term ) (θ : var -> term ) (Eq : forall x, (funcomp (subst_term τ) σ) x = θ x) (s : term )
+    : subst_term τ (subst_term σ s) = subst_term θ s :=
+    match s return subst_term τ (subst_term σ s) = subst_term θ s with
+    | var_term  s => Eq s
+    | TFunc  f s0 => congr_TFunc ((vec_comp (compSubstSubst_term σ τ θ Eq)) s0)
     end.
 
-  Definition up_subst_subst_term_term    (sigma : fin -> term ) (tauterm : fin -> term ) (theta : fin -> term ) (Eq : forall x, ((funcomp) (subst_term tauterm) sigma) x = theta x) : forall x, ((funcomp) (subst_term (up_term_term tauterm)) (up_term_term sigma)) x = (up_term_term theta) x :=
+  Definition up_subst_subst_term_term
+    (σ : var -> term ) (τ : var -> term ) (θ : var -> term ) (Eq : forall x, ((funcomp) (subst_term τ) σ) x = θ x)
+    : forall x, ((funcomp) (subst_term (up_term_term τ)) (up_term_term σ)) x = (up_term_term θ) x :=
     fun n => match n with
-             | S fin_n => (eq_trans) (compSubstSubst_term ((funcomp) (var_term ) (shift)) (up_term_term tauterm) ((funcomp) (up_term_term tauterm) (shift)) (fun x => eq_refl) (sigma fin_n)) ((eq_trans) ((eq_sym) (compSubstSubst_term tauterm ((funcomp) (var_term ) (shift)) ((funcomp) (subst_term ((funcomp) (var_term ) (shift))) tauterm) (fun x => eq_refl) (sigma fin_n))) ((ap) (subst_term ((funcomp) (var_term ) (shift))) (Eq fin_n)))
+             | S var_n => (eq_trans) (compSubstSubst_term ((funcomp) (var_term ) (shift)) (up_term_term τ) ((funcomp) (up_term_term τ) (shift)) (fun x => eq_refl) (σ var_n)) ((eq_trans) ((eq_sym) (compSubstSubst_term τ ((funcomp) (var_term ) (shift)) ((funcomp) (subst_term ((funcomp) (var_term ) (shift))) τ) (fun x => eq_refl) (σ var_n))) ((ap) (subst_term ((funcomp) (var_term ) (shift))) (Eq var_n)))
              | 0  => eq_refl
              end.
 
-  Lemma instId_term  : subst_term var_term = id .
+  Lemma instId_term : subst_term var_term = id.
   Proof. exact ((FunctionalExtensionality.functional_extensionality _ _ ) (fun x => idSubst_term (var_term ) (fun n => eq_refl) ((id) x))). Qed.
 
-  Lemma varL_term   (sigmaterm : fin -> term) : (funcomp) (subst_term sigmaterm) (var_term ) = sigmaterm .
+  Lemma varL_term (σ : var -> term) : funcomp (subst_term σ) var_term = σ.
   Proof. exact ((FunctionalExtensionality.functional_extensionality _ _ ) (fun x => eq_refl)). Qed.
 
-  Lemma compComp_term    (sigmaterm : fin -> term ) (tauterm : fin -> term ) (s : term ) : subst_term tauterm (subst_term sigmaterm s) = subst_term ((funcomp) (subst_term tauterm) sigmaterm) s .
-  Proof. exact (compSubstSubst_term sigmaterm tauterm (_) (fun n => eq_refl) s). Qed.
+  Lemma compComp_term (σ : var -> term) (τ : var -> term) (s : term)
+    : subst_term τ (subst_term σ s) = subst_term ((funcomp) (subst_term τ) σ) s .
+  Proof. exact (compSubstSubst_term σ τ (_) (fun n => eq_refl) s). Qed.
 
-  Lemma compComp'_term    (sigmaterm : fin -> term ) (tauterm : fin -> term ) : (funcomp) (subst_term tauterm) (subst_term sigmaterm) = subst_term ((funcomp) (subst_term tauterm) sigmaterm) .
-  Proof. exact ((FunctionalExtensionality.functional_extensionality _ _ ) (fun n => compComp_term sigmaterm tauterm n)). Qed.
+  Lemma compComp'_term (σ : var -> term) (τ : var -> term)
+    : funcomp (subst_term τ) (subst_term σ) = subst_term (funcomp (subst_term τ) σ).
+  Proof. exact ((FunctionalExtensionality.functional_extensionality _ _ ) (fun n => compComp_term σ τ n)). Qed.
 
 End term.
 
@@ -164,17 +181,17 @@ Section formula.
   Context {Σ : signature}.
   
   Inductive formula  : Type :=
-  | FPred : forall (P : PredS Σ), vec (term Σ) (pred_ar P) -> formula 
-  | FIndPred : forall (P : IndPredS Σ), vec (term Σ) (indpred_ar P) -> formula 
+  | FPred (P : PredS Σ) : vec (term Σ) (pred_ar P) -> formula 
+  | FIndPred (P : IndPredS Σ) : vec (term Σ) (indpred_ar P) -> formula 
   | FNeg : formula -> formula 
   | FImp : formula -> formula -> formula 
-  | FAll : formula -> formula .
+  | FAll : formula -> formula.
 
   Inductive FV : formula -> E.Ensemble var :=
-  | FV_Pred : forall R args v, (forall st, V.In st args -> ~ TV st v) ->
-                          FV (FPred R args) v
-  | FV_IndPred : forall R args v, (forall st, V.In st args -> ~ TV st v) ->
-                             FV (FIndPred R args) v
+  | FV_Pred : forall R args v,
+      (exists st, V.In st args /\ TV st v) -> FV (FPred R args) v
+  | FV_IndPred : forall R args v,
+      (exists st, V.In st args /\ TV st v) -> FV (FIndPred R args) v
   | FV_Imp_l : forall F G v, FV F v -> FV (FImp F G) v
   | FV_Imp_r : forall F G v, FV G v -> FV (FImp F G) v
   | FV_Neg : forall F v, FV F v -> FV (FNeg F) v
@@ -196,68 +213,98 @@ Section formula.
     : FIndPred  P s0 = FIndPred  P t0 .
   Proof. congruence. Qed.
 
-  Lemma congr_FNeg  { s0 : formula   } { t0 : formula   } (H1 : s0 = t0) : FNeg  s0 = FNeg  t0 .
+  Lemma congr_FNeg
+    {s0 : formula}
+    {t0 : formula}
+    (H1 : s0 = t0)
+    : FNeg s0 = FNeg t0.
   Proof. congruence. Qed.
 
-  Lemma congr_FImp  { s0 : formula   } { s1 : formula   } { t0 : formula   } { t1 : formula   } (H1 : s0 = t0) (H2 : s1 = t1) : FImp  s0 s1 = FImp  t0 t1 .
+  Lemma congr_FImp
+    {s0 : formula}
+    {s1 : formula}
+    {t0 : formula}
+    {t1 : formula}
+    (H1 : s0 = t0)
+    (H2 : s1 = t1)
+    : FImp  s0 s1 = FImp  t0 t1.
   Proof. congruence. Qed.
 
-  Lemma congr_FAll  { s0 : formula   } { t0 : formula   } (H1 : s0 = t0) : FAll  s0 = FAll  t0 .
+  Lemma congr_FAll
+    {s0 : formula}
+    {t0 : formula}
+    (H1 : s0 = t0)
+    : FAll s0 = FAll t0.
   Proof. congruence. Qed.
 
-  Fixpoint subst_formula   (sigmaterm : fin -> term Σ) (s : formula ) : formula  :=
+  Fixpoint subst_formula
+    (σ : var -> term Σ) (s : formula )
+    : formula  :=
     match s return formula  with
-    | FPred  P s0 => FPred  P ((V.map (subst_term sigmaterm)) s0)
-    | FIndPred  P s0 => FIndPred  P ((V.map (subst_term sigmaterm)) s0)
-    | FNeg  s0 => FNeg  ((subst_formula sigmaterm) s0)
-    | FImp  s0 s1 => FImp  ((subst_formula sigmaterm) s0) ((subst_formula sigmaterm) s1)
-    | FAll  s0 => FAll  ((subst_formula (up_term_term sigmaterm)) s0)
+    | FPred  P s0 => FPred  P ((V.map (subst_term σ)) s0)
+    | FIndPred  P s0 => FIndPred  P ((V.map (subst_term σ)) s0)
+    | FNeg  s0 => FNeg  ((subst_formula σ) s0)
+    | FImp  s0 s1 => FImp  ((subst_formula σ) s0) ((subst_formula σ) s1)
+    | FAll  s0 => FAll  ((subst_formula (up_term_term σ)) s0)
     end.
 
-  Fixpoint idSubst_formula  (sigmaterm : fin -> term Σ) (Eqterm : forall x, sigmaterm x = (var_term ) x) (s : formula ) : subst_formula sigmaterm s = s :=
-    match s return subst_formula sigmaterm s = s with
-    | FPred  P s0 => congr_FPred ((vec_id (idSubst_term sigmaterm Eqterm)) s0)
-    | FIndPred  P s0 => congr_FIndPred ((vec_id (idSubst_term sigmaterm Eqterm)) s0)
-    | FNeg  s0 => congr_FNeg ((idSubst_formula sigmaterm Eqterm) s0)
-    | FImp  s0 s1 => congr_FImp ((idSubst_formula sigmaterm Eqterm) s0) ((idSubst_formula sigmaterm Eqterm) s1)
-    | FAll  s0 => congr_FAll ((idSubst_formula (up_term_term sigmaterm) (upId_term_term (_) Eqterm)) s0)
+  Fixpoint idSubst_formula
+    (σ : var -> term Σ) (Eq : forall x, σ x = var_term x) (s : formula )
+    : subst_formula σ s = s :=
+    match s return subst_formula σ s = s with
+    | FPred  P s0 => congr_FPred ((vec_id (idSubst_term σ Eq)) s0)
+    | FIndPred  P s0 => congr_FIndPred ((vec_id (idSubst_term σ Eq)) s0)
+    | FNeg  s0 => congr_FNeg ((idSubst_formula σ Eq) s0)
+    | FImp  s0 s1 => congr_FImp ((idSubst_formula σ Eq) s0) ((idSubst_formula σ Eq) s1)
+    | FAll  s0 => congr_FAll ((idSubst_formula (up_term_term σ) (upId_term_term (_) Eq)) s0)
     end.
 
-  Fixpoint ext_formula   (sigmaterm : fin -> term Σ) (tauterm : fin -> term Σ) (Eqterm : forall x, sigmaterm x = tauterm x) (s : formula ) : subst_formula sigmaterm s = subst_formula tauterm s :=
-    match s return subst_formula sigmaterm s = subst_formula tauterm s with
-    | FPred  P s0 => congr_FPred ((vec_ext (ext_term sigmaterm tauterm Eqterm)) s0)
-    | FIndPred  P s0 => congr_FIndPred ((vec_ext (ext_term sigmaterm tauterm Eqterm)) s0)
-    | FNeg  s0 => congr_FNeg ((ext_formula sigmaterm tauterm Eqterm) s0)
-    | FImp  s0 s1 => congr_FImp ((ext_formula sigmaterm tauterm Eqterm) s0) ((ext_formula sigmaterm tauterm Eqterm) s1)
-    | FAll  s0 => congr_FAll ((ext_formula (up_term_term sigmaterm) (up_term_term tauterm) (upExt_term_term (_) (_) Eqterm)) s0)
+  Fixpoint ext_formula
+    (σ : var -> term Σ) (τ : var -> term Σ) (Eq : forall x, σ x = τ x) (s : formula )
+    : subst_formula σ s = subst_formula τ s :=
+    match s return subst_formula σ s = subst_formula τ s with
+    | FPred  P s0 => congr_FPred ((vec_ext (ext_term σ τ Eq)) s0)
+    | FIndPred  P s0 => congr_FIndPred ((vec_ext (ext_term σ τ Eq)) s0)
+    | FNeg  s0 => congr_FNeg ((ext_formula σ τ Eq) s0)
+    | FImp  s0 s1 => congr_FImp ((ext_formula σ τ Eq) s0) ((ext_formula σ τ Eq) s1)
+    | FAll  s0 => congr_FAll ((ext_formula (up_term_term σ) (up_term_term τ) (upExt_term_term (_) (_) Eq)) s0)
+    end.
+  
+  Fixpoint compSubstSubst_formula
+    (σ : var -> term Σ) (τ : var -> term Σ) (θ : var -> term Σ) (Eq : forall x, ((funcomp) (subst_term τ) σ) x = θ x) (s : formula )
+    : subst_formula τ (subst_formula σ s) = subst_formula θ s :=
+    match s return subst_formula τ (subst_formula σ s) = subst_formula θ s with
+    | FPred  P s0 => congr_FPred ((vec_comp (compSubstSubst_term σ τ θ Eq)) s0)
+    | FIndPred  P s0 => congr_FIndPred ((vec_comp (compSubstSubst_term σ τ θ Eq)) s0)
+    | FNeg  s0 => congr_FNeg ((compSubstSubst_formula σ τ θ Eq) s0)
+    | FImp  s0 s1 => congr_FImp ((compSubstSubst_formula σ τ θ Eq) s0) ((compSubstSubst_formula σ τ θ Eq) s1)
+    | FAll  s0 => congr_FAll ((compSubstSubst_formula (up_term_term σ) (up_term_term τ) (up_term_term θ) (up_subst_subst_term_term (_) (_) (_) Eq)) s0)
     end.
 
-  Fixpoint compSubstSubst_formula    (sigmaterm : fin -> term Σ) (tauterm : fin -> term Σ) (thetaterm : fin -> term Σ) (Eqterm : forall x, ((funcomp) (subst_term tauterm) sigmaterm) x = thetaterm x) (s : formula ) : subst_formula tauterm (subst_formula sigmaterm s) = subst_formula thetaterm s :=
-    match s return subst_formula tauterm (subst_formula sigmaterm s) = subst_formula thetaterm s with
-    | FPred  P s0 => congr_FPred ((vec_comp (compSubstSubst_term sigmaterm tauterm thetaterm Eqterm)) s0)
-    | FIndPred  P s0 => congr_FIndPred ((vec_comp (compSubstSubst_term sigmaterm tauterm thetaterm Eqterm)) s0)
-    | FNeg  s0 => congr_FNeg ((compSubstSubst_formula sigmaterm tauterm thetaterm Eqterm) s0)
-    | FImp  s0 s1 => congr_FImp ((compSubstSubst_formula sigmaterm tauterm thetaterm Eqterm) s0) ((compSubstSubst_formula sigmaterm tauterm thetaterm Eqterm) s1)
-    | FAll  s0 => congr_FAll ((compSubstSubst_formula (up_term_term sigmaterm) (up_term_term tauterm) (up_term_term thetaterm) (up_subst_subst_term_term (_) (_) (_) Eqterm)) s0)
-    end.
-
-  Lemma instId_formula  : subst_formula (var_term ) = id .
+  Lemma instId_formula  : subst_formula var_term = id .
   Proof. exact ((FunctionalExtensionality.functional_extensionality _ _ ) (fun x => idSubst_formula (var_term ) (fun n => eq_refl) ((id) x))). Qed.
 
-  Lemma compComp_formula    (sigmaterm : fin -> term Σ) (tauterm : fin -> term Σ) (s : formula ) : subst_formula tauterm (subst_formula sigmaterm s) = subst_formula ((funcomp) (subst_term tauterm) sigmaterm) s .
-  Proof. exact (compSubstSubst_formula sigmaterm tauterm (_) (fun n => eq_refl) s). Qed.
+  Lemma compComp_formula
+    (σ : var -> term Σ) (τ : var -> term Σ) (s : formula )
+    : subst_formula τ (subst_formula σ s) = subst_formula ((funcomp) (subst_term τ) σ) s .
+  Proof. exact (compSubstSubst_formula σ τ (_) (fun n => eq_refl) s). Qed.
 
-  Lemma compComp'_formula    (sigmaterm : fin -> term Σ) (tauterm : fin -> term Σ ) : (funcomp) (subst_formula tauterm) (subst_formula sigmaterm) = subst_formula ((funcomp) (subst_term tauterm) sigmaterm) .
-  Proof. exact ((FunctionalExtensionality.functional_extensionality _ _ ) (fun n => compComp_formula sigmaterm tauterm n)). Qed.
+  Lemma compComp'_formula
+    (σ : var -> term Σ) (τ : var -> term Σ )
+    : (funcomp) (subst_formula τ) (subst_formula σ) = subst_formula ((funcomp) (subst_term τ) σ) .
+  Proof. exact ((FunctionalExtensionality.functional_extensionality _ _ ) (fun n => compComp_formula σ τ n)). Qed.
 
 End formula.
 
+Arguments formula Σ : clear implicits.
+                            
 
-Instance Subst_term (Σ : signature)  : Subst1 (fin -> term Σ) (term Σ) (term Σ) := @subst_term Σ   .
 
-Instance Subst_formula (Σ : signature)  : Subst1 (fin -> term Σ) (formula ) (formula ) := @subst_formula Σ  .
+Instance Subst_term (Σ : signature)  : Subst1 (var -> term Σ) (term Σ) (term Σ) := @subst_term Σ   .
 
-Instance VarInstance_term (Σ : signature) : Var (fin) (term Σ) := @var_term Σ .
+Instance Subst_formula (Σ : signature)  : Subst1 (var -> term Σ) (formula Σ ) (formula Σ) := @subst_formula Σ  .
+
+Instance VarInstance_term (Σ : signature) : Var (var) (term Σ) := @var_term Σ .
 
 Notation "x '__term'" := (var_term x) (at level 5, format "x __term") : subst_scope.
 
@@ -273,13 +320,13 @@ Notation "↑__term" := (up_term_term) (only printing) : subst_scope.
 
 Instance Up_term_term (Σ : signature)  : Up_term (_) (_) := @up_term_term Σ  .
 
-Notation "s [ sigmaterm ]" := (subst_term sigmaterm s) (at level 7, left associativity, only printing) : subst_scope.
+Notation "s [ σ ]" := (subst_term σ s) (at level 7, left associativity, only printing) : subst_scope.
 
-Notation "[ sigmaterm ]" := (subst_term sigmaterm) (at level 1, left associativity, only printing) : fscope.
+Notation "[ σ ]" := (subst_term σ) (at level 1, left associativity, only printing) : fscope.
 
-Notation "s [ sigmaterm ]" := (subst_formula sigmaterm s) (at level 7, left associativity, only printing) : subst_scope.
+Notation "s [ σ ]" := (subst_formula σ s) (at level 7, left associativity, only printing) : subst_scope.
 
-Notation "[ sigmaterm ]" := (subst_formula sigmaterm) (at level 1, left associativity, only printing) : fscope.
+Notation "[ σ ]" := (subst_formula σ) (at level 1, left associativity, only printing) : fscope.
 
 Ltac auto_unfold := repeat unfold subst1,  subst2,  Subst1,  Subst2,  ids,  ren1,  ren2,  Ren1,  Ren2,  Subst_term,  Subst_formula,  VarInstance_term.
 

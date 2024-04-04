@@ -14,7 +14,7 @@ Module E := Ensembles.
 Arguments E.In {U} A x.
 
 Lemma vec_Exists_exists : forall A (P : A -> Prop) n (v : vec A n),
-    V.Exists P v <-> ex (fun t => V.In t v /\ P t).
+    V.Exists P v <-> exists t, V.In t v /\ P t.
 Proof.
   intros A P n v; split.
   - intros Hex; induction Hex.
