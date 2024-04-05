@@ -137,6 +137,25 @@ Section quantifiers_examples.
     apply (H (a + 1)).
     reflexivity.
   Qed.
-    
+   
+  Example nonzero_is_successor_example := (* ∀ x, ¬(x = 0) → ∃ y, x = y + 1 *)
+    let x  := Some (@None ∅) : ∅⁺⁺ in
+    let x' := @None ∅ : ∅⁺ in (* x and x' are actually the same variable !!!
+                                 Some smart coercions are needed to make it look nicer. *)
+    let y := @None ∅⁺ : ∅⁺⁺ in
+    FAll (*x*) (FImp (FNeg (FPred eq [TVar x'; peano_zero]))
+                     (FExists (*y*)  (FPred eq [TVar x; TFunc plus [TVar y; peano_one]]))).
+  
+  Example nonzero_is_successor_is_true_example :
+    M_PA ⊧ nonzero_is_successor_example.
+  Proof.
+    intro.
+    simpl.
+    intros a NZa H.
+    destruct a as [ | b]; [congruence | ].
+    apply (H b).
+    rewrite Nat.add_1_r.
+    reflexivity.
+  Qed.
 
 End quantifiers_examples.
