@@ -78,6 +78,12 @@ Section eval_facts.
   Context {Σ : signature}.
   Context {M: structure Σ}.
 
+  Lemma env_subst_scons : forall (ρ : env M) b x d,
+    b .: env_subst ρ x d = env_subst (b .: ρ) (S x) d.
+  Proof.
+    intros ρ b x d. fext; intros [|y]; reflexivity.
+  Qed.
+
   Lemma eval_ext : forall (ρ ξ : env M) t,
       (forall x, ρ x = ξ x) -> eval ρ t = eval ξ t.
   Proof.
@@ -135,7 +141,7 @@ Section eval_facts.
     - f_equal. rewrite V.map_map. apply V.map_ext_in.
       intros a Hin. apply H. assumption.
   Qed.
-
+  
   Lemma eval_env_subst_unused :
     forall (ρ : env M) x t d,
       ~ TV t x -> eval ρ t = eval (env_subst ρ x d) t.
@@ -246,64 +252,73 @@ Section Sat_facts.
 End Sat_facts.
 
 Section lemma_2_1_9.
-  Context {x : var}.
-  Context {Σ : signature}.
-  Context {M : structure Σ}.
-  Context {ρ : env M}.             
-  Context {t : term Σ}.
-  Context {F : formula Σ}.
-
   Lemma form_subst_sanity1 :
-    forall (d : |M|), ~ FV F x -> (ρ ⊨ F <-> (env_subst ρ x d) ⊨ F).
+    forall (Σ : signature) (F : formula Σ) (M : structure Σ)
+      (ρ : env M) (d : |M|) (x : var),
+    ~ FV F x -> (ρ ⊨ F <-> (env_subst ρ x d) ⊨ F).
   Proof.
-    intros d Hfv; split; intros Hsat.
-    - induction F.
-      + simpl in *; erewrite V.map_ext_in.
-        * apply Hsat.
-        * intros st Hin. rewrite <- eval_subst_env_subst.
-          apply eval_subst_sanity1. intros Htv.
-          apply Hfv. constructor. exists st; intuition.
-      + simpl in *; erewrite V.map_ext_in.
-        * apply Hsat.
-        * intros st Hin. rewrite <- eval_subst_env_subst.
-          apply eval_subst_sanity1. intros Htv.
-          apply Hfv. constructor. exists st; intuition.
+    intros Σ; induction F; intros M ρ d x Hfv;
+      split; intros Hsat; simpl in *;
+      try (erewrite V.map_ext_in;
+           [ apply Hsat
+           | intros st Hin; rewrite <- eval_env_subst_unused;
+             [ reflexivity
+             | intros Htv; apply Hfv; constructor; exists st; intuition]]).
+    - intros Hsats; apply Hsat; rewrite IHF.
+      + apply Hsats.
+      + intros Hfv'; apply Hfv; constructor; assumption.
+    - intros Hsats; apply Hsat; rewrite <- IHF.
+      + assumption.
+      + intros Hfs'; apply Hfv; constructor; assumption.
+    - intros Hsat1; rewrite <- IHF2.
+      + apply Hsat; rewrite IHF1.
+        * apply Hsat1.
+        * intros Hfv1; apply Hfv; apply FV_Imp_l; auto.
+      + intros Hfv2; apply Hfv; apply FV_Imp_r; auto.
+    - intros Hsat1; rewrite IHF2.
+      + apply Hsat; rewrite <- IHF1; auto; intros Hfv1.
+        apply Hfv; apply FV_Imp_l; auto.
+      + intros Hfv2; apply Hfv; apply FV_Imp_r; auto.
+    - intros b; specialize Hsat with b. rewrite env_subst_scons;
+        rewrite <- IHF.
+      + apply Hsat.
+      + intros Hfv'; apply Hfv. admit.
+    - intros b; specialize Hsat with b; rewrite IHF.
+      + rewrite <- env_subst_scons. apply Hsat.
       + admit.
-      + simpl in *. intros Hsat1. apply IHf2.
-        * intros Hfv1. apply Hfv. apply FV_Imp_r. assumption.
-        * apply Hsat. 
   Admitted.
 
   Open Scope subst_scope.
 
   Lemma strong_form_subst_sanity2 :
-    forall (σ : var -> term Σ),
-    ρ ⊨ (subst_formula σ F) <-> (σ >> eval ρ) ⊨ F.
+    forall (Σ : signature) (F : formula Σ)
+      (M : structure Σ) (ρ : env M)
+      (σ : var -> term Σ),
+      ρ ⊨ (subst_formula σ F) <-> (σ >> eval ρ) ⊨ F.
   Proof.
-    revert ρ; induction F; cbn; intuition.
-    - erewrite <- vec_comp.
-      + eapply H.
-      + intros u. asimpl. now rewrite eval_comp.
-    - erewrite vec_comp.
-      + eapply H.
-      + intros u; asimpl; now rewrite eval_comp.
+    intros Σ F; induction F; intros M ρ σ; cbn; intuition.
     - erewrite <- vec_comp.
       + eapply H.
       + intros u; asimpl; now rewrite eval_comp.
     - erewrite vec_comp.
       + eapply H.
       + intros u; asimpl; now rewrite eval_comp.
-    - now apply H, IHf.
-    - now apply H, IHf. 
-    - apply IHf2. apply H. apply IHf1. auto.
-    - apply IHf2; apply H; apply IHf1; auto.
+    - erewrite <- vec_comp.
+      + eapply H.
+      + intros u; asimpl; now rewrite eval_comp.
+    - erewrite vec_comp.
+      + eapply H.
+      + intros u; asimpl; now rewrite eval_comp.
+    - now apply H, IHF.
+    - now apply H, IHF. 
+    - apply IHF2; apply H; apply IHF1; auto.
+    - apply IHF2; apply H; apply IHF1; auto.
     - asimpl in H. specialize H with d.
-      apply IHf in H. asimpl in H. simpl in H.
+      apply IHF in H. asimpl in H. simpl in H.
       rewrite eval_shift in H. apply H.
-    - rewrite IHf. asimpl. simpl.
+    - rewrite IHF. asimpl. simpl.
       rewrite eval_shift.
       apply H.
-  Qed.
-    
+  Qed.  
+  
 End lemma_2_1_9.
-
