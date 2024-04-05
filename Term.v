@@ -7,6 +7,11 @@ Section variables.
     typ :> Type;
     eq_dec: ∀ (x y : typ), {x = y} + {x ≠ y}
   }.
+
+  Program Definition NoVars := {| typ := Empty_set |}.
+  Next Obligation.
+    destruct x.
+  Defined.
   
   Program Definition Extend (X : Vars) := {| typ := option (typ X) |}.
   Next Obligation.
@@ -24,6 +29,7 @@ End variables.
 Module VarNotations.
   Declare Scope var_scope.
   Delimit Scope var_scope with var.
+  Notation "∅" := NoVars : var_scope.
   Notation "X ⁺" := (Extend X) (at level 1, format "X ⁺") : var_scope.
   Notation "x == y" := (eq_dec _ x y) (at level 50) : var_scope.
   Open Scope var_scope.

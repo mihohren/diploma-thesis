@@ -48,6 +48,11 @@ Section term_examples.
 End term_examples.
 
 
+
+
+
+
+
 Section Peano.
   Arguments nil {A}.
   Arguments cons {A}.
@@ -102,3 +107,36 @@ Section Peano.
   (* = nat : Type *)
   (* if only we could have notation for interpretation... *)
 End Peano.
+
+Section quantifiers_examples.
+  Import VarNotations.
+  
+  Example equality_example := (* ∀ x, x = x *)
+    let x := @None ∅ : ∅⁺ in
+    FAll (*x*) (FPred eq [TVar x; TVar x]).
+    
+  Example equality_true_example : 
+    M_PA ⊧ equality_example.
+  Proof.
+    intro.
+    simpl.
+    intro; reflexivity.
+  Qed.
+  
+  Example existence_of_successor_example := (* ∀ x, ∃ y, y = x + 1 *)
+    let x := Some (@None ∅) : ∅⁺⁺ in
+    let y := @None ∅⁺ : ∅⁺⁺ in
+    FAll (*x*) (FExists (*y*)  (FPred eq [TVar y; TFunc plus [TVar x; peano_one]])).
+     
+  Example existence_of_successor_is_true_example : 
+    M_PA ⊧ existence_of_successor_example.
+  Proof.
+    intro.
+    simpl.
+    intros a H. 
+    apply (H (a + 1)).
+    reflexivity.
+  Qed.
+    
+
+End quantifiers_examples.

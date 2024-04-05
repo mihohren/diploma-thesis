@@ -1,5 +1,5 @@
 Require Import Base Signature Term.
-Require Import ClassicalDescription.
+Require Import Formula.
 
 Section structure.
   Context {Σ : signature}.
@@ -18,10 +18,22 @@ Arguments interpP {Σ M} _ _ : rename.
 Arguments interpIP {Σ M} _ _ : rename.
 Notation "| M |" := (domain M) (no associativity, at level 150).
 
+
+
+
 Section environment.
   Context {Σ : signature} {X : Vars} {M : structure Σ}.
 
+  Import VarNotations.
+  
   Definition env := X -> |M|.
+  
+  Definition ExtendEnv (ρ : env) (b : |M|) (x : X⁺) :=
+    match x with
+    | Some a => ρ a
+    | None   => b
+    end.
+  
 
   Import VarNotations.
   
@@ -43,14 +55,22 @@ Section environment.
     | TVar y => env_subst ρ x d y
     | TFunc f args => interpF f (V.map (fun st => eval_subst ρ st x d) args)
     end.
+    
 End environment.
 
 Arguments env {Σ} X M.
 
-Section lemma_2_1_5.
-  Context {Σ : signature} (X : Vars) {M : structure Σ}.
-  Variable ρ : env X M.
-  Variable t : term Σ X.
-  Variable x : X.
+Fixpoint interpForm [Σ X] M (ρ : env X M) (φ : formula Σ X) : Prop :=
+    match φ with
+    | FPred R args    => interpP R (V.map (eval ρ) args)
+    | FIndPred R args => interpIP R (V.map (eval ρ) args)
+    | FImp φ₁ φ₂      => interpForm M ρ φ₁ → interpForm M ρ φ₂
+    | FNeg ψ          => ¬ interpForm M ρ ψ
+    | FAll ψ          => ∀ v, interpForm M (ExtendEnv ρ v) ψ
+    end.
 
-End lemma_2_1_5.
+Definition models [Σ X] M (φ : formula Σ X) : Prop :=
+  ∀ ρ, interpForm M ρ φ.
+  
+Notation "M , ρ ⊧ φ" := (interpForm M ρ φ) (at level 100, format "M ,  ρ  ⊧  φ").
+Notation "M ⊧ φ" := (models M φ) (at level 101).
