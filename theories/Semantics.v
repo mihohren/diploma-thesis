@@ -282,11 +282,14 @@ Section lemma_2_1_9.
     - intros b; specialize Hsat with b. rewrite env_subst_scons;
         rewrite <- IHF.
       + apply Hsat.
-      + intros Hfv'; apply Hfv. admit.
+      + intros Hfv'; apply Hfv.
+        constructor; assumption.
     - intros b; specialize Hsat with b; rewrite IHF.
       + rewrite <- env_subst_scons. apply Hsat.
-      + admit.
-  Admitted.
+      + contradict Hfv.
+        replace x with (pred (S x)) by easy. 
+        constructor; assumption.
+  Qed.
 
   Open Scope subst_scope.
 
