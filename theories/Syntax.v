@@ -195,7 +195,7 @@ Section formula.
   | FV_Imp_l : forall F G v, FV F v -> FV (FImp F G) v
   | FV_Imp_r : forall F G v, FV G v -> FV (FImp F G) v
   | FV_Neg : forall F v, FV F v -> FV (FNeg F) v
-  | FV_All : forall F v, FV F v -> FV (FAll F) (S v).
+  | FV_All : forall F v, v ≠ 0 -> FV F v -> FV (FAll F) (pred v).
   
   Lemma congr_FPred
     {P : PredS Σ}
