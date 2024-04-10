@@ -344,3 +344,16 @@ Tactic Notation "asimpl" "in" "*" := auto_unfold in *; repeat first [progress re
 
 Ltac substify := auto_unfold.
 Ltac renamify := auto_unfold.
+
+Section inductive.
+  Context {Σ : signature}.
+  
+  Inductive production :=
+  | mkProd
+      (preds : list ({ P : PredS Σ & vec (term Σ) (pred_ar P) }))
+      (indpreds : list ({ P : IndPredS Σ & vec (term Σ) (indpred_ar P) }))
+      (P : IndPredS Σ)
+      (v : vec (term Σ) (indpred_ar P)).
+
+  Definition IndDefSet := production -> Prop .
+End inductive.
