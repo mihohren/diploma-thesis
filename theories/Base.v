@@ -1,3 +1,4 @@
+Require Import Relations.
 Require Export Utf8.
 Require Export Arith Bool.
 Require Export unscoped.
@@ -49,3 +50,16 @@ Proof.
   - reflexivity.
   - cbn. rewrite <- Heq. f_equal. apply IHv.
 Defined.
+
+Section monotone_operator.
+  Context {A : Type}.
+  Context (le : relation A).
+  Context (le_order : order A le).
+  Local Notation "x <= y" := (le x y).
+
+  Definition monotone (f : A -> A) :=
+    forall x y, x <= y -> f x <= f y.
+
+  Definition prefixed_point (f : A -> A) (x : A) :=
+    x <= f x.
+End monotone_operator.
