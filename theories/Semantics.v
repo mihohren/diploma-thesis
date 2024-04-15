@@ -188,38 +188,6 @@ Section kripke_semantics.
     intros _; apply satG.
   Qed.
 End kripke_semantics.
-
-Section Sat_ind.
-  Context {Σ : signature}.
-  Context {M : structure Σ}.
-  Context {ρ : env M}.
-  Context {Q : formula Σ -> Prop}.
-
-  Hypothesis HP : forall P args,
-      interpP P (V.map (eval ρ) args) -> Q (FPred P args).
-
-  Hypothesis HIP : forall P args,
-      interpIP P (V.map (eval ρ) args) -> Q (FIndPred P args).
-
-  Hypothesis Hneg : forall F,
-      ~ Sat ρ F -> Q F -> Q (FNeg F).
-
-  Hypothesis Himp : forall F G,
-      (Sat ρ F -> Sat ρ G) -> Q G -> Q G -> Q (FImp F G).
-
-  Hypothesis Hall : forall F,
-      (forall d, Sat (d .: ρ) F) -> Q F -> Q (FAll F).
-
-  Definition Sat_ind : forall F, Sat ρ F -> Q F.
-    fix IND_PRINCIPLE 1; intros F Hsat.
-    destruct F eqn:E.
-    - apply HP, Hsat.
-    - apply HIP, Hsat.
-    - apply Hneg; [apply Hsat | apply IND_PRINCIPLE]. admit.
-  Abort.
-  (* Je li moguce / ima li smisla definirati Sat_ind? *)
-End Sat_ind.
-
   
 Notation "ρ ⊨ F" := (Sat ρ F) (at level 10).
 
@@ -322,6 +290,6 @@ Section lemma_2_1_9.
     - rewrite IHF. asimpl. simpl.
       rewrite eval_shift.
       apply H.
-  Qed.  
+  Qed.
   
 End lemma_2_1_9.
