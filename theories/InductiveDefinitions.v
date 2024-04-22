@@ -131,7 +131,7 @@ Section approximants.
       + now apply approximant_succ.
   Qed.
 
-  Lemma lema_iza_cor_2_2_10 :
+  Lemma lema_iza_cor_2_2_10 :   (* nije prava lema, napisana je kao komentar *)
     forall α, (forall P v, φ_Φ_n P (S α) v <-> φ_Φ_n P α v) <->
            (forall P v, @φ_Φ Σ M Φ (fun P => φ_Φ_n P α) P v -> φ_Φ_n P α v).
   Proof.
@@ -144,18 +144,102 @@ Section approximants.
   
   Definition φ_Φ_ω P v := exists α, φ_Φ_n P α v.
 
+  Lemma φ_Φ_ω_characterization : forall P v, φ_Φ_ω P v <-> exists α, @φ_Φ Σ M Φ (fun P => φ_Φ_n P α) P v.
+  Proof.
+    intros P v; split; intros [α Hφ].
+    - destruct α.
+      + inversion Hφ.
+      + exists α. apply Hφ.
+    - exists (S α). apply Hφ.
+  Qed.
+  
+  Notation "{ X , Y }" := (existT _ X Y) (only printing).
+  Notation "Q '^M'" := (interpP Q) (at level 10, only printing).
+  Notation "vs @ f" := (V.map f vs) (at level 10, only printing).
+  Notation "'|' Q '|'" := (pred_ar Q) (only printing).
+  Notation "'|' R '|'" := (indpred_ar R) (only printing).
+
+  Require Import List Lia Arith.
+  Import ListNotations.
+
+  Section experiment.
+    Variable T : Type.
+    Variable P : T -> nat -> Prop.
+    Hypothesis P_succ : forall t n, P t n -> P t (S n).
+
+    Lemma P_monotone : forall t n m, n < m -> P t n -> P t m.
+    Proof.
+      intros t n m Hle. induction Hle.
+      - apply P_succ.
+      - intros H. apply P_succ. auto.
+    Qed.
+
+    Variable ls : list T.
+    Hypothesis In_ls_P : forall t, In t ls -> exists n, P t n.
+
+    Lemma supremum : exists α, forall t, In t ls -> P t α.
+    Proof.
+      induction ls.
+      - exists 0. cbn; intros; subst; contradiction.
+      - assert (In_a : In a (a :: l)) by now left.
+        destruct (In_ls_P a In_a) as [α HPα].
+        assert (In_tail_P : forall t, In t l -> exists n, P t n).
+        { intros t Hin. apply In_ls_P. now right. }
+        pose proof (IHl In_tail_P) as [β HPβ].
+        set (γ := Nat.max α β).
+        exists (S γ). intros t Hin.
+        inversion Hin.
+        + subst. apply P_monotone with α; [lia | assumption].
+        + clear Hin. apply P_monotone with β; [lia | auto].
+    Qed.
+  End experiment.
+
+  Require Import Program.
+  
   Section lemma_2_2_11.
     Lemma ω_prefixed : forall P v, @φ_Φ Σ M Φ φ_Φ_ω P v -> φ_Φ_ω P v.
     Proof.
-      intros P v H. unfold φ_Φ_ω in *.
-      unfold φ_Φ, φ_P in H.
+      intros P y H.
+      (* apply φ_Φ_ω_characterization; eexists. *)
+      (* eapply φ_Φ_monotone. *)
+      (* 2: { apply H. } *)
+      (* intros Q u. intros [α HQ]. apply HQ. *)
+      unfold φ_Φ, φ_P, φ_pr in H;
       destruct H as (pr & [Heq Hpr] & (ρ & H1 & H2 & H3)).
-      subst P; unfold eq_rect in H3; subst v.
-      (* k := max od svih razina koje postoje zbog H2 *)
-      (*      a jer je lista indpreds pr konacna, takav broj postoji *)
-      (* onda postoji k + 2 *)
-      set (k := 1).
-    Admitted.
+      unfold eq_rect in H3; subst P; subst y.
+      assert (Hsup : exists α, forall P ts, In (existT _ P ts) (indpreds pr) -> φ_Φ_n P α (V.map (eval ρ) ts)).
+      {
+        induction (indpreds pr).
+        - exists 0. intros. contradiction.
+        - destruct a. pose proof (H2 x t).
+          assert (In (existT _ x t) ((existT _ x t) :: l)) by now left.
+          apply H in H0. destruct H0 as [α Hα].
+          assert (IH_help : forall P ts, In (existT _ P ts) l -> φ_Φ_ω P (V.map (eval ρ) ts)).
+          { intros P ts Hin. apply H2. now right. }
+          apply IHl in IH_help.
+          destruct IH_help as [β Hβ].
+          exists (S (max α β)).
+          intros P ts Hin.
+          inversion Hin.
+          + apply approximant_monotone with α.
+            * auto with arith.
+            * apply EqdepFacts.eq_sigT_fst in H0 as HHH.
+              subst x. unfold approximant_of.
+              apply inj_pair2 in H0 as HH. subst t. assumption.
+          + apply approximant_monotone with β.
+            * auto with arith.
+            * clear Hin. now apply Hβ.                                
+      }
+      destruct Hsup as [κ Hsup].
+      exists (S (S κ)).
+      apply approximant_succ.
+      cbn. unfold φ_Φ.
+      unfold φ_P.
+      exists pr, (conj eq_refl Hpr).
+      unfold φ_pr. exists ρ; split; auto.
+    Qed.
+
+    Print Assumptions ω_prefixed. (* Axioms: proof irrelevance *)
 
     Lemma ω_least : forall args, (forall P v, @φ_Φ Σ M Φ args P v -> args P v) ->
                             forall P v, φ_Φ_ω P v -> args P v.

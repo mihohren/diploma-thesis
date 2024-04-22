@@ -73,3 +73,5 @@ Section lkid.
       LKID (Γ ++ [φ] ⊢ ψ :: Δ) -> LKID (Γ ⊢ (FImp φ ψ) :: Δ)
   (* Quantifier rules. *)
   (* TODO *).
+  
+End lkid.
