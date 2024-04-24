@@ -187,6 +187,15 @@ Section formula.
   | FImp : formula -> formula -> formula 
   | FAll : formula -> formula.
 
+  Definition FAnd (φ ψ : formula) : formula :=
+    FNeg (FImp φ (FNeg ψ)).
+
+  Definition FOr (φ ψ : formula) : formula :=
+    FImp (FNeg φ) ψ.
+
+  Definition FExist (φ : formula) : formula :=
+    FNeg (FAll (FNeg φ)).
+  
   Inductive FV : formula -> E.Ensemble var :=
   | FV_Pred : forall R args v,
       (exists st, V.In st args /\ TV st v) -> FV (FPred R args) v

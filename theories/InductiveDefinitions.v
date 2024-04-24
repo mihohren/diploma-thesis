@@ -200,10 +200,6 @@ Section approximants.
     Lemma ω_prefixed : forall P v, @φ_Φ Σ M Φ φ_Φ_ω P v -> φ_Φ_ω P v.
     Proof.
       intros P y H.
-      (* apply φ_Φ_ω_characterization; eexists. *)
-      (* eapply φ_Φ_monotone. *)
-      (* 2: { apply H. } *)
-      (* intros Q u. intros [α HQ]. apply HQ. *)
       unfold φ_Φ, φ_P, φ_pr in H;
       destruct H as (pr & [Heq Hpr] & (ρ & H1 & H2 & H3)).
       unfold eq_rect in H3; subst P; subst y.
@@ -231,8 +227,7 @@ Section approximants.
             * clear Hin. now apply Hβ.                                
       }
       destruct Hsup as [κ Hsup].
-      exists (S (S κ)).
-      apply approximant_succ.
+      exists (S κ).
       cbn. unfold φ_Φ.
       unfold φ_P.
       exists pr, (conj eq_refl Hpr).
@@ -263,5 +258,6 @@ Definition standard_model
   (Σ : signature) (Φ: @IndDefSet Σ)
   : structure Σ -> Prop :=
   fun M =>
-    forall (P : IndPredS Σ) ts, interpIP P ts <-> exists α, @φ_Φ_n Σ M Φ P α ts.
+    forall (P : IndPredS Σ) ts, interpIP P ts <-> @φ_Φ_ω Σ M Φ P ts.
 
+(* LKID (Γ ⊢ Δ) -> za sve standardne modele, za sve formule F u Γ, M ⊨ F -> postoji G u Δ t.d. M ⊨ G *)
