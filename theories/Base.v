@@ -63,3 +63,5 @@ Section monotone_operator.
   Definition prefixed_point (f : A -> A) (x : A) :=
     x <= f x.
 End monotone_operator.
+
+Notation "A ⊆ B" := (incl A B) (no associativity, at level 10).
