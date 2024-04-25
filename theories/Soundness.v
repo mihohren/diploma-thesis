@@ -77,18 +77,19 @@ Section soundness.
     - exists (FNeg φ); intuition.
   Qed.
 
-  Lemma LS_ImpL : forall Γ Δ φ ψ,    (* NOTE: uses excluded middle *)
+  Lemma LS_ImpL : forall Γ Δ φ ψ,
       Γ ⊫ (φ :: Δ) -> (ψ :: Γ) ⊫ Δ -> (FImp φ ψ :: Γ) ⊫ Δ.
   Proof.
     intros Γ Δ φ ψ Hsatseq1 Hsatseq2 M ρ HsatΓ.
+    assert (Himpsat : ρ ⊨ (FImp φ ψ)) by intuition.
+    cbn in Himpsat.
     assert (HΓ : forall ξ, In ξ Γ -> ρ ⊨ ξ) by intuition;
       apply Hsatseq1 in HΓ as [ξ [Hinξ Hsatξ]].
     inversion Hinξ; subst; clear Hinξ.
-    - pose proof (classic (ρ ⊨ ψ)) as [Hsatψ | Hnsatψ].
-      + assert (HΓ : forall γ, In γ (ψ :: Γ) -> ρ ⊨ γ) by (intros γ Hinγ; inversion Hinγ; subst; intuition);
-          apply Hsatseq2 in HΓ. exact HΓ.
-      + assert (Himp : ρ ⊨ (FImp ξ ψ)) by intuition. cbn in Himp.
-        apply Himp in Hsatξ; contradiction.
+    - apply Himpsat in Hsatξ.
+      assert (H : forall γ, In γ (ψ :: Γ) -> ρ ⊨ γ) by
+        (intros γ Hin; inversion Hin; subst; intuition);
+        apply Hsatseq2 in H; exact H.
     - exists ξ; auto.
   Qed.
 
@@ -105,21 +106,30 @@ Section soundness.
     - exists (FImp φ ψ); cbn; intuition.
   Qed.
     
-  Lemma LS_AllL : forall Γ Δ φ t,
+  Lemma LS_AllL : forall Γ Δ φ t,    (* NOTE: uses excluded middle *)
       (subst_formula (t .: ids) φ :: Γ) ⊫ Δ ->
       (FAll φ :: Γ) ⊫ Δ.
   Proof.
-    intros Γ Δ φ t Hsatprem M ρ HsatΓ.    
-  Admitted.
+    intros Γ Δ φ t Hsatprem M ρ HsatΓ.
+    assert (Hφ : ρ ⊨ (FAll φ)) by intuition. cbn in Hφ.
+    pose proof (classic (ρ ⊨ (subst_formula (t .: ids) φ))) as [H | H].
+    - assert (HΓ : forall ψ, In ψ (subst_formula (t .: ids) φ :: Γ) -> ρ ⊨ ψ) by (intros ψ Hin; inversion Hin; subst; intuition);
+        apply Hsatprem in HΓ as [ψ [Hinψ Hsatψ]]. exists ψ; intuition.
+    - rewrite strong_form_subst_sanity2 in H. Search funcomp eval. specialize Hφ with (eval ρ t).
+      asimpl in *. contradiction.
+  Qed.
     
   Lemma LS_AllR : forall Γ Δ φ,
       (shift_formulas Γ) ⊫ (φ :: shift_formulas Δ) ->
       Γ ⊫ (FAll φ :: Δ).
   Proof.
     intros Γ Δ φ Hsat M ρ HsatΓ.
-    unfold Sat_sequent in Hsat.
+    assert (Hshifted : forall ψ, In ψ (shift_formulas Γ) -> exists φ, shift_formula φ = ψ /\ In φ Γ) by apply in_map_iff.
+    assert (HΓ : forall ψ, In ψ (shift_formulas Γ) -> forall d, (d .: ρ) ⊨ ψ).
+    { intros ψ Hin. apply Hshifted in Hin as [ξ [Hinξ Hsatξ]]. apply HsatΓ in Hsatξ; subst; intros d.
+      unfold shift_formula; rewrite strong_form_subst_sanity2; auto. }
+    assert (Hd : forall d, exists ψ, In ψ (φ :: shift_formulas Δ) /\ (d .: ρ) ⊨ ψ) by (intros d; apply Hsat; intuition).
   Admitted.
-
   
   Lemma soundness : forall Γ Δ, LKID (Γ ⊢ Δ) -> Γ ⊫ Δ.
   Proof.
