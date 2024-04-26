@@ -129,7 +129,40 @@ Section soundness.
     - rewrite strong_form_subst_sanity2 in H. Search funcomp eval. specialize Hφ with (eval ρ t).
       asimpl in *. contradiction.
   Qed.
-    
+
+  Lemma LS_ExL : forall Γ Δ φ,       (* NOTE: uses excluded middle and dependent functional extensionality *)
+      (φ :: shift_formulas Γ) ⊫S (shift_formulas Δ) ->
+      (FExist φ :: Γ) ⊫S Δ.
+  Proof.
+    intros Γ Δ φ Hsat M Hstandard ρ Hsat1.
+    assert (Hexφ : ρ ⊨ (FExist φ)) by intuition.
+    cbn in Hexφ. apply not_all_not_ex in Hexφ.
+    destruct Hexφ as [d Hd].
+    assert (HΓ : forall ψ, In ψ (shift_formulas Γ) -> (d .: ρ) ⊨ ψ).
+    { intros ψ Hin. apply in_map_iff in Hin as [ξ [Heq Hinξ]]; subst.
+      unfold shift_formula. rewrite strong_form_subst_sanity2.
+      apply Hsat1. now right. }
+    assert (H : forall ψ, In ψ (φ :: shift_formulas Γ) -> (d .: ρ) ⊨ ψ) by (intros ψ Hin; inversion Hin; subst; intuition).
+    apply Hsat in H; auto.
+    destruct H as [ψ [Hinψ Hsatψ]].
+    apply in_map_iff in Hinψ as [ξ [Heq Hinξ]]; subst. exists ξ; split. assumption.
+    unfold shift_formula in Hsatψ. rewrite strong_form_subst_sanity2 in Hsatψ. assumption.
+  Qed.
+
+  Lemma LS_ExR : forall Γ Δ φ t,
+      Γ ⊫S (subst_formula (t .: ids) φ :: Δ) ->
+      Γ ⊫S (FExist φ :: Δ).
+  Proof.
+    intros Γ Δ φ t Hsatseq M Hstandard ρ HsatΓ.
+    apply Hsatseq in HsatΓ as [ψ [Hinψ Hsatψ]]; auto.
+    inversion Hinψ; subst; clear Hinψ.
+    - exists (FExist φ); split. now left. cbn.
+      rewrite strong_form_subst_sanity2 in Hsatψ.
+      intros H. specialize H with (eval ρ t).
+      apply H. rewrite scons_comp in Hsatψ. auto.
+    - exists ψ; intuition.
+  Qed.
+       
   Lemma LS_AllR : forall Γ Δ φ,
       (shift_formulas Γ) ⊫S (φ :: shift_formulas Δ) ->
       Γ ⊫S (FAll φ :: Δ).
