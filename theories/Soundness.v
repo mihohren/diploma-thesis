@@ -162,18 +162,28 @@ Section soundness.
       apply H. rewrite scons_comp in Hsatψ. auto.
     - exists ψ; intuition.
   Qed.
-       
+
+  Lemma Semantic_NegAllNegAll : forall Γ Δ φ,
+      Γ ⊫S (FNeg (FExist (FNeg φ)) :: Δ) ->
+      Γ ⊫S (FAll φ :: Δ).
+  Proof.
+    unfold FExist. intros Γ Δ φ Hsatseq M Hstandard ρ HsatΓ.
+    apply Hsatseq in HsatΓ; auto.
+    destruct HsatΓ as [ψ [Hinψ Hsatψ]].
+    inversion Hinψ; subst; clear Hinψ.
+    - exists (FAll φ); split. now left. cbn in Hsatψ. apply NNPP in Hsatψ.
+      intros d; specialize Hsatψ with d. now apply NNPP in Hsatψ.
+    - exists ψ; split. now right. assumption.
+  Qed.
+  
   Lemma LS_AllR : forall Γ Δ φ,
       (shift_formulas Γ) ⊫S (φ :: shift_formulas Δ) ->
       Γ ⊫S (FAll φ :: Δ).
   Proof.
-    intros Γ Δ φ Hsat M Hstandard ρ HsatΓ.
-    assert (Hshifted : forall ψ, In ψ (shift_formulas Γ) -> exists φ, shift_formula φ = ψ /\ In φ Γ) by apply in_map_iff.
-    assert (HΓ : forall ψ, In ψ (shift_formulas Γ) -> forall d, (d .: ρ) ⊨ ψ).
-    { intros ψ Hin. apply Hshifted in Hin as [ξ [Hinξ Hsatξ]]. apply HsatΓ in Hsatξ; subst; intros d.
-      unfold shift_formula; rewrite strong_form_subst_sanity2; auto. }
-    assert (Hd : forall d, exists ψ, In ψ (φ :: shift_formulas Δ) /\ (d .: ρ) ⊨ ψ) by (intros d; apply Hsat; intuition).
-  Admitted.
+    intros Γ Δ φ Hsatseq.
+    apply Semantic_NegAllNegAll. apply LS_NegR. apply LS_ExL. apply LS_NegL.
+    apply Hsatseq.
+  Qed.
 
   Notation "'{' x ',' y '}'" := (existT _ x y) (only printing).
   Lemma LS_IndL : forall Γ Δ pr σ,   (* NOTE: uses excluded middle *)
