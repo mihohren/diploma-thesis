@@ -85,7 +85,14 @@ Section lkid.
   | AllR : forall Γ Δ φ,
       LKID (shift_formulas Γ ⊢ φ :: shift_formulas Δ) ->
       LKID (Γ ⊢ (FAll φ) :: Δ)
-  (* TODO *).
+  (* | IndL TODO *)
+  | IndR : forall Γ Δ pr σ,
+      Φ pr ->
+      (forall Q us, In (existT _ Q us) (preds pr) ->
+               LKID (Γ ⊢ (FPred Q (V.map (subst_term σ) us) :: Δ))) ->
+      (forall P ts, In (existT _ P ts) (indpreds pr) ->
+               LKID (Γ ⊢ (FIndPred P (V.map (subst_term σ) ts) :: Δ))) ->
+      LKID ( Γ ⊢ FIndPred (indcons pr) (V.map (subst_term σ) (indargs pr)) :: Δ).
 
   
 

@@ -260,4 +260,18 @@ Definition standard_model
   fun M =>
     forall (P : IndPredS Σ) ts, interpIP P ts <-> @φ_Φ_ω Σ M Φ P ts.
 
-(* LKID (Γ ⊢ Δ) -> za sve standardne modele, za sve formule F u Γ, M ⊨ F -> postoji G u Δ t.d. M ⊨ G *)
+Local Notation "{ x , y }" := (existT _ x y).
+Lemma standard_model_inductive_implication :
+  forall Σ (Φ : @IndDefSet Σ) (M : structure Σ) (ρ : env M) (pr : @production Σ),
+    Φ pr ->
+    standard_model Σ Φ M ->
+    (forall Q us, In (existT _ Q us) (preds pr) -> interpP Q (V.map (eval ρ) us)) ->
+    (forall P ts, In (existT _ P ts) (indpreds pr) -> interpIP P (V.map (eval ρ) ts)) ->
+    ρ ⊨ (FIndPred (indcons pr) (indargs pr)).
+Proof.
+  intros; cbn in *.
+  apply H0. apply ω_prefixed.
+  unfold φ_Φ, φ_P; exists pr, (conj eq_refl H); cbn.
+  unfold φ_pr; exists ρ; repeat split; auto.
+  intros. apply H0. auto.
+Qed.
