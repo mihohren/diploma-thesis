@@ -51,6 +51,12 @@ Proof.
   - cbn. rewrite <- Heq. f_equal. apply IHv.
 Defined.
 
+Fixpoint vec_iota (n : nat) : vec nat n :=
+  match n with
+  | 0 => V.nil
+  | S n' => V.cons n' (vec_iota n')
+  end.
+
 Section monotone_operator.
   Context {A : Type}.
   Context (le : relation A).
@@ -65,3 +71,4 @@ Section monotone_operator.
 End monotone_operator.
 
 Notation "A ⊆ B" := (incl A B) (no associativity, at level 10).
+

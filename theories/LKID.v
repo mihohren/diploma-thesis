@@ -54,6 +54,11 @@ Section lkid.
   
   Definition shift_formula := @subst_formula Σ (funcomp var_term ↑).
   Definition shift_formulas := map shift_formula.
+  Fixpoint FPreds_from_preds (ps : list {P : PredS Σ & vec (term Σ) (pred_ar P)}) : list (formula Σ) :=
+    match ps with
+    | [] => []
+    | (existT _ Q us) :: xs => (FPred Q us) :: FPreds_from_preds xs
+    end.
   
   Inductive LKID : sequent -> Prop := 
   (* Structural rules. *)
@@ -85,7 +90,24 @@ Section lkid.
   | AllR : forall Γ Δ φ,
       LKID (shift_formulas Γ ⊢ φ :: shift_formulas Δ) ->
       LKID (Γ ⊢ (FAll φ) :: Δ)
-  (* | IndL TODO *)
+  | IndL : forall Γ Δ (Pj : IndPredS Σ)      (* za razliku od IndR, koje ide po produkcijama, ovo pravilo ide po induktivnim predikatima *)
+             (z_i : forall P, var -> var) (* induction variables, mozda bi bilo bolje da ovo stvarno bude vec  *)
+             (F_i : forall Pi, mutually_dependent Pi Pj -> formula Σ) (* induction hypotheses *)
+             (t : var -> term Σ),                            (* ako je z vektor, onda i t mora biti vektor *)
+      let G_i := fun Pi : IndPredS Σ => False
+                                       (* if mutually_dependent Pi Pj then F_i prethodni_dokaz else FIndPred Pi (z_i (vec_iota (indpred_ar Pi))) *)
+                                       (* slutim da nas tu sustize ono cega sam se bojao, odluciva jednakost nad IndPredS *)
+                                       (* a onda nema smisla ne imati odlucive jednakosti nad PredS i FuncS *)
+      in
+      let minor_premises :=
+        (forall pr (Hdep : mutually_dependent (indcons pr) Pj),
+            LKID ((* Qovi *) FPreds_from_preds (preds pr) ++ [(* Govi *)] ++ Γ ⊢ (F_i (indcons pr) Hdep) :: Δ))
+          (* TODO supstitucija, x ne smije biti slobodna varijabla *)
+          (* TODO definirati G_i *)
+      in
+      minor_premises ->
+      LKID (subst_formula t (F_i Pj (mutually_dependent_refl Pj)) :: Γ ⊢ Δ) ->
+      LKID (subst_formula t (FIndPred Pj (V.map (funcomp t (z_i Pj)) (vec_iota (indpred_ar Pj)))) :: Γ ⊢ Δ)
   | IndR : forall Γ Δ pr σ,
       Φ pr ->
       (forall Q us, In (existT _ Q us) (preds pr) ->

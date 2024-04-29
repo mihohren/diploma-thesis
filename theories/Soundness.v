@@ -233,5 +233,5 @@ Section soundness.
     - eapply LS_AllL; eauto.
     - eapply LS_AllR; eauto.
     - eapply LS_IndL; eauto.
-  Admitted.
+  Qed.
 End soundness.
