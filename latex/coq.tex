@@ -1,0 +1,38 @@
+\chapter{Coq}\label{pog:glavni_dio}
+
+\section{Osnovno o Coqu}\label{sec:osnovno-o-coqu}
+
+\begin{description}             
+\item[povijest] ukratko
+\item[Programski sustav] type checker, kompajler
+\item[Skup jezika] Vernacular, Gallina, Ltac, Ltac2 \ldots
+\item[Teorija tipova] CoC, CIC, PCUIC, pravila ``izvoda'' i redukcije
+\item[usporedba] s ostalim zavisnim jezicima
+\end{description}
+
+\section{Programiranje u Coqu}\label{sec:programiranje-u-coqu}
+\begin{description}
+\item[Funkcijsko programiranje] neki jednostavni primjer
+\item[Definiranje funkcija] \texttt{Definition}, \texttt{Fixpoint}, \texttt{CoFixpoint}
+\item[Definiranje tipova] \texttt{Inductive}, \texttt{CoInductive}
+\item[Ekstrakcija] OCaml, Haskell, spomenuti da se radi na verificiranoj ekstrakciji
+\end{description}
+
+\section{Kumulativna hijerarhija tipova}\label{sec:kumul-hijer-tipova}
+Ukratko objasniti. Lijepa skica koja prikazuje gdje su \texttt{nat}, \texttt{nat -> nat}, \texttt{nat -> Set}, \texttt{Prop -> Prop}, i njima srodni.
+
+\section{Propozicije i tipovi, dokazi i programi}\label{sec:propozicije-i-tipovi}
+Ukratko objasniti što je to Curry--Howard, možda najlakše pomoću BHK interpretacije.
+
+Primjeri dokaznih terma, recimo ručno napisan dokazni term za komutiranje univerzalnih kvantifikacija, pa neki jednostavni induktivni dokaz.
+
+Principi indukcije kao rekurzivne funkcije.
+
+\section{Ograničenja u programiranju i dokazivanju}\label{sec:ogranicenja}
+Tu prvenstveno mislim na uvjete pozitivnosti i produktivnosti za induktivne i koinduktivne tipove,
+te na eliminaciju propozicija kod definiranja nečega u \texttt{Type}.
+
+%%% Local Variables:
+%%% mode: LaTeX
+%%% TeX-master: "master"
+%%% End:
