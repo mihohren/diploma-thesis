@@ -13,7 +13,7 @@ Section lkid.
   (* Γ izvodi Δ *)
 
   Definition Prem (Pi Pj : IndPredS Σ) :=
-    exists pr, Φ pr /\ indcons pr = Pi /\ exists ts, List.In (existT _ Pj ts) (indpreds pr).
+    exists pr, Φ pr /\ indcons pr = Pi /\ exists ts, List.In (Pj; ts) (indpreds pr).
 
   Definition Prem_star := clos_refl_trans (IndPredS Σ) Prem.
 
@@ -57,7 +57,7 @@ Section lkid.
   Fixpoint FPreds_from_preds (ps : list {P : PredS Σ & vec (term Σ) (pred_ar P)}) : list (formula Σ) :=
     match ps with
     | [] => []
-    | (existT _ Q us) :: xs => (FPred Q us) :: FPreds_from_preds xs
+    | (Q; us) :: xs => (FPred Q us) :: FPreds_from_preds xs
     end.
   
   Inductive LKID : sequent -> Prop := 
@@ -92,30 +92,24 @@ Section lkid.
       LKID (Γ ⊢ (FAll φ) :: Δ)
   | IndL : forall Γ Δ (Pj : IndPredS Σ)      (* za razliku od IndR, koje ide po produkcijama, ovo pravilo ide po induktivnim predikatima *)
              (z_i : forall P, var -> var) (* induction variables, mozda bi bilo bolje da ovo stvarno bude vec  *)
-             (F_i : forall Pi, mutually_dependent Pi Pj -> formula Σ) (* induction hypotheses *)
-             (t : var -> term Σ),                            (* ako je z vektor, onda i t mora biti vektor *)
-      let G_i := fun Pi : IndPredS Σ => False
-                                       (* if mutually_dependent Pi Pj then F_i prethodni_dokaz else FIndPred Pi (z_i (vec_iota (indpred_ar Pi))) *)
-                                       (* slutim da nas tu sustize ono cega sam se bojao, odluciva jednakost nad IndPredS *)
-                                       (* a onda nema smisla ne imati odlucive jednakosti nad PredS i FuncS *)
-      in
+             (G_i : IndPredS Σ -> formula Σ)
+             (t : var -> term Σ)                            (* ako je z vektor, onda i t mora biti vektor *)
+             (HG2 : forall Pi, ~mutually_dependent Pi Pj -> G_i Pi = FIndPred Pi (V.map (fun n => var_term (z_i Pi n)) (vec_iota (indpred_ar Pi)))),
       let minor_premises :=
         (forall pr (Hdep : mutually_dependent (indcons pr) Pj),
-            LKID ((* Qovi *) FPreds_from_preds (preds pr) ++ [(* Govi *)] ++ Γ ⊢ (F_i (indcons pr) Hdep) :: Δ))
-          (* TODO supstitucija, x ne smije biti slobodna varijabla *)
-          (* TODO definirati G_i *)
+            LKID ((* Qovi *) FPreds_from_preds (preds pr) ++ (* Govi *) map (fun p => G_i (p .1)) (indpreds pr) ++ Γ ⊢ (G_i (indcons pr)) :: Δ))
       in
       minor_premises ->
-      LKID (subst_formula t (F_i Pj (mutually_dependent_refl Pj)) :: Γ ⊢ Δ) ->
+      LKID (subst_formula t (G_i Pj) :: Γ ⊢ Δ) ->
       LKID (subst_formula t (FIndPred Pj (V.map (funcomp t (z_i Pj)) (vec_iota (indpred_ar Pj)))) :: Γ ⊢ Δ)
   | IndR : forall Γ Δ pr σ,
       Φ pr ->
-      (forall Q us, In (existT _ Q us) (preds pr) ->
+      (forall Q us, In (Q; us) (preds pr) ->
                LKID (Γ ⊢ (FPred Q (V.map (subst_term σ) us) :: Δ))) ->
-      (forall P ts, In (existT _ P ts) (indpreds pr) ->
+      (forall P ts, In (P; ts) (indpreds pr) ->
                LKID (Γ ⊢ (FIndPred P (V.map (subst_term σ) ts) :: Δ))) ->
       LKID ( Γ ⊢ FIndPred (indcons pr) (V.map (subst_term σ) (indargs pr)) :: Δ).
-
+  (* TODO z_i i t_i imaju vise smisla kao vektori, onda se rucno napise supstitucija *)
   
 
   Lemma NegL_inversion : forall Γ Δ φ,

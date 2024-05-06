@@ -3,6 +3,8 @@ Require Export Utf8.
 Require Export Arith Bool.
 Require Export unscoped.
 
+Export SigTNotations.
+
 Require Vectors.Vector.
 Module V := Vector.
 Notation vec := (V.t).

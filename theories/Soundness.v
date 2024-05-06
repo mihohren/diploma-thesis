@@ -126,11 +126,11 @@ Section soundness.
     pose proof (classic (ρ ⊨ (subst_formula (t .: ids) φ))) as [H | H].
     - assert (HΓ : forall ψ, In ψ (subst_formula (t .: ids) φ :: Γ) -> ρ ⊨ ψ) by (intros ψ Hin; inversion Hin; subst; intuition);
         apply Hsatprem in HΓ as [ψ [Hinψ Hsatψ]]. exists ψ; intuition. auto.
-    - rewrite strong_form_subst_sanity2 in H. Search funcomp eval. specialize Hφ with (eval ρ t).
+    - rewrite strong_form_subst_sanity2 in H. specialize Hφ with (eval ρ t).
       asimpl in *. contradiction.
   Qed.
 
-  Lemma LS_ExL : forall Γ Δ φ,       (* NOTE: uses excluded middle and dependent functional extensionality *)
+  Lemma LS_ExL : forall Γ Δ φ,       (* NOTE: uses excluded middle *)
       (φ :: shift_formulas Γ) ⊫S (shift_formulas Δ) ->
       (FExist φ :: Γ) ⊫S Δ.
   Proof.
@@ -163,7 +163,7 @@ Section soundness.
     - exists ψ; intuition.
   Qed.
 
-  Lemma Semantic_NegAllNegAll : forall Γ Δ φ,
+  Lemma Semantic_NegExistNegAll : forall Γ Δ φ, (* NOTE: uses XM *)
       Γ ⊫S (FNeg (FExist (FNeg φ)) :: Δ) ->
       Γ ⊫S (FAll φ :: Δ).
   Proof.
@@ -181,16 +181,16 @@ Section soundness.
       Γ ⊫S (FAll φ :: Δ).
   Proof.
     intros Γ Δ φ Hsatseq.
-    apply Semantic_NegAllNegAll. apply LS_NegR. apply LS_ExL. apply LS_NegL.
+    apply Semantic_NegExistNegAll. apply LS_NegR. apply LS_ExL. apply LS_NegL.
     apply Hsatseq.
   Qed.
+  Import SigTNotations. 
 
-  Notation "'{' x ',' y '}'" := (existT _ x y) (only printing).
   Lemma LS_IndL : forall Γ Δ pr σ,   (* NOTE: uses excluded middle *)
       Φ pr ->
-      (forall Q us, In (existT _ Q us) (preds pr) ->
+      (forall Q us, In (Q; us) (preds pr) ->
                Γ ⊫S (FPred Q (V.map (subst_term σ) us) :: Δ)) ->
-      (forall P ts, In (existT _ P ts) (indpreds pr) ->
+      (forall P ts, In (P; ts) (indpreds pr) ->
                Γ ⊫S (FIndPred P (V.map (subst_term σ) ts) :: Δ)) ->
       Γ ⊫S (FIndPred (indcons pr) (V.map (subst_term σ) (indargs pr)) :: Δ).
   Proof.
@@ -198,12 +198,12 @@ Section soundness.
     cbn beta in Hpreds, Hindpreds.
     pose proof (classic (exists ψ, In ψ Δ /\ ρ ⊨ ψ)) as [HΔ | HΔ].
     - destruct HΔ as [ψ [Hinψ Hsatψ]]; exists ψ; intuition.
-    - assert (Hpreds' : forall Q us, In (existT _ Q us) (preds pr) -> ρ ⊨ (FPred Q (V.map (subst_term σ) us))).
+    - assert (Hpreds' : forall Q us, In (Q; us) (preds pr) -> ρ ⊨ (FPred Q (V.map (subst_term σ) us))).
       { intros Q us Hin. pose proof (Hpreds Q us Hin M Hstandard ρ HsatΓ) as [ξ [Hinξ Hsatξ]].
         inversion Hinξ; subst; clear Hinξ.
         - assumption.
         - exfalso; apply HΔ; exists ξ; auto. }
-      assert (Hindpreds' : forall P ts, In (existT _ P ts) (indpreds pr) -> ρ ⊨ (FIndPred P (V.map (subst_term σ) ts))).
+      assert (Hindpreds' : forall P ts, In (P; ts) (indpreds pr) -> ρ ⊨ (FIndPred P (V.map (subst_term σ) ts))).
       { intros P ts Hin. pose proof (Hindpreds P ts Hin M Hstandard ρ HsatΓ) as [ξ [Hinξ Hsatξ]].
         inversion Hinξ; subst; clear Hinξ.
         - assumption.
@@ -218,7 +218,7 @@ Section soundness.
       + rewrite V.map_map. f_equal. rewrite Heq. reflexivity.
   Qed.
   
-  Lemma soundness : forall Γ Δ, @LKID Σ Φ (Γ ⊢ Δ) -> Γ ⊫S Δ.
+  Theorem soundness : forall Γ Δ, @LKID Σ Φ (Γ ⊢ Δ) -> Γ ⊫S Δ.
   Proof.
     intros Γ Δ Hlkid.
     induction Hlkid; intros M Hstandard ρ Hsat.
@@ -232,6 +232,7 @@ Section soundness.
     - eapply LS_ImpR; eauto.
     - eapply LS_AllL; eauto.
     - eapply LS_AllR; eauto.
+    - admit.
     - eapply LS_IndL; eauto.
-  Qed.
+  Admitted.
 End soundness.

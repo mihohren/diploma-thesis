@@ -34,10 +34,10 @@ Section definition_set_operator.
     (ds : vec D (indpred_ar (indcons pr)))
     : Prop :=
         exists (ρ : env M),
-        (forall Q us, List.In (existT _ Q us) (preds pr) ->
+        (forall Q us, List.In (Q; us) (preds pr) ->
                  interpP Q (V.map (eval ρ) us))
         /\
-          ( forall P ts, List.In (existT _ P ts) (indpreds pr) ->
+          ( forall P ts, List.In (P; ts) (indpreds pr) ->
                     args P (V.map (eval ρ) ts))
         /\
           ds = V.map (eval ρ) (indargs pr).
@@ -152,12 +152,6 @@ Section approximants.
       + exists α. apply Hφ.
     - exists (S α). apply Hφ.
   Qed.
-  
-  Notation "{ X , Y }" := (existT _ X Y) (only printing).
-  Notation "Q '^M'" := (interpP Q) (at level 10, only printing).
-  Notation "vs @ f" := (V.map f vs) (at level 10, only printing).
-  Notation "'|' Q '|'" := (pred_ar Q) (only printing).
-  Notation "'|' R '|'" := (indpred_ar R) (only printing).
 
   Require Import List Lia Arith.
   Import ListNotations.
@@ -203,14 +197,14 @@ Section approximants.
       unfold φ_Φ, φ_P, φ_pr in H;
       destruct H as (pr & [Heq Hpr] & (ρ & H1 & H2 & H3)).
       unfold eq_rect in H3; subst P; subst y.
-      assert (Hsup : exists α, forall P ts, In (existT _ P ts) (indpreds pr) -> φ_Φ_n P α (V.map (eval ρ) ts)).
+      assert (Hsup : exists α, forall P ts, In (P; ts) (indpreds pr) -> φ_Φ_n P α (V.map (eval ρ) ts)).
       {
         induction (indpreds pr).
         - exists 0. intros. contradiction.
         - destruct a. pose proof (H2 x t).
-          assert (In (existT _ x t) ((existT _ x t) :: l)) by now left.
+          assert (In (x; t) ((x; t) :: l)) by now left.
           apply H in H0. destruct H0 as [α Hα].
-          assert (IH_help : forall P ts, In (existT _ P ts) l -> φ_Φ_ω P (V.map (eval ρ) ts)).
+          assert (IH_help : forall P ts, In (P; ts) l -> φ_Φ_ω P (V.map (eval ρ) ts)).
           { intros P ts Hin. apply H2. now right. }
           apply IHl in IH_help.
           destruct IH_help as [β Hβ].
@@ -260,13 +254,12 @@ Definition standard_model
   fun M =>
     forall (P : IndPredS Σ) ts, interpIP P ts <-> @φ_Φ_ω Σ M Φ P ts.
 
-Local Notation "{ x , y }" := (existT _ x y).
 Lemma standard_model_inductive_implication :
   forall Σ (Φ : @IndDefSet Σ) (M : structure Σ) (ρ : env M) (pr : @production Σ),
     Φ pr ->
     standard_model Σ Φ M ->
-    (forall Q us, In (existT _ Q us) (preds pr) -> interpP Q (V.map (eval ρ) us)) ->
-    (forall P ts, In (existT _ P ts) (indpreds pr) -> interpIP P (V.map (eval ρ) ts)) ->
+    (forall Q us, In (Q; us) (preds pr) -> interpP Q (V.map (eval ρ) us)) ->
+    (forall P ts, In (P; ts) (indpreds pr) -> interpIP P (V.map (eval ρ) ts)) ->
     ρ ⊨ (FIndPred (indcons pr) (indargs pr)).
 Proof.
   intros; cbn in *.

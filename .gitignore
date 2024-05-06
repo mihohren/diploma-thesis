@@ -1,5 +1,13 @@
 .git
 *.aux
+*.bbl
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.xmpdata
+*.xmpi
+latex/auto
 *.vo
 *.vok
 *.vos
