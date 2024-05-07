@@ -23,12 +23,17 @@
 % Sadržaj se automatski generira / Table of contents is automatically generated
 \tableofcontents
 
+% za pisati todo
+\newcommand\misao[1]{\textcolor{red}{\textbf{Misao:} \textit{#1}}}
+
 \include{uvod}
 \include{coq}
 \include{logika}
 \include{ciklicki}
 \include{zakljucak}
 
+% privremeno
+\nocite{*}
 \bibliography{literatura}
 
 \begin{sazetak}

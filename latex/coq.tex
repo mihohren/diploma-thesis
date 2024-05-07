@@ -1,9 +1,37 @@
 \chapter{Coq}\label{pog:glavni_dio}
 
-\section{Osnovno o Coqu}\label{sec:osnovno-o-coqu}
+\section{Što je Coq?}\label{sec:osnovno-o-coqu}
+% Program, skup programskih jezika, prevoditelj, semantički analizator, asistent pri dokazivanjum, teorija tipova, zajednica.
+% Svaku od ovih stavaka ćemo objasniti u zasebnim odlomcima.
+
+Alat za dokazivanje Coq\footnote{\url{https://coq.inria.fr/}}, punog naziva \textit{The Coq Proof Assistant},
+programski je sustav pomoću kojeg korisnici mogu dokazivati matematičke tvrdnje. \misao{ne sluzi samo tome, moze biti i opceniti funkcijski programski jezik, moze sluziti za programiranje sa zavisnim tipovima}
+Alat se temelji na \(\lambda\)-računu i teoriji tipova, a prva je inačica implementirana godine 1984.~\cite{coqrefman}
+Ovaj rad koristi inačicu \(8.18\) iz rujna godine 2023.
+
+Program Coq može se pokrenuti u interaktivnom ili u skupnom načinu rada.
+Interaktivni način rada pokreće se naredbom \texttt{coqtop}, a korisniku omogućuje rad u ljusci sličnoj \texttt{bash} i \texttt{python} ljuskama.
+Interaktivna ljuska (također poznata pod imenom \textit{toplevel}) služi unosu definicija i iskazivanju lema.
+Skupni način rada pokreće se naredbom \texttt{coqc}, a korisniku omogućuje semantičku provjeru i prevođenje izvornih datoteka u jednostavnije formate.
+Kod formaliziranja i dokazivanja, korisnik će najčešće koristiti interaktivni način rada, po mogućnosti kroz neku od dostupnih razvojnih okolina.
+\footnote{Autor rada koristio je paket \textit{Proof General} za uređivač teksta \textit{Emacs}. Druge često korištene okoline su \textit{VsCoq} i \textit{CoqIDE}.}
+
+\misao{tu negdje treba spomenuti proof mode, koji je zaseban od toplevela}
+
+Kao programski jezik, Coq se sastoji od više podjezika različitih namjena, kao što su \textit{Vernacular}, \textit{Gallina} i \textit{Ltac}.
+\textbf{Vernacular} je jezik naredbi kojom korisnik komunicira sa sustavom (i u interaktivnom i u skupnom načinu rada);
+svaka Coq skripta (datoteka s nastavkom \texttt{.v}) je niz naredbi.
+Neke od najčešće korištenih naredbi su \texttt{Check}, \texttt{Definition}, \texttt{Inductive}, \texttt{Fixpoint} i \texttt{Lemma}.
+Pomoću naredbi za tvrdnje, kao što je \texttt{Lemma}, Coq prelazi iz \textit{toplevela}\misao{treba bolji prevod} u način dokazivanja~\engl{proof mode}.
+\textbf{Gallina} je Coqov strogo statički tipiziran specifikacijski jezik. Glavnina programiranja u Coqu svodi se upravo na programiranje u Gallini.
+\textbf{Ltac} je Coqov netipiziran jezik za definiciju taktika. Taktike su pomoćne naredbe kojima se u načinu dokazivanja konstruira dokaz.
+Primjeri taktika su \texttt{intros}, \texttt{destruct}, \texttt{apply} i \texttt{rewrite}.
+
+
+
+\misao{spomenuti da je jezgra Coqa, a.k.a. typechecker, jako mala i zato joj mozemo vjerovati, de Bruijnovo nacelo za dokazivace}
 
 \begin{description}             
-\item[povijest] ukratko
 \item[Programski sustav] type checker, kompajler
 \item[Skup jezika] Vernacular, Gallina, Ltac, Ltac2 \ldots
 \item[Teorija tipova] CoC, CIC, PCUIC, pravila ``izvoda'' i redukcije
@@ -19,7 +47,7 @@
 \end{description}
 
 \section{Kumulativna hijerarhija tipova}\label{sec:kumul-hijer-tipova}
-Ukratko objasniti. Lijepa skica koja prikazuje gdje su \texttt{nat}, \texttt{nat -> nat}, \texttt{nat -> Set}, \texttt{Prop -> Prop}, i njima srodni.
+Ukratko objasniti. Lijepa skica koja prikazuje gdje su \texttt{nat}, \texttt{nat -> nat}, \texttt{nat -> Set}, \texttt{Prop -> Prop}, i njima srodni. Razlika između \texttt{Set} i \texttt{Prop}.
 
 \section{Propozicije i tipovi, dokazi i programi}\label{sec:propozicije-i-tipovi}
 Ukratko objasniti što je to Curry--Howard, možda najlakše pomoću BHK interpretacije.
