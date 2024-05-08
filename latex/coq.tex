@@ -31,7 +31,7 @@ Kao programski jezik, Coq se sastoji od više podjezika različitih namjena, od 
   Taktike su pomoćne naredbe kojima se u načinu dokazivanja konstruira dokaz.
   Može se reći da je Ltac jezik za metaprogramiranje Galline.
   Primjeri taktika su \texttt{intros}, \texttt{destruct}, \texttt{apply} i \texttt{rewrite}.
-\end{description}
+\end{description} % https://coq.discourse.group/t/what-is-the-difference-between-gallina-and-ltac/1184 
 \noindent Pogledajmo ilustrativan primjer.
 \begin{minted}{coq}
   Lemma example_lemma : 1 + 1 = 2.
@@ -57,16 +57,77 @@ Coq se, osim kao dokazivač teorema, može koristiti i za programiranje sa zavis
 U toj sferi konkuriraju jezici Agda\footnote{\url{https://wiki.portal.chalmers.se/agda/}}, Idris\footnote{\url{https://www.idris-lang.org/}} i Lean\footnote{\url{https://lean-lang.org/}}. Coq se između njih istiće po usmjerenosti prema dokazivanju, posebno po korištenju taktika (jezik Ltac) i nepredikativnoj sorti \texttt{Prop} (o kojoj će kasnije biti riječi).
 
 \section{Programiranje u Gallini}\label{sec:programiranje-u-gallini}
-\misao{spomenuti da je Gallina odlučiv jezik, odnosno da je za svaka Gallinina funkcija odlučiva}
+Gallina je funkcijski programski jezik ugrađen u Coq, što znači da su funkcije prvoklasni objekti ---
+funkcije mogu biti argumenti i povratne vrijednosti drugih funkcija.
+Dodatno, varijable su nepromjenjive \engl{immutable} te se iteracija ostvaruje rekurzijom.
+Za uvod u funkcijsko programiranje, čitatelja upućujemo na knjigu \textit{Programming in Haskell}~\cite{Hutton_2016}.
+Gallina je strogo statički tipiziran jezik, što znači da se svakom termu prilikom prevođenja dodjeljuje tip.
+U općenitom smislu, tip je kolekcija sličnih objekata. 
+Tip nekog terma možemo provjeriti (Vernacular) naredbom \texttt{Check}.
 \begin{description}
 \item[Funkcijsko programiranje] neki jednostavni primjer
 \item[Definiranje funkcija] \texttt{Definition}, \texttt{Fixpoint}, \texttt{CoFixpoint}
 \item[Definiranje tipova] \texttt{Inductive}, \texttt{CoInductive}
 \item[Ekstrakcija] OCaml, Haskell, spomenuti da se radi na verificiranoj ekstrakciji
 \end{description}
-
+\misao{kod Fixpoint, spomenuti da je Gallina odlučiv jezik, odnosno da je za svaka Gallinina funkcija odlučiva}
 \section{Kumulativna hijerarhija tipova}\label{sec:kumul-hijer-tipova}
 Ukratko objasniti. Lijepa skica koja prikazuje gdje su \texttt{nat}, \texttt{nat -> nat}, \texttt{nat -> Set}, \texttt{Prop -> Prop}, i njima srodni. Razlika između \texttt{Set} i \texttt{Prop}.
+
+\begin{figure}[hbt]
+  \centering
+  \begin{tikzpicture}[sibling distance=3cm]
+    \node {\vdots{}}
+    child {
+      node {\(\mathtt{Type_{m+1}}\)}
+      child {
+        node {\(\mathtt{Type_{m}}\)}
+        child {
+          node {\vdots{}}
+          child {
+            node {\(\mathtt{Type_{3}}\)}
+            child {
+              node {\(\mathtt{Type_{2}}\)}
+              child {
+                node {\(\mathtt{Type_{1}}\)}
+                child {
+                  node {\(\mathtt{Set}\)}
+                  child {
+                    node {\(\mathtt{nat}\)}
+                  }
+                  child {
+                    node {\(\mathtt{nat \rightarrow nat}\)}
+                  }
+                  child {
+                    node {\(\mathtt{bool}\)}
+                  }
+                }
+                child {
+                  node {\(\mathtt{Prop}\)}
+                }
+                child {
+                  node {\(\mathtt{Prop \rightarrow Prop}\)}
+                }
+                child {
+                  node {\(\mathtt{Prop \rightarrow Prop \rightarrow Prop}\)}
+                }
+              }
+            }
+          }
+        }
+      }
+      child {
+        node {\(\mathtt{Type_{3} \rightarrow Type_{m}}\)}
+      }
+      child {
+        node {\(\mathtt{nat \rightarrow Type_{m}}\)}
+      }
+    };
+  \end{tikzpicture}
+  \caption{Kumulativna hijerarhija tipova}
+  \label{fig:kumhijertip}
+\end{figure}
+\misao{Kad malo bolje razmislim, sve funkcije u Coqu koje primaju nešto tipa \texttt{Type} u stvari implicitno primaju dodatni parametar; razinu svemira}
 
 \section{Propozicije i tipovi, dokazi i programi}\label{sec:propozicije-i-tipovi}
 Ukratko objasniti što je to Curry--Howard, možda najlakše pomoću BHK interpretacije.
@@ -74,6 +135,31 @@ Ukratko objasniti što je to Curry--Howard, možda najlakše pomoću BHK interpr
 Primjeri dokaznih terma, recimo ručno napisan dokazni term za komutiranje univerzalnih kvantifikacija, pa neki jednostavni induktivni dokaz.
 
 Principi indukcije kao rekurzivne funkcije.
+\begin{table}[hbt]
+  \centering
+  \begin{tabular}[hbt]{rlrl}
+    \toprule \\
+    Logika & Program & Logički term & Programski term \\
+    \midrule \\
+    konjunkcija & produktni tip  & \texttt{and} & \texttt{prod} \\
+    disjunkcija & zbrojni tip & \texttt{or} & \texttt{sum} \\
+    implikacija & funkcijski tip & \texttt{->} & \texttt{->} \\
+    univerzalna kvantifikacija & zavisni produkt & \texttt{forall x, P x} & \texttt{forall x, P x} \\
+    egzistencijalna kvantifikacija & zavisni koprodukt & \texttt{ex} & \texttt{sigT} \\
+    istina & jedinični tip & \texttt{True} & \texttt{unit} \\
+    laž & prazni tip & \texttt{False} & \texttt{Empty\_set} \\
+    modus ponens & poziv funkcije &  &  \\
+    teorem & tip & & \\
+    dokaz & term & & \\
+    pretpostavka & varijabla & & \\
+    dokazivanje & programiranje & & \\
+    dokazivost & nastanjenost tipa & & \\
+    \bottomrule
+  \end{tabular}
+  \caption{Korespondencija logike i programiranja}\label{tab:curryhoward}
+\end{table}
+\misao{Zavisni produkt se zove produkt jer je univerzalna kvantifikacija u načelu beskonačna konjunkcija.}
+\misao{Zavisni koprodukt se zove koprodukt jer ??? Ako gledamo obične produkte, obični koprodukt je onda suma.}
 
 \section{Ograničenja u programiranju i dokazivanju}\label{sec:ogranicenja}
 Tu prvenstveno mislim na uvjete pozitivnosti i produktivnosti za induktivne i koinduktivne tipove,
