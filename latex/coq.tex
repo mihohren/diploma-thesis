@@ -1,9 +1,10 @@
 \chapter{Coq}\label{pog:glavni_dio}
+U ovom poglavlju dajemo pogled svisoka na programski sustav Coq.
+Prvo ćemo objasniti što je uopće Coq, u kojem je kontekstu nastao, i od kojih komponenti se sastoji.
+Zatim ćemo dati kratak pregled programiranja u Coqu, nakon čega ćemo se baviti naprednijim konceptima i spomenuti neka ograničenja.
+Za širi opseg gradiva, čitatelja upućujemo na knjige \textit{Coq'Art}~\cite{coqart}, \textit{Software Foundations}~\cite{sf-lf, sf-plf, sf-vfa} i \textit{Certified Programming with Dependent Types}~\cite{cpdt} te na službenu dokumentaciju~\cite{coqrefman}.
 
 \section{Što je Coq?}\label{sec:osnovno-o-coqu}
-% Program, skup programskih jezika, prevoditelj, semantički analizator, asistent pri dokazivanjum, teorija tipova, zajednica.
-% Svaku od ovih stavaka ćemo objasniti u zasebnim odlomcima.
-
 Alat za dokazivanje Coq\footnote{\url{https://coq.inria.fr/}}, punog naziva \textit{The Coq Proof Assistant},
 programski je sustav pomoću kojeg korisnici mogu dokazivati matematičke tvrdnje. \misao{ne sluzi samo tome, moze biti i opceniti funkcijski programski jezik, moze sluziti za programiranje sa zavisnim tipovima}
 Alat se temelji na \(\lambda\)-računu i teoriji tipova, a prva je inačica implementirana godine 1984.~\cite{coqrefman}
@@ -18,27 +19,45 @@ Kod formaliziranja i dokazivanja, korisnik će najčešće koristiti interaktivn
 
 \misao{tu negdje treba spomenuti proof mode, koji je zaseban od toplevela}
 
-Kao programski jezik, Coq se sastoji od više podjezika različitih namjena, kao što su \textit{Vernacular}, \textit{Gallina} i \textit{Ltac}.
-\textbf{Vernacular} je jezik naredbi kojom korisnik komunicira sa sustavom (i u interaktivnom i u skupnom načinu rada);
-svaka Coq skripta (datoteka s nastavkom \texttt{.v}) je niz naredbi.
-Neke od najčešće korištenih naredbi su \texttt{Check}, \texttt{Definition}, \texttt{Inductive}, \texttt{Fixpoint} i \texttt{Lemma}.
-Pomoću naredbi za tvrdnje, kao što je \texttt{Lemma}, Coq prelazi iz \textit{toplevela}\misao{treba bolji prevod} u način dokazivanja~\engl{proof mode}.
-\textbf{Gallina} je Coqov strogo statički tipiziran specifikacijski jezik. Glavnina programiranja u Coqu svodi se upravo na programiranje u Gallini.
-\textbf{Ltac} je Coqov netipiziran jezik za definiciju taktika. Taktike su pomoćne naredbe kojima se u načinu dokazivanja konstruira dokaz.
-Primjeri taktika su \texttt{intros}, \texttt{destruct}, \texttt{apply} i \texttt{rewrite}.
-
-
-
-\misao{spomenuti da je jezgra Coqa, a.k.a. typechecker, jako mala i zato joj mozemo vjerovati, de Bruijnovo nacelo za dokazivace}
-
-\begin{description}             
-\item[Programski sustav] type checker, kompajler
-\item[Skup jezika] Vernacular, Gallina, Ltac, Ltac2 \ldots
-\item[Teorija tipova] CoC, CIC, PCUIC, pravila ``izvoda'' i redukcije
-\item[usporedba] s ostalim zavisnim jezicima
+Kao programski jezik, Coq se sastoji od više podjezika različitih namjena, od kojih spominjemo \textit{Vernacular}, \textit{Gallinu} i \textit{Ltac}.
+\begin{description}
+\item[Vernacular] \misao{\textit{vernacular} znači ``govorni jezik''} je jezik naredbi kojima korisnik komunicira sa sustavom (i u interaktivnom i u skupnom načinu rada);
+  svaka Coq skripta (datoteka s nastavkom \texttt{.v}) je niz naredbi.
+  Neke od najčešće korištenih naredbi su \texttt{Check}, \texttt{Definition}, \texttt{Inductive}, \texttt{Fixpoint} i \texttt{Lemma}.
+  Pomoću naredbi za tvrdnje, kao što je \texttt{Lemma}, Coq prelazi iz \textit{toplevela}\misao{treba bolji prevod} u način dokazivanja~\engl{proof mode}.
+\item[Gallina] je Coqov strogo statički tipiziran specifikacijski jezik.
+  Kako se glavnina programiranja u Coqu svodi upravo na programiranje u Gallini, posvećujemo joj idući odjeljak.
+\item[Ltac] je Coqov netipiziran jezik za definiciju i korištenje taktika.
+  Taktike su pomoćne naredbe kojima se u načinu dokazivanja konstruira dokaz.
+  Može se reći da je Ltac jezik za metaprogramiranje Galline.
+  Primjeri taktika su \texttt{intros}, \texttt{destruct}, \texttt{apply} i \texttt{rewrite}.
 \end{description}
+\noindent Pogledajmo ilustrativan primjer.
+\begin{minted}{coq}
+  Lemma example_lemma : 1 + 1 = 2.
+  Proof.
+    cbn. reflexivity.
+  Qed.
+\end{minted}
+\noindent Ključne riječi \texttt{Lemma}, \texttt{Proof} i \texttt{Qed} dio su Vernaculara,
+izraz \texttt{example\_lemma : 1 + 1 = 2} dio je Galline,
+a pomoćne naredbe \texttt{cbn} i \texttt{reflexivity} dio su Ltaca.
 
-\section{Programiranje u Coqu}\label{sec:programiranje-u-coqu}
+Jezgra programskog sustava Coq je algoritam za provjeru tipova \engl{type checking} implementiran u OCamlu ---
+svaka tvrdnja koja se dokazuje izrečena je pomoću tipova.
+Ostatak sustava u načelu služi za knjigovodstvo i poboljšanje korisničkog iskustva.
+Nužno je da jezgra sustava bude relativno mala kako bismo se mogli uvjeriti u njenu točnost.
+U suprotnom, možemo li biti sigurni da su naše dokazane tvrdnje doista istinite?
+\misao{kažem istinite, ali u stvari mislim dokazive, no to je nespretno za napisati i diskusija oko toga je preopćenita}
+
+Prve inačice Coqa implementirale su račun konstrukcija, no kasnije je dodana podrška za induktivno i koinduktivno definirane tipove~\cite{cic, coinductive}.
+Danas se može reći da Coq implementira polimorfni kumulativni račun induktivnih konstrukcija~\cite{coqcoqcorrect}.
+\misao{mogu spomenuti i preteče računa konstrukcija i jezike koji ih implementiraju, npr.~ Lisp je implementacija \(\lambda\)-računa}
+Coq se, osim kao dokazivač teorema, može koristiti i za programiranje sa zavisnim tipovima.
+U toj sferi konkuriraju jezici Agda\footnote{\url{https://wiki.portal.chalmers.se/agda/}}, Idris\footnote{\url{https://www.idris-lang.org/}} i Lean\footnote{\url{https://lean-lang.org/}}. Coq se između njih istiće po usmjerenosti prema dokazivanju, posebno po korištenju taktika (jezik Ltac) i nepredikativnoj sorti \texttt{Prop} (o kojoj će kasnije biti riječi).
+
+\section{Programiranje u Gallini}\label{sec:programiranje-u-gallini}
+\misao{spomenuti da je Gallina odlučiv jezik, odnosno da je za svaka Gallinina funkcija odlučiva}
 \begin{description}
 \item[Funkcijsko programiranje] neki jednostavni primjer
 \item[Definiranje funkcija] \texttt{Definition}, \texttt{Fixpoint}, \texttt{CoFixpoint}

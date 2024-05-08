@@ -1,21 +1,23 @@
 \documentclass[diplomskirad, upload]{fer}
 % Dodaj opciju upload za generiranje konačne verzije koja se učitava na FERWeb
 
-\usepackage{blindtext}
 \usepackage{hyperref}
+\usepackage{minted}
+\usepackage{xcolor}
 
+\setminted[coq]{frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, obeytabs}
 \title{Applications of the Coq Proof Assistant in mathematics and computer science}
 \naslov{Primjene Coq alata za dokazivanje u matematici i računarstvu}
 \brojrada{578}
 \author{Miho Hren}
-\mentor{izv.~prof.~dr.~sc.~Ante Đerek}
+\mentor{}
 
 \begin{document}
 \maketitle
 \zadatak{zadatak.pdf}
 
 \begin{zahvale}
-  TODO
+  Ovo je zahvala.
 \end{zahvale}
 
 \mainmatter{}
@@ -24,7 +26,7 @@
 \tableofcontents
 
 % za pisati todo
-\newcommand\misao[1]{\textcolor{red}{\textbf{Misao:} \textit{#1}}}
+\newcommand\misao[1]{ \textcolor{red}{\textbf{Misao:} \textit{#1}} }
 
 \include{uvod}
 \include{coq}
