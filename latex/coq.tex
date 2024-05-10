@@ -57,7 +57,7 @@ Danas se može reći da Coq implementira polimorfni kumulativni račun induktivn
 Coq se, osim kao dokazivač teorema, može koristiti i za programiranje sa zavisnim tipovima.
 U toj sferi konkuriraju jezici Agda\footnote{\url{https://wiki.portal.chalmers.se/agda/}}, Idris\footnote{\url{https://www.idris-lang.org/}} i Lean\footnote{\url{https://lean-lang.org/}}. Coq se između njih istiće po usmjerenosti prema dokazivanju, posebno po korištenju taktika (jezik Ltac) i nepredikativnoj sorti \texttt{Prop} (o kojoj će kasnije biti riječi).
 Još jedna prednost Coqa je mehanizam \textit{ekstrakcije} pomoću kojeg korisnik može proizvoljnu funkciju\footnote{Za koju je dokazao točnost, štogod to značilo.} prevesti u jezik niže razine apstrakcije.\footnote{Trenutno su podržani Haskell, OCaml i Scheme.}
-Mehanizam ekstrakcije nije dokazano točan, no poželjno je da funkcije zadržavaju točnost i nakon ekstrakcije, pa se radi na verifikaciji ekstrakcije~\cite{coqcoqcorrect}.
+Mehanizam ekstrakcije nije dokazano točan, no poželjno je da funkcije zadržavaju točnost i nakon ekstrakcije pa se radi na verifikaciji ekstrakcije~\cite{coqcoqcorrect}.
 
 \section{Programiranje u Coqu}\label{sec:programiranje-u-gallini}
 Gallina je funkcijski programski jezik, što znači da su funkcije prvoklasni objekti ---
@@ -145,8 +145,10 @@ CoFixpoint from (n : nat) : Stream nat := Cons _ n (from (n + 1)).
 Ovime je definirana funkcija \texttt{from} koja za ulazni argument \texttt{n} vraća niz prirodnih brojeva od \(n\) na dalje.
 
 Razlika induktivnih i koinduktivnih tipova može se izreći epigramom:\\
-``\textbf{Induktivni tipovi su domene rekurzivnih funkcija, a koinduktivni tipovi su kodomene korekurzivnih funkcija}''.\\
-Time se želi reći da se termi induktivnih tipova destrukturiraju u rekurzivnim funkcijama,
+\[
+  \textrm{``Induktivni tipovi su domene rekurzivnih funkcija, a koinduktivni tipovi su kodomene korekurzivnih funkcija''.}
+\]
+\noindent Time se želi reći da se termi induktivnih tipova destrukturiraju u rekurzivnim funkcijama,
 dok se termi koinduktivnih tipova konstruiraju u korekurzivnim funkcijama.
 
 \misao{Barendregtova kocka, term koji ovisi o termu, term koji ovisi o tipu, tip koji ovisi o termu, tip koji ovisi o tipu}
@@ -215,17 +217,37 @@ S druge strane, sorta \coqset{} je \textbf{predikativna}, to jest \textit{ne dop
 Na praktičnoj strani, predikativnost ograničava korisnika da prilikom definicije programa smije koristiti samo druge programe.
 
 
-\section{Propozicije i tipovi, dokazi i programi}\label{sec:propozicije-i-tipovi}
-Ukratko objasniti što je to Curry--Howard, možda najlakše pomoću BHK interpretacije.
+\section{Propozicije i tipovi, dokazi i termi}\label{sec:propozicije-i-tipovi}
+Evo par zanimljivih tvrdnji:
+\begin{align}
+  & \textrm{``Negdje u svemiru postoji šešir veličine planeta Zemlje.''}\label{eqn:sesir}\\
+  & \textrm{``Tvrdnja~\ref{eqn:sesir} ili vrijedi ili ne vrijedi.''}\label{eqn:sesirxm}
+\end{align}
+\noindent Jasno je da takav šešir ili postoji ili ne postoji, odnosno tvrdnja~\ref{eqn:sesir} ili vrijedi ili ne vrijedi.
+Treća mogućnost ne postoji.\footnote{\textit{Tertium non datur.}}
+Tada tvrdnja~\ref{eqn:sesirxm} mora vrijediti!
+Međutim, nije jasno \textit{zašto} tvrdnja~\ref{eqn:sesirxm} vrijedi.
 
-Primjeri dokaznih terma, recimo ručno napisan dokazni term za komutiranje univerzalnih kvantifikacija, pa neki jednostavni induktivni dokaz.
-
-Principi indukcije kao rekurzivne funkcije.
-\begin{table}[hbt]
+Sličnim pitanjima bavili su se logičari dvadesetog stoljeća. \textit{Klasični} logičari bi tvrdnju~\ref{eqn:sesirxm} smjesta prihvatili,
+dok bi \textit{konstruktivisti} tražili konkretan dokaz.\footnote{Ako takav šešir postoji, oni bi ga htjeli vidjeti. Ako pak ne postoji, htjeli bi vidjeti da traganje \textit{kroz cijeli svemir} za takvim šeširom nije urodilo plodom.}
+Između ostalog, ovakva razmatranja rezultirala su fundamentalnim uvidom u povezanost programiranja i dokazivanja.
+Naime, želimo li dokazati konjunkciju, dovoljno je zasebno dokazati njene konjunkte.
+S druge strane, želimo li konstruirati par objekata, dovoljno je zapakirati prvi i drugi objekt u konstruktor para.
+Na sličan način, želimo li dokazati implikaciju, dovoljno je pretpostaviti njen antecedent pomoću njega dokazati konzekvens.
+Ako pak želimo konstruirati funkciju, smijemo uzeti jedan argument i pomoću njega konstruirati povratnu vrijednost.
+Dodatno, nemoguće je dokazati laž, a istina trivijalno vrijedi.
+S druge strane, ako tip nema konstruktore, nije moguće definirati vrijednost tog tipa.
+Ako pak tip ima barem jedan konstruktor, tada postoje i njegovi stanovnici.
+Kroz ove primjere vidimo fenomen \textbf{Curry--Howardove korespondencije}, koju možemo sažeti epigramom:
+\begin{align*}
+  \textrm{``Propozicije su tipovi, dokazi su termi.''}
+\end{align*}
+\\ Time se dokazivanje svodi na programiranje. Pogledi na dvije strane ovog novčića mogu se vidjeti u tablici~\ref{tab:curryhoward}.
+\begin{table}[!hbt]
   \centering
-  \begin{tabular}[hbt]{rlrl}
+  \begin{tabular}[!htb]{rlrl}
     \toprule \\
-    Logika & Program & Logički term & Programski term \\
+    Dokazivanje & Programiranje & Logički term & Programski term \\
     \midrule \\
     konjunkcija & produktni tip  & \texttt{and} & \texttt{prod} \\
     disjunkcija & zbrojni tip & \texttt{or} & \texttt{sum} \\
@@ -242,10 +264,30 @@ Principi indukcije kao rekurzivne funkcije.
     dokazivost & nastanjenost tipa & & \\
     \bottomrule
   \end{tabular}
-  \caption{Korespondencija logike i programiranja}\label{tab:curryhoward}
+  \caption{Sličnosti dokazivanja i programiranja}\label{tab:curryhoward}
 \end{table}
 
+Za bolju ilustraciju, prikazujemo princip matematičke indukcije u Coqu.
+Prisjetimo se, za proizvoljni predikat \(P\) nad prirodnim brojevima, princip matematičke indukcije glasi:
+\[
+  P(0) \land (\forall n, P(n) \rightarrow P(n + 1)) \rightarrow \forall n, P(n).
+\]
+\noindent Tvrdnju dokazujemo analizom broja \(n\).
+Ako je \(n = 0\), tvrdnja slijedi iz \textit{baze} indukcije.
+Ako pak je \(n = n' + 1\) za neki \(n'\), tada rekurzivno konstruiramo dokaz za \(P(n')\), a konačna tvrdnja slijedi primjenom \textit{koraka} indukcije na rekurzivno konstruirani dokaz.
+\begin{minted}{coq}
+Definition nat_ind (P : nat -> Prop) (baza : P 0) (korak : forall n, P n -> P (S n))
+  : forall n, P n :=
+  fix F (n : nat) : P n :=
+    match n with
+    | O => baza
+    | S n' => korak n' (F n')
+    end.
+\end{minted}
+Za term \texttt{nat\_ind} kažemo da je dokazni objekt \engl{proof object} za tvrdnju matematičke indukcije.
+Princip matematičke indukcije je samo poseban slučaj \textbf{principa indukcije}, kojeg Coq automatski generira za sve induktivno definirane tipove.
 
+\misao{Kada bih pisao rad od 100 stranica, ovdje bih spomenuo Noetherin princip indukcije.}
 
 \section{Ograničenja u programiranju i dokazivanju}\label{sec:ogranicenja}
 Tu prvenstveno mislim na uvjete pozitivnosti i produktivnosti za induktivne i koinduktivne tipove,
