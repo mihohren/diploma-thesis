@@ -6,6 +6,7 @@
 \usepackage{minted}
 \usepackage{xcolor}
 \usepackage{tikz}
+\usepackage{forest}
 
 \setminted[coq]{frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, obeytabs}
 \title{Applications of the Coq Proof Assistant in mathematics and computer science}
@@ -29,6 +30,9 @@
 
 % za pisati todo
 \newcommand\misao[1]{ \textcolor{red}{\textbf{Misao:} \textit{#1}} }
+\newcommand\coqset{\texttt{Set}}
+\newcommand\coqprop{\texttt{Prop}}
+\newcommand\coqtype[1]{\texttt{Type\(_{#1}\)}}
 
 \include{uvod}
 \include{coq}
