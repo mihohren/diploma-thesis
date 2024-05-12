@@ -289,9 +289,46 @@ Princip matematičke indukcije je samo poseban slučaj \textbf{principa indukcij
 
 \misao{Kada bih pisao rad od 100 stranica, ovdje bih spomenuo Noetherin princip indukcije.}
 
-\section{Ograničenja u programiranju i dokazivanju}\label{sec:ogranicenja}
-Tu prvenstveno mislim na uvjete pozitivnosti i produktivnosti za induktivne i koinduktivne tipove,
-te na eliminaciju propozicija kod definiranja nečega u \texttt{Type}.
+\section{Ograničenja tipskog sustava}\label{sec:ogranicenja}
+Kao što smo već vidjeli, Coqov tipski sustav je ekspresivniji od tipskih sustava tradicionalnih programskih jezika.
+Međutim, kako bi se sačuvala poželjna svojstva algoritma provjere tipova, ipak se tipski sustav mora ograničiti.
+Prvo ograničenje, \textbf{uvjet pozivitnosti}, odnosi se na definiciju induktivnih i koinduktivnih tipova.
+Ovaj uvjet zabranjuje \textit{negativne} pojave tipa kojeg definiramo u argumentima njegovih konstruktora.
+\begin{minted}{coq}
+Inductive Lam :=
+| LamVar (n : nat)
+| LamApp (M N : Lam)
+| LamAbs (M : Lam -> Lam).
+\end{minted}
+\noindent Pokretanje primjera iznad u Coqu rezultira greškom \texttt{Non strictly positive occurrence of "Lam" in "(Lam -> Lam) -> Lam"} ---
+drugim riječima, tip \texttt{Lam} se javlja negativno u konstruktoru \texttt{LamAbs}, odnosno kao argument funkcije koja je parametar konstruktora.
+Ovaj uvjet štiti korisnika od inkonzistentnosti, a za točnu definiciju pozitivnosti čitatelja upućujemo na dokumentaciju.\footnote{\url{https://coq.inria.fr/doc/v8.18/refman/language/core/inductive.html\#well-formed-inductive-definitions}}\\
+\noindent Drugo ograničenje, \textbf{uvjet produktivnosti}, odnosi se na definiciju korekurzivnih funkcija.
+Ovaj uvjet također štiti korisnika od inkonzistentnosti, a glasi: svaki korekurzivni poziv smije se javljati točno kao izravan argument konstruktora koinduktivnog tipa čiji element definiramo.\footnote{\url{https://coq.inria.fr/doc/v8.18/refman/language/core/coinductive.html\#co-recursive-functions-cofix}}
+Zbog tog uvjeta, iduća definicija nije moguća.
+\begin{minted}{coq}
+Inductive NatStream :=
+| NatCons : nat -> NatStream -> NatStream.
+
+CoFixpoint foo : NatStream := foo.
+\end{minted}
+Greška koju sustav javlja glasi \texttt{Unguarded recursive call in "foo"}, što znači da se korekurzivni poziv \textit{ne} javlja kao izravni argument konstruktora. S druge strane, definicija
+\begin{minted}{coq}
+CoFixpoint bar : NatStream := NatCons 1 bar.
+\end{minted}
+\noindent je sasvim legalna.
+
+Posljednje ograničenje koje spominjemo vezano je uz irelevantnost dokaza \engl{proof irrelevance}.
+Naime, mnogi teoremi mogu se dokazati na više načina, ali svaki pojedini dokaz (dakle, postupak kojim smo od pretpostavka došli do konkluzije) \textit{nije bitan}.
+Matematičarima su bitni samo iskaz teorema i činjenica da se teorem \textit{može dokazati}.
+Sam postupak dokazivanja smatra se ``implementacijskim detaljom''.
+Upravo zato analiza dokaza ima smisla samo kada se dokazuje, ali ne i kada se programira.
+U našoj terminologiji to znači da se \textit{pattern matching} nad dokazima smije provoditi samo kod definiranja terma sorte \texttt{Prop}.
+U suprotnom, mogli bismo definirati programe koji ovise o \textit{konkretnom dokazu}, umjesto o iskazanom teoremu.
+\textbf{Ograničenje eliminacije propozicije} nastalo je radi ekstrakcije ---
+svi termi sorte \texttt{Prop} se ``brišu'' prilikom prevođenja iz Coqovog tipskog sustava u tipske sustave niže razine apstrakcije.
+Kada ovog ograničenja nebi bilo, ekstrakcija u jednostavnije jezike naprosto nebi bila moguća.
+
 
 %%% Local Variables:
 %%% mode: LaTeX
