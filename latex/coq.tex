@@ -55,7 +55,7 @@ Prve inačice Coqa implementirale su račun konstrukcija, no kasnije je dodana p
 Danas se može reći da Coq implementira polimorfni kumulativni račun induktivnih konstrukcija~\cite{coqcoqcorrect}.
 \misao{mogu spomenuti i preteče računa konstrukcija i jezike koji ih implementiraju, npr.~ Lisp je implementacija \(\lambda\)-računa}
 Coq se, osim kao dokazivač teorema, može koristiti i za programiranje sa zavisnim tipovima.
-U toj sferi konkuriraju jezici Agda\footnote{\url{https://wiki.portal.chalmers.se/agda/}}, Idris\footnote{\url{https://www.idris-lang.org/}} i Lean\footnote{\url{https://lean-lang.org/}}. Coq se između njih istiće po usmjerenosti prema dokazivanju, posebno po korištenju taktika (jezik Ltac) i nepredikativnoj sorti \texttt{Prop} (o kojoj će kasnije biti riječi).
+U toj sferi konkuriraju jezici Agda\footnote{\url{https://wiki.portal.chalmers.se/agda/}}, Idris\footnote{\url{https://www.idris-lang.org/}} i Lean\footnote{\url{https://lean-lang.org/}}. Coq se između njih ističe po usmjerenosti prema dokazivanju, posebno po korištenju taktika (jezik Ltac) i nepredikativnoj sorti \texttt{Prop} (o kojoj će kasnije biti riječi).
 Još jedna prednost Coqa je mehanizam \textit{ekstrakcije} pomoću kojeg korisnik može proizvoljnu funkciju\footnote{Za koju je dokazao točnost, štogod to značilo.} prevesti u jezik niže razine apstrakcije.\footnote{Trenutno su podržani Haskell, OCaml i Scheme.}
 Mehanizam ekstrakcije nije dokazano točan, no poželjno je da funkcije zadržavaju točnost i nakon ekstrakcije pa se radi na verifikaciji ekstrakcije~\cite{coqcoqcorrect}.
 
@@ -64,10 +64,10 @@ Gallina je funkcijski programski jezik, što znači da su funkcije prvoklasni ob
 funkcije mogu biti argumenti i povratne vrijednosti drugih funkcija.
 Dodatno, varijable su nepromjenjive \engl{immutable} te se iteracija ostvaruje rekurzijom.
 Za uvod u funkcijsko programiranje, čitatelja upućujemo na knjigu \textit{Programming in Haskell}~\cite{Hutton_2016}.
-Primjeri koje ćemo vidjeti u ostatku ovog odjeljka dijelom se osljanjanju na tipove i funkcije definirane u Coqovoj standardnoj knjižnici.\footnote{\url{https://coq.inria.fr/library/}}
+Primjeri koje ćemo vidjeti u ostatku ovog odjeljka dijelom se oslanjanju na tipove i funkcije definirane u Coqovoj standardnoj knjižnici.\footnote{\url{https://coq.inria.fr/library/}}
 
 Gallina je strogo statički tipiziran jezik, što znači da se svakom termu prilikom prevođenja dodjeljuje tip\footnote{Tipovi su kolekcije srodnih objekata.}.
-Naredbom \texttt{Check} možemo provjeriti tip nekog terma ili doznati da se termu ne može dodjeliti tip.
+Naredbom \texttt{Check} možemo provjeriti tip nekog terma ili doznati da se termu ne može dodijeliti tip.
 Dalje u radu pod ``term'' mislimo na dobro formirane terme, odnosno na one terme kojima se može dodijeliti tip.
 Kažemo da je term \textit{stanovnik} tipa koji mu je dodijeljen.
 Za tip kažemo da je \textit{nastanjen}, odnosno \textit{nenastanjen}, ako postoji, odnosno ne postoji, stanovnik tog tipa.
@@ -100,7 +100,7 @@ Definition mult_zero_r : Prop := forall (n : nat), n * 0 = 0.
 \end{minted}
 Ovdje je definirana propozicija (tip) imena \texttt{mult\_zero\_r} kao univerzalno kvantificirana tvrdnja po prirodnim brojevima.
 
-Naredbom \texttt{\textbf{Inductive}} definira se \textit{induktivni} tip te se automatski za njega generiraju principi \textit{indukcije} i \textit{rekuzrije}.
+Naredbom \texttt{\textbf{Inductive}} definira se \textit{induktivni} tip te se automatski za njega generiraju principi \textit{indukcije} i \textit{rekurzije}.
 \begin{minted}{coq}
 Inductive nat : Set :=
 | O : nat
@@ -195,7 +195,7 @@ Dvije najvažnije sorte u Coqu su sorta \texttt{Set} i sorta \texttt{Prop}.
 \end{figure}
 
 Naziv \coqset{} sinonim je za sortu \coqtype{0}, a njeni stanovnici su \textbf{mali tipovi}.
-\misao{NB: Tu je prije pisalo da su stanovnici od \texttt{Set} programi, no to nije tako. Stavovnici od \texttt{Set} su mali tipovi (ne znam kako ih drugačije nazvati), a tek onda su stanovnici malih tipova programi.} 
+\misao{NB: Tu je prije pisalo da su stanovnici od \texttt{Set} programi, no to nije tako. Stanovnici sorte \texttt{Set} su mali tipovi (ne znam kako ih drugačije nazvati), a tek onda su stanovnici malih tipova programi.} 
 Primjerice, tipovi \texttt{nat} i \texttt{bool} su mali tipovi.
 Dodatno, funkcije koje primaju i vraćaju male tipove su također mali tipovi.
 Tada su i produkti, sume, liste i stabla malih tipova također mali tipovi.
@@ -289,8 +289,8 @@ Princip matematičke indukcije je samo poseban slučaj \textbf{principa indukcij
 Kao što smo već vidjeli, Coqov tipski sustav je ekspresivniji od tipskih sustava tradicionalnih programskih jezika.
 Međutim, kako bi se sačuvala poželjna svojstva algoritma provjere tipova, ipak se tipski sustav mora ograničiti.
 
-\textbf{Uvjet pozivitnosti} odnosi se na definiciju induktivnih i koinduktivnih tipova.
-\misao{NB: uvjet pozitivnosti mora vrijediti i u pozitivinim i u negativnim koinduktivnim tipovima.}
+\textbf{Uvjet pozitivnosti} odnosi se na definiciju induktivnih i koinduktivnih tipova.
+\misao{NB: uvjet pozitivnosti mora vrijediti i u pozitivnim i u negativnim koinduktivnim tipovima.}
 Ovo ograničenje zabranjuje \textit{negativne} pojave tipa kojeg definiramo u argumentima njegovih konstruktora.
 \begin{minted}{coq}
 Inductive Lam :=
@@ -333,7 +333,7 @@ CoFixpoint bar : NatStream := {| nat_hd := 0; nat_tl := bar |}.
   Nije li to opet uvjet pozitivnosti?
 }
 
-\misao{Ipak neću spomenuti razlike između pozitivinih i negativnih koinduktivnih tipova.
+\misao{Ipak neću spomenuti razlike između pozitivnih i negativnih koinduktivnih tipova.
   Mislim da je to izvan dosega ovog rada.}
 
 Posljednje ograničenje koje spominjemo vezano je uz irelevantnost dokaza \engl{proof irrelevance}.
@@ -345,7 +345,7 @@ U našoj terminologiji to znači da se \textit{pattern matching} nad dokazima sm
 U suprotnom, mogli bismo definirati programe koji ovise o \textit{konkretnom dokazu}, umjesto o iskazanom teoremu.
 \textbf{Ograničenje eliminacije propozicije} nastalo je radi ekstrakcije ---
 svi termi sorte \texttt{Prop} se ``brišu'' prilikom prevođenja iz Coqovog tipskog sustava u tipske sustave niže razine apstrakcije.
-Kada ovog ograničenja nebi bilo, ekstrakcija u jednostavnije jezike naprosto nebi bila moguća.
+Kada ovog ograničenja ne bi bilo, ekstrakcija u jednostavnije jezike naprosto ne bi bila moguća.
 
 
 %%% Local Variables:
