@@ -51,9 +51,7 @@ Section lkid.
     - induction HPQ; eauto 10. apply rt_trans with y; auto.
     - induction HQP; eauto 10. apply rt_trans with x; auto.
   Qed.
-  
-  Definition shift_formula := @subst_formula Σ (funcomp var_term ↑).
-  Definition shift_formulas := map shift_formula.
+
   Fixpoint FPreds_from_preds (ps : list {P : PredS Σ & vec (term Σ) (pred_ar P)}) : list (formula Σ) :=
     match ps with
     | [] => []
@@ -90,18 +88,20 @@ Section lkid.
   | AllR : forall Γ Δ φ,
       LKID (shift_formulas Γ ⊢ φ :: shift_formulas Δ) ->
       LKID (Γ ⊢ (FAll φ) :: Δ)
-  | IndL : forall Γ Δ (Pj : IndPredS Σ)      (* za razliku od IndR, koje ide po produkcijama, ovo pravilo ide po induktivnim predikatima *)
-             (z_i : forall P, var -> var) (* induction variables, mozda bi bilo bolje da ovo stvarno bude vec  *)
+  | IndL : forall Γ Δ (Pj : IndPredS Σ) (u : vec (term Σ) (indpred_ar Pj))
+             (z_i : forall P, vec var (indpred_ar P))
              (G_i : IndPredS Σ -> formula Σ)
-             (t : var -> term Σ)                            (* ako je z vektor, onda i t mora biti vektor *)
-             (HG2 : forall Pi, ~mutually_dependent Pi Pj -> G_i Pi = FIndPred Pi (V.map (fun n => var_term (z_i Pi n)) (vec_iota (indpred_ar Pi)))),
+             (HG2 : forall Pi, ~mutually_dependent Pi Pj -> G_i Pi = FIndPred Pi (V.map var_term (z_i Pi))),
       let minor_premises :=
         (forall pr (Hdep : mutually_dependent (indcons pr) Pj),
-            LKID ((* Qovi *) FPreds_from_preds (preds pr) ++ (* Govi *) map (fun p => G_i (p .1)) (indpreds pr) ++ Γ ⊢ (G_i (indcons pr)) :: Δ))
-      in
+            LKID (
+                (* Qovi *) FPreds_from_preds (preds pr) ++
+                  (* Govi *) map (fun p => subst_formula (finite_subst (z_i (p .1)) (p .2)) (G_i (p .1))) (indpreds pr) ++ Γ
+                  ⊢ subst_formula (finite_subst (z_i (indcons pr)) (indargs pr)) (G_i (indcons pr)) :: Δ))
+      in          (* TODO treba shiftati Γ i Δ za najvecu varijablu koja se javlja u ?negdje? *)
       minor_premises ->
-      LKID (subst_formula t (G_i Pj) :: Γ ⊢ Δ) ->
-      LKID (subst_formula t (FIndPred Pj (V.map (funcomp t (z_i Pj)) (vec_iota (indpred_ar Pj)))) :: Γ ⊢ Δ)
+      LKID (subst_formula (finite_subst (z_i Pj) u) (G_i Pj) :: Γ ⊢ Δ) ->
+      LKID (FIndPred Pj u :: Γ ⊢ Δ)
   | IndR : forall Γ Δ pr σ,
       Φ pr ->
       (forall Q us, In (Q; us) (preds pr) ->
@@ -109,8 +109,6 @@ Section lkid.
       (forall P ts, In (P; ts) (indpreds pr) ->
                LKID (Γ ⊢ (FIndPred P (V.map (subst_term σ) ts) :: Δ))) ->
       LKID ( Γ ⊢ FIndPred (indcons pr) (V.map (subst_term σ) (indargs pr)) :: Δ).
-  (* TODO z_i i t_i imaju vise smisla kao vektori, onda se rucno napise supstitucija *)
-  
 
   Lemma NegL_inversion : forall Γ Δ φ,
       LKID (FNeg φ :: Γ ⊢ Δ) -> LKID (Γ ⊢ φ :: Δ).

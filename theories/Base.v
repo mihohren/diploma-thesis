@@ -59,6 +59,15 @@ Fixpoint vec_iota (n : nat) : vec nat n :=
   | S n' => V.cons n' (vec_iota n')
   end.
 
+Lemma vec_in_dec : forall [A], (forall x y : A, {x = y} + {x <> y}) ->
+                          forall (a : A) {n} (v : vec A n),
+                            {V.In a v} + {~V.In a v}.
+Proof.
+  intros A Adec a n v.
+  destruct (in_dec Adec a (V.to_list v)) as [H | H];
+    rewrite <- V.to_list_In in H; auto.
+Qed.
+
 Section monotone_operator.
   Context {A : Type}.
   Context (le : relation A).

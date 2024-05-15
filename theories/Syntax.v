@@ -45,6 +45,15 @@ Section term.
     | TFunc f args => TFunc f (V.map (subst_term σ) args)
     end.
 
+  Fixpoint finite_subst {n} (u : vec var n) (v : vec term n) : var -> term :=
+    match u in Vector.t _ n return Vector.t term n -> var -> term with
+    | V.cons uh ut => fun v m =>
+                  if m =? uh
+                  then Vector.hd v
+                  else finite_subst ut (Vector.tl v) m
+    | V.nil => fun _ => var_term
+    end v.
+  
   Definition term_var_subst (t : term) (x : var) (u : term) : term :=
     subst_term (fun v => if v =? x then u else var_term v) t.
   
@@ -76,7 +85,6 @@ Section term.
              | S var_n => (ap) (subst_term ((funcomp) (var_term ) (shift))) (Eq var_n)
              | 0  => eq_refl
              end.
-
   
   Fixpoint ext_term
     (σ : var -> term ) (τ : var -> term ) (Eq : forall x, σ x = τ x) (s : term)
@@ -174,7 +182,50 @@ Section term_facts.
       + assumption.
       + intros Hinvar. apply Hnotin. constructor.
         exists st; intuition.
-  Qed.                                             
+  Qed.
+
+  Lemma finite_subst_not_in_id : forall n (u : vec var n) (v : vec (term Σ) n) m,
+      ~V.In m u -> finite_subst u v m = var_term m.
+  Proof.
+    intros n; induction u; intros v m notin.
+    - reflexivity.
+    - cbn; destruct (m =? h) eqn:Eth.
+      + exfalso. apply notin. rewrite Nat.eqb_eq in Eth; subst.
+        now left.
+      + apply IHu. intros Hin. apply notin. now right.
+  Qed.
+
+  Lemma finite_subst_in_id : forall n (u : vec var n) (v : vec (term Σ) n) m,
+      (forall x, V.In x u -> finite_subst u v x = var_term x) ->
+      finite_subst u v m = var_term m.
+  Proof.
+    intros n; destruct u; intros v m Hid.
+    - reflexivity.
+    - destruct (vec_in_dec Nat.eq_dec m u) as [H | H].
+      + specialize Hid with m.
+        assert (Htemp: V.In m (V.cons h u)) by (now right);
+          apply Hid in Htemp as Heq; clear Htemp.
+        apply Heq.
+      + cbn. destruct (Nat.eq_dec m h).
+        * rewrite e; rewrite Nat.eqb_refl.
+          specialize Hid with h.
+          assert (HH: V.In h (V.cons h u)) by now left.
+          apply Hid in HH. cbn in HH.
+          rewrite Nat.eqb_refl in HH. assumption.
+        * apply Nat.eqb_neq in n0. rewrite n0.
+          apply finite_subst_not_in_id. assumption.
+  Qed.
+  
+  Lemma subst_term_finite_subst_id : forall t n (u : vec var n) (v : vec (term Σ) n),
+      (forall x, V.In x u -> finite_subst u v x = var_term x) ->
+      subst_term (finite_subst u v) t = t.
+  Proof.
+    induction t as [m | f args IH]; intros n u v Hid; cbn.
+    - apply finite_subst_in_id. assumption.
+    - f_equal. erewrite V.map_ext_in.
+      + apply V.map_id.
+      + intros st Hin. cbn. apply IH; auto.
+  Qed.
 End term_facts.
 
 Section formula.
@@ -257,6 +308,17 @@ Section formula.
     | FAll  s0 => FAll  ((subst_formula (up_term_term σ)) s0)
     end.
 
+  Definition shift_formula := subst_formula (funcomp (@var_term Σ) shift).
+  Definition shift_formulas := map shift_formula.
+  
+  Fixpoint shift_formula_by (n : nat) :=
+    match n with
+    | O => id
+    | S m => funcomp shift_formula (shift_formula_by m)
+    end.
+  Definition shift_formulas_by (n : nat) :=
+    map (shift_formula_by n).
+  
   Fixpoint idSubst_formula
     (σ : var -> term Σ) (Eq : forall x, σ x = var_term x) (s : formula )
     : subst_formula σ s = s :=
