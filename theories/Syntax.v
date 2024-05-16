@@ -275,10 +275,10 @@ Section formula.
     FNeg (FAll (FNeg φ)).
   
   Inductive FV : formula -> E.Ensemble var :=
-  | FV_Pred : forall R args v,
-      (exists st, V.In st args /\ TV st v) -> FV (FPred R args) v
-  | FV_IndPred : forall R args v,
-      (exists st, V.In st args /\ TV st v) -> FV (FIndPred R args) v
+  | FV_Pred : forall R args v st,
+      V.In st args -> TV st v -> FV (FPred R args) v
+  | FV_IndPred : forall R args v st,
+      V.In st args -> TV st v -> FV (FIndPred R args) v
   | FV_Imp_l : forall F G v, FV F v -> FV (FImp F G) v
   | FV_Imp_r : forall F G v, FV G v -> FV (FImp F G) v
   | FV_Neg : forall F v, FV F v -> FV (FNeg F) v
@@ -411,7 +411,10 @@ Section formula_facts.
   Lemma some_var_not_in_formula_gt_FV : forall (φ : @formula Σ) (v : var),
       FV φ v -> v < some_var_not_in_formula φ.
   Proof.
-  Admitted.
+    intros φ v Hfv. induction Hfv; cbn; try lia;
+      apply Nat.lt_lt_succ_r; apply lt_any_lt_maxfold with st;
+      auto using some_var_not_in_term_gt_TV.
+  Qed.
 
   Lemma some_var_not_in_formula_valid : forall (φ : @formula Σ),
       ~FV φ (some_var_not_in_formula φ).

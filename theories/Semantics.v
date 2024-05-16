@@ -231,7 +231,8 @@ Section lemma_2_1_9.
            [ apply Hsat
            | intros st Hin; rewrite <- eval_env_subst_unused;
              [ reflexivity
-             | intros Htv; apply Hfv; constructor; exists st; intuition]]).
+             | intros Htv; apply Hfv; try (apply FV_Pred with st);
+               try (apply FV_IndPred with st); intuition]]).
     - intros Hsats; apply Hsat; rewrite IHF.
       + apply Hsats.
       + intros Hfv'; apply Hfv; constructor; assumption.
