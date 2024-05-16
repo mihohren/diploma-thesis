@@ -1,6 +1,6 @@
 Require Import Relations.
 Require Export Utf8.
-Require Export Arith Bool.
+Require Export Arith Bool Lia.
 Require Export unscoped.
 
 Export SigTNotations.
@@ -66,6 +66,21 @@ Proof.
   intros A Adec a n v.
   destruct (in_dec Adec a (V.to_list v)) as [H | H];
     rewrite <- V.to_list_In in H; auto.
+Qed.
+
+Definition max_fold (l : list nat) := fold_right Nat.max 0 l.
+                                          
+Definition vec_max_fold {n} (v : vec nat n) := V.fold_right Nat.max v 0.
+
+Lemma vec_max_fold_ge : forall {n} (vs : vec nat n) v,
+    V.In v vs -> v <= vec_max_fold vs.
+Proof.
+  intros n; induction vs as [| h m t IH]; intros v Hin; cbn.
+  - inversion Hin.
+  - apply V.In_cons_iff in Hin as [Hhd | Htl].
+    + subst h. apply Nat.le_max_l.
+    + specialize IH with v. apply IH in Htl.
+      fold (vec_max_fold t). lia.
 Qed.
 
 Section monotone_operator.

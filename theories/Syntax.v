@@ -30,6 +30,12 @@ Section term.
   | TVVar : forall v, TV (var_term v) v
   | TVFunc : forall f args v,
       (exists st, V.In st args /\ TV st v) -> TV (TFunc f args) v.
+
+  Fixpoint some_var_not_in_term (t : term) : var :=
+    match t with
+    | var_term v => S v
+    | TFunc f args => S (vec_max_fold (V.map some_var_not_in_term args))
+    end.
   
   Lemma congr_TFunc
     {f : FuncS Σ}
@@ -56,6 +62,13 @@ Section term.
   
   Definition term_var_subst (t : term) (x : var) (u : term) : term :=
     subst_term (fun v => if v =? x then u else var_term v) t.
+
+  Definition shift_term := subst_term (funcomp var_term shift).
+  Fixpoint shift_term_by (n : nat) :=
+    match n with
+    | O => id
+    | S n => funcomp shift_term (shift_term_by n)
+    end.
   
   Definition up_term_term  (σ : var -> term) : var -> term  :=    
     scons
@@ -226,6 +239,24 @@ Section term_facts.
       + apply V.map_id.
       + intros st Hin. cbn. apply IH; auto.
   Qed.
+
+  Lemma some_var_not_in_term_gt_TV : forall (t : term Σ) (v : var),
+      TV t v -> v < some_var_not_in_term t.
+  Proof.
+    induction t as [v' | f args IH]; intros v HTV.
+    - inversion HTV; subst. unfold some_var_not_in_term. lia.
+    - inversion HTV; subst; cbn.
+      Require Import Coq.Program.Program.
+      apply inj_pair2 in H1; subst.
+      destruct H2 as (st & Hin & Htv).
+  Admitted.
+  
+  Lemma some_var_not_in_term_valid : forall (t : term Σ),
+      ~TV t (some_var_not_in_term t).
+  Proof.
+    intros t HTV.
+    apply some_var_not_in_term_gt_TV in HTV; lia.
+  Qed.  
 End term_facts.
 
 Section formula.
@@ -256,7 +287,18 @@ Section formula.
   | FV_Imp_r : forall F G v, FV G v -> FV (FImp F G) v
   | FV_Neg : forall F v, FV F v -> FV (FNeg F) v
   | FV_All : forall F v, FV F (S v) -> FV (FAll F) v.
-  
+
+  Fixpoint some_var_not_in_formula (φ : formula) : var :=
+    match φ with
+    | FPred P args => S (vec_max_fold (V.map some_var_not_in_term args))
+    | FIndPred P args => S (vec_max_fold (V.map some_var_not_in_term args))
+    | FNeg φ => S (some_var_not_in_formula φ)
+    | FImp φ ψ => S (Nat.max
+                   (some_var_not_in_formula φ)
+                   (some_var_not_in_formula ψ))
+    | FAll φ => S (some_var_not_in_formula φ)
+    end.
+
   Lemma congr_FPred
     {P : PredS Σ}
     {s0 : vec (term Σ) (pred_ar P)}
@@ -367,9 +409,22 @@ Section formula.
 
 End formula.
 
-Arguments formula Σ : clear implicits.
-                            
+Section formula_facts.
+  Context {Σ : signature}.
+  
+  Lemma some_var_not_in_formula_gt_FV : forall (φ : @formula Σ) (v : var),
+      FV φ v -> v < some_var_not_in_formula φ.
+  Proof.
+  Admitted.
 
+  Lemma some_var_not_in_formula_valid : forall (φ : @formula Σ),
+      ~FV φ (some_var_not_in_formula φ).
+  Proof.
+    intros φ Hfv. apply some_var_not_in_formula_gt_FV in Hfv. lia.
+  Qed.
+End formula_facts.
+
+Arguments formula Σ : clear implicits.
 
 Instance Subst_term (Σ : signature)  : Subst1 (var -> term Σ) (term Σ) (term Σ) := @subst_term Σ   .
 
