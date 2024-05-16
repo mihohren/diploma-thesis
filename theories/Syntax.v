@@ -26,10 +26,10 @@ Section term.
   
   Set Elimination Schemes.
 
-  Inductive TV : term -> E.Ensemble var :=
+  Inductive TV : term -> var -> Prop :=
   | TVVar : forall v, TV (var_term v) v
-  | TVFunc : forall f args v,
-      (exists st, V.In st args /\ TV st v) -> TV (TFunc f args) v.
+  | TVFunc : forall f args v st,
+      V.In st args -> TV st v -> TV (TFunc f args) v.
 
   Fixpoint some_var_not_in_term (t : term) : var :=
     match t with
@@ -171,8 +171,7 @@ Section term_facts.
   Proof.
     intros f args x Hnotin; unfold E.In in *.
     intros t Hin Hvar. apply Hnotin.
-    apply TVFunc.
-    exists t; intuition.
+    apply TVFunc with t; assumption.
   Qed.
     
   Lemma term_subst_id : forall (t : term Σ) (x : var),
@@ -193,8 +192,7 @@ Section term_facts.
     - f_equal. rewrite <- V.map_id. apply V.map_ext_in.
       intros st Hstin. apply IH.
       + assumption.
-      + intros Hinvar. apply Hnotin. constructor.
-        exists st; intuition.
+      + intros Hinvar. apply Hnotin. apply TVFunc with st; assumption.
   Qed.
 
   Lemma finite_subst_not_in_id : forall n (u : vec var n) (v : vec (term Σ) n) m,
@@ -239,18 +237,16 @@ Section term_facts.
       + apply V.map_id.
       + intros st Hin. cbn. apply IH; auto.
   Qed.
-
+    
   Lemma some_var_not_in_term_gt_TV : forall (t : term Σ) (v : var),
       TV t v -> v < some_var_not_in_term t.
   Proof.
-    induction t as [v' | f args IH]; intros v HTV.
-    - inversion HTV; subst. unfold some_var_not_in_term. lia.
-    - inversion HTV; subst; cbn.
-      Require Import Coq.Program.Program.
-      apply inj_pair2 in H1; subst.
-      destruct H2 as (st & Hin & Htv).
-  Admitted.
-  
+    intros t v Htv; induction Htv as [w | f args w st Hin Htv IH].
+    - auto.
+    - cbn; apply Nat.lt_lt_succ_r.
+      apply lt_any_lt_maxfold with st; assumption.
+  Qed.
+    
   Lemma some_var_not_in_term_valid : forall (t : term Σ),
       ~TV t (some_var_not_in_term t).
   Proof.

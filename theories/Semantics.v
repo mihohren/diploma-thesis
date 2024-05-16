@@ -59,7 +59,7 @@ Section lemma_2_1_5.
       intros st Hin. apply IH.
       + assumption.
       + intros x_in_var_st. apply x_not_in_t.
-        constructor. exists st; intuition.
+        apply TVFunc with st; auto.
   Qed.
 
   Lemma eval_subst_sanity2 : forall (u : term Σ),

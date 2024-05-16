@@ -83,6 +83,20 @@ Proof.
       fold (vec_max_fold t). lia.
 Qed.
 
+Lemma lt_any_lt_maxfold :
+  forall {A : Type} (f : A -> nat) {n} (ys : vec A n) x y,
+    V.In y ys -> x < f y -> x < vec_max_fold (V.map f ys).
+Proof.
+  intros A f n; induction ys as [| ysh len yst IH];
+    intros x y Hin Hlt.
+  - inversion Hin.
+  - cbn. fold (vec_max_fold (V.map f yst)).
+    apply V.In_cons_iff in Hin as [Hhd | Htl].
+    + subst; lia.
+    + specialize IH with x y.
+      pose proof (IH Htl Hlt); lia.
+Qed.
+  
 Section monotone_operator.
   Context {A : Type}.
   Context (le : relation A).
