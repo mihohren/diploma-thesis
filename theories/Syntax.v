@@ -252,7 +252,15 @@ Section term_facts.
   Proof.
     intros t HTV.
     apply some_var_not_in_term_gt_TV in HTV; lia.
-  Qed.  
+  Qed.
+
+  Lemma lt_some_var_not_in_term_not_TV : forall (t : term Σ) (v : var),
+      some_var_not_in_term t <= v -> ~TV t v.
+  Proof.
+    intros t v Hle. induction Hle.
+    - apply some_var_not_in_term_valid.
+    - intros H. apply some_var_not_in_term_gt_TV in H. lia.
+  Qed.
 End term_facts.
 
 Section formula.
@@ -420,6 +428,14 @@ Section formula_facts.
       ~FV φ (some_var_not_in_formula φ).
   Proof.
     intros φ Hfv. apply some_var_not_in_formula_gt_FV in Hfv. lia.
+  Qed.
+
+  Lemma lt_some_var_not_in_term_not_FV : forall (φ : @formula Σ) v,
+      some_var_not_in_formula φ <= v -> ~FV φ v.
+  Proof.
+    intros φ v Hle; induction Hle.
+    - apply some_var_not_in_formula_valid.
+    - intros H. apply some_var_not_in_formula_gt_FV in H. lia.
   Qed.
 End formula_facts.
 
