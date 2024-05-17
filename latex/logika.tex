@@ -1,13 +1,84 @@
 \chapter{Logika prvog reda s induktivnim definicijama}\label{cha:logika-prvog-reda}
+U ovom poglavlju predstavljamo glavne rezultate diplomskog rada koji uključuju formalizaciju
+logike prvog reda s induktivnim definicijama \(\mathit{FOL_{ID}}\)
+te dokaznog sustava \(\mathit{LKID}\), koje je prvi uveo Brotherston~\cite{brotherston2005}.
+Definicije, leme i dokazi u ovom poglavlju preuzete su iz Brotherstonove disertacije~\cite{brotherstonphd}.
+
+Prvo ćemo definirati sintaksu i semantiku logike \(\mathit{FOL_{ID}}\),
+nakon čega ćemo definirati standardne modele te logike.
+Zatim ćemo prikazati dokazni sustav \(\mathit{LKID}\) te konačno dokazati adekvatnost
+sustava \(LKID\) s obzirom na standardnu semantiku,
+što je ujedno i glavni rezultat ovog diplomskog rada.
+
+Svaka definicija i lema u ovom poglavlju biti će popraćena svojim pandanom u Coqu.
+Jedan je od ciljeva diplomskog rada prikazati primjene Coqa u matematici,
+zbog čega leme nećemo dokazivati ``na papiru'',
+već se dokaz svake leme može pronaći na GitHub repozitoriju rada.\footnote{TODO: REPO LINK}
+Zainteresiranom čitatelju predlažemo interaktivni prolazak kroz dokaze lema.
 
 \section{Sintaksa}\label{sec:sintaksa}
-Signatura. Term. Formula.
+Kao i u svakom izlaganju logike, na početku je potrebno definirati sintaksu.
+\begin{definition}
+  \textit{Jezik prvog reda s induktivnim predikatima} (kratko: \textbf{signatura}), u oznaci \(\Sigma\),
+  je skup simbola od kojih razlikujemo
+  \begin{itemize}
+  \item funkcijske simbole,
+  \item \textit{obične} predikatne simbole i
+  \item \textit{induktivne} predikatne simbole.
+  \end{itemize}
+\end{definition}
+\begin{remark}
+  Svaki simbol signature ima pripadajuću arnost.
+  Funkcijski simboli arnosti nula nazivaju se \textit{konstante},
+  a predikatni simboli arnosti nula nazivaju se \textit{propozicije}.
+\end{remark}
+
+Već smo vidjeli da se propozicije, odnosno skupovi, u Coqu mogu reprezentirati tipovima.
+Tako i ovdje skupove funkcijskih, običnih predikatnih i induktivnih predikatnih
+simbola prikazujemo tipovima.
+Tada je arnost pojedinog simbola funkcija sa skupa odgovarajućih simbola u \(\mathbb{N}\).
+\begin{minted}{coq}
+Structure signature := {
+    FuncS : Type;
+    fun_ar : FuncS -> nat;
+    PredS : Type;
+    pred_ar : PredS -> nat;
+    IndPredS : Type;
+    indpred_ar : IndPredS -> nat
+  }.
+\end{minted}
+
+\begin{definition}
+  Term.
+\end{definition}
+
+\begin{definition}
+  Formula.
+\end{definition}
+
+\begin{definition}
+  Produkcija. Skup induktivnih definicija.
+\end{definition}
 
 \section{Semantika}\label{sec:semantika}
-Struktura. Okolina. Evaluacija. Relacija ispunjivosti. Substitution sanity leme.
+\begin{definition}
+  Struktura.
+\end{definition}
+
+\begin{definition}
+  Okolina, evaluacija.
+\end{definition}
+
+\begin{definition}
+  Ispunjivost formule.
+\end{definition}
+
+\begin{lemma}
+  Substitution sanity.
+\end{lemma}
 
 \section{Standardni modeli}\label{sec:standardni-modeli}
-Produkcije. Skup induktivnih definicija. Operator \(\varphi_{\Phi}\). Aproksimanti. Standardni model.
+Operator \(\varphi_{\Phi}\). Aproksimanti. Standardni model.
 
 \section{Sistem sekvenata s induktivnim definicijama}\label{sec:sistem-sekvenata}
 LKID. Dopustiva pravila. Primjeri dokaza.

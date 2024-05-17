@@ -2,12 +2,23 @@
 % Dodaj opciju upload za generiranje konačne verzije koja se učitava na FERWeb
 
 \usepackage{amsmath}
+\usepackage{amsthm}
 \usepackage{hyperref}
 \usepackage{booktabs}
 \usepackage{minted}
 \usepackage{xcolor}
 \usepackage{tikz}
 \usepackage{forest}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definicija}
+
+\theoremstyle{remark}
+\newtheorem*{remark}{Napomena}
+
+\theoremstyle{plain}
+\newtheorem{lemma}{Lema}
+\newtheorem{theorem}{Teorem}
 
 \setminted[coq]{frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, obeytabs}
 \title{Applications of the Coq Proof Assistant in mathematics and computer science}
@@ -35,7 +46,6 @@
 \newcommand\coqset{\texttt{Set}}
 \newcommand\coqprop{\texttt{Prop}}
 \newcommand\coqtype[1]{\texttt{Type\(_{#1}\)}}
-
 \include{uvod}
 \include{coq}
 \include{logika}
