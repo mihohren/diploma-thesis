@@ -18,7 +18,7 @@ Zainteresiranom čitatelju predlažemo interaktivni prolazak kroz dokaze lema.
 
 \section{Sintaksa}\label{sec:sintaksa}
 Kao i u svakom izlaganju logike, na početku je potrebno definirati sintaksu.
-\begin{definition}
+\begin{definition}\label{def:signatura}
   \textit{Jezik prvog reda s induktivnim predikatima} (kratko: \textbf{signatura}), u oznaci \(\Sigma\),
   je skup simbola od kojih razlikujemo
   \begin{itemize}
@@ -33,7 +33,7 @@ Kao i u svakom izlaganju logike, na početku je potrebno definirati sintaksu.
   a predikatni simboli arnosti nula nazivaju se \textit{propozicije}.
 \end{remark}
 
-Već smo vidjeli da se propozicije, odnosno skupovi, u Coqu mogu reprezentirati tipovima.
+\noindent Već smo vidjeli da se propozicije, odnosno skupovi, u Coqu mogu reprezentirati tipovima.
 Tako i ovdje skupove funkcijskih, običnih predikatnih i induktivnih predikatnih
 simbola prikazujemo tipovima.
 Tada je arnost pojedinog simbola funkcija sa skupa odgovarajućih simbola u \(\mathbb{N}\).
@@ -47,14 +47,50 @@ Structure signature := {
     indpred_ar : IndPredS -> nat
   }.
 \end{minted}
+\misao{Stavljam i primjere? Tu je dobar primjer \(\Sigma_{PA}\).}
 
-\begin{definition}
-  Term.
-\end{definition}
+\noindent U ostatku poglavlja promatramo jednu proizvoljnu, ali fiksiranu, signaturu \(\Sigma\).
+Fiksiranje nekog proizvoljnog objekta je česta pojava u matematici,
+prvenstveno zato što fiksiranjem ne trebamo spominjati argumente eksplicitno.
+Coq omogućuje fiksiranje varijable naredbama \texttt{Variable} i \texttt{Context},
+pod uvjetom da se korisnik nalazi u \texttt{Section} okolini.\footnote{\url{https://coq.inria.fr/doc/v8.18/refman/language/core/sections.html}}
+Većina definicija i lema u ovom radu su napisane upravo unutar \texttt{Section} okoline.
 
-\begin{definition}
-  Formula.
+\begin{definition}\label{def:term}
+  \textit{Varijabla} je prirodan broj. Skup \textbf{terma} je najmanji skup izraza zatvoren na iduća pravila:
+  \begin{enumerate}
+  \item svaka varijabla je term;
+  \item ako je \(f\) funkcijski simbol arnosti \(n\) te su \(t_{1}\), \ldots, \(t_{n}\) termi\footnote{Primijetimo, broj terma ovisi o arnosti funkcijskog simbola. U Coq implementaciji ovog ``konstruktora'' možemo vidjeti da je on zavisnog tipa.},
+    onda je \(f(t_{1}, \ldots, t_{n})\) također term.
+  \end{enumerate}
 \end{definition}
+U općenitijim razmatranjima bi varijable bile članovi proizvoljnog skupa,
+no mi smo uzeli prirodne brojeve jer je s njima lakše raditi u Coqu.
+
+\begin{minted}{coq}
+Inductive term  : Type :=
+  | var_term : var -> term 
+  | TFunc : forall (f : FuncS Σ), vec term (fun_ar f) -> term.
+\end{minted}
+
+\begin{definition}\label{def:formula}
+  Skup svih \textbf{formula} je najmanji skup zatvoren na iduća pravila:
+  \begin{enumerate}
+  \item ako je \(Q\) obični ili induktivni predikatni simbol arnosti \(n\) te su \(t_{1}\), \ldots, \(t_{n}\) termi,
+    onda je \(Q(t_{1}, \ldots, t_{n})\) formula;
+  \item ako je \(\varphi\) formula, onda su \(\neg\varphi\) i \(\forall\varphi\) također formule;
+  \item ako su \(\varphi\) i \(\psi\) formule, onda je \(\varphi \rightarrow \psi\) također formula.
+  \end{enumerate}
+\end{definition}
+\noindent Za univerzalnu kvantifikaciju odstupamo od tradicionalne defincije formule.
+Umjesto kvantificiranja po eksplicitnoj varijabli,
+mi ćemo implicitno kvantificirati po varijabli \(0\).
+Ovaj pristup kvantifikaciji (ili općenitije, vezivanju varijabli), imena ``de Bruijnovo indeksiranje'', bitno olakšava rad sa supstitucijama, a uveden je u članku~\cite{debruijnamelessdummies}.
+O samoj implementaciji de Bruijnovog indeksiranja više se može pročitati u knjizi
+\textit{Types and Programming Languages}~\cite{pierce2002tapl}.
+Za potrebe ovog rada koristili smo paket \textit{Autosubst2}\footnote{\url{https://github.com/uds-psl/autosubst2?tab=readme-ov-file}} za automatsko generiranje tipova terma i formula te
+pripadajućih funkcija supstitucija i pomoćnih lema.
+\misao{Postojala je konfiguracijska datoteka za ovo. Ja to ne bih spominjao.}
 
 \begin{definition}
   Produkcija. Skup induktivnih definicija.

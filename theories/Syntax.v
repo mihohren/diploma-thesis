@@ -22,7 +22,7 @@ Section term.
   
   Inductive term  : Type :=
   | var_term : var -> term 
-  | TFunc : forall (f : FuncS Σ), vec term (fun_ar f) -> term .
+  | TFunc : forall (f : FuncS Σ), vec term (fun_ar f) -> term.
   
   Set Elimination Schemes.
 
