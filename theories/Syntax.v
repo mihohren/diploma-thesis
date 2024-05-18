@@ -266,7 +266,7 @@ End term_facts.
 Section formula.
   Context {Σ : signature}.
   
-  Inductive formula  : Type :=
+  Inductive formula : Type :=
   | FPred (P : PredS Σ) : vec (term Σ) (pred_ar P) -> formula 
   | FIndPred (P : IndPredS Σ) : vec (term Σ) (indpred_ar P) -> formula 
   | FNeg : formula -> formula 

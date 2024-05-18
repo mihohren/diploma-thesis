@@ -68,9 +68,9 @@ U općenitijim razmatranjima bi varijable bile članovi proizvoljnog skupa,
 no mi smo uzeli prirodne brojeve jer je s njima lakše raditi u Coqu.
 
 \begin{minted}{coq}
-Inductive term  : Type :=
-  | var_term : var -> term 
-  | TFunc : forall (f : FuncS Σ), vec term (fun_ar f) -> term.
+Inductive term : Type :=
+| var_term : var -> term 
+| TFunc : forall (f : FuncS Σ), vec term (fun_ar f) -> term.
 \end{minted}
 
 \begin{definition}\label{def:formula}
@@ -88,13 +88,36 @@ mi ćemo implicitno kvantificirati po varijabli \(0\).
 Ovaj pristup kvantifikaciji (ili općenitije, vezivanju varijabli), imena ``de Bruijnovo indeksiranje'', bitno olakšava rad sa supstitucijama, a uveden je u članku~\cite{debruijnamelessdummies}.
 O samoj implementaciji de Bruijnovog indeksiranja više se može pročitati u knjizi
 \textit{Types and Programming Languages}~\cite{pierce2002tapl}.
-Za potrebe ovog rada koristili smo paket \textit{Autosubst2}\footnote{\url{https://github.com/uds-psl/autosubst2?tab=readme-ov-file}} za automatsko generiranje tipova terma i formula te
+Za potrebe ovog rada koristili smo paket \textit{Autosubst2}\footnote{\url{https://github.com/uds-psl/autosubst2}} za automatsko generiranje tipova terma i formula te
 pripadajućih funkcija supstitucija i pomoćnih lema.
 \misao{Postojala je konfiguracijska datoteka za ovo. Ja to ne bih spominjao.}
+\begin{minted}{coq}
+Inductive formula : Type :=
+| FPred (P : PredS Σ) : vec (term Σ) (pred_ar P) -> formula 
+| FIndPred (P : IndPredS Σ) : vec (term Σ) (indpred_ar P) -> formula 
+| FNeg : formula -> formula 
+| FImp : formula -> formula -> formula 
+| FAll : formula -> formula.
+\end{minted}
 
 \begin{definition}
-  Produkcija. Skup induktivnih definicija.
+  \textbf{Produkcija} je uređena četvorka koja sadrži
+  \begin{enumerate}
+  \item listu parova običnih predikatnih simbola i vektora terma odgovarajućih duljina,
+  \item listu parova induktivnih predikatnih simbola i vektora terma odgovarajućih duljina,
+  \item induktivni predikatni simbol \(P\) arnosti \(n\) i
+  \item vektor terma duljine \(n\).
+  \end{enumerate}
 \end{definition}
+
+\begin{minted}{coq}
+Record production := mkProd {
+    preds : list ({ P : PredS Σ & vec (term Σ) (pred_ar P) });
+    indpreds : list ({ P : IndPredS Σ & vec (term Σ) (indpred_ar P) });
+    indcons : IndPredS Σ;
+    indargs : vec (term Σ) (indpred_ar indcons);
+  }.
+\end{minted}
 
 \section{Semantika}\label{sec:semantika}
 \begin{definition}

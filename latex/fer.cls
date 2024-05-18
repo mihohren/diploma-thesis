@@ -74,7 +74,7 @@
 % Font Open Sans ćemo koristiti za naslove i naslovnicu, a Stix 2 će
 % biti standardni font cijelog dokumenta.
 \RequirePackage[T1]{fontenc}
-\RequirePackage[utf8]{inputenc}
+\RequirePackage[utf8x]{inputenc}
 \RequirePackage{opensans}
 \RequirePackage{stix2}
 
