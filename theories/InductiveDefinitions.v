@@ -11,7 +11,7 @@ Section inductive_definition_set.
       indargs : vec (term Σ) (indpred_ar indcons);
     }.
 
-  Definition IndDefSet := production -> Prop .
+  Definition IndDefSet := production -> Prop.
 End inductive_definition_set.
 
 Section definition_set_operator.

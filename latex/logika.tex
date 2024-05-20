@@ -151,8 +151,6 @@ a podebljani znakovi predstavljaju vektore terma odgovarajućih duljina.
   \item induktivnog predikatnog simbola \(P\) mjesnosti \(n\) i
   \item vektora terma duljine \(n\).
   \end{enumerate}
-\end{definition}
-
 \begin{minted}{coq}
 Record production := mkProd {
     preds : list ({ P : PredS Σ & vec (term Σ) (pred_ar P) });
@@ -161,6 +159,13 @@ Record production := mkProd {
     indargs : vec (term Σ) (indpred_ar indcons);
   }.
 \end{minted}
+  \textbf{Skup induktivnih definicija} je skup produkcija.
+\begin{minted}{coq}
+Definition IndDefSet := production -> Prop.
+\end{minted}
+\end{definition}
+
+
 
 \section{Semantika}\label{sec:semantika}
 \begin{definition}
@@ -184,18 +189,62 @@ oblika \texttt{T\(\rightarrow\)\coqprop{}}.
 
 \begin{definition}
   Neka je \(M\) proizvoljna struktura. \textbf{Okolina} \(\rho\) za \(M\) je proizvoljna funkcija iz skupa prirodnih brojeva u nosač strukture.
-  Strukturalnom rekurzijom po termima možemo uz interpretaciju funkcijskih simbola proširiti okolinu
+\begin{minted}{coq}
+Definition env := var -> |M|.
+\end{minted}
+  Strukturalnom rekurzijom po termima možemo uz interpretaciju funkcijskih simbola proširiti okolinu na skup terma.
+\begin{minted}{coq}
+Fixpoint eval (ρ : env) (t : term Σ) : |M| :=
+  match t with
+  | var_term x => ρ x
+  | TFunc f args => interpF f (V.map (eval ρ) args)
+  end.
+\end{minted}
 \end{definition}
 
-\begin{definition}
-  Ispunjivost formule.
-\end{definition}
-
-\begin{lemma}
-  Razumnost supstitucije za evaluaciju.
+\begin{lemma}[Razumnost supstitucije za evaluaciju]\
+\begin{minted}{coq}
+Lemma eval_subst_sanity1 : forall (d : |M|),
+    ~ TV t x -> eval_subst ρ t x d = eval ρ t.
+\end{minted}
+\begin{minted}{coq}
+Lemma eval_subst_sanity2 : forall (u : term Σ),
+    eval_subst ρ t x (eval ρ u) = eval ρ (term_var_subst t x u).
+\end{minted}
+\begin{minted}{coq}
+Lemma eval_comp :
+    forall (σ : var -> term Σ) (ρ : env M) t,
+      eval (σ >> eval ρ) t = eval ρ (subst_term σ t).
+\end{minted}
 \end{lemma}
-\begin{lemma}
-  Rezumnost supstitucije za formule.
+
+\begin{definition}[Relacija ispunjivosti]\
+\begin{minted}{coq}
+Fixpoint Sat (ρ : env M) (F : formula Σ) : Prop :=
+  match F with
+    | FPred P args => interpP P (V.map (eval ρ) args)
+    | FIndPred P args => interpIP P (V.map (eval ρ) args)
+    | FNeg G => ~ Sat ρ G
+    | FImp F G => Sat ρ F -> Sat ρ G
+    | FAll G => forall d, Sat (d .: ρ) G
+  end.
+\end{minted}
+\end{definition}
+
+\begin{lemma}[Rezumnost supstitucije za formule]\
+\begin{minted}{coq}
+Lemma form_subst_sanity1 :
+  forall (Σ : signature) (F : formula Σ) (M : structure Σ)
+    (ρ : env M) (d : |M|) (x : var),
+    ~ FV F x -> (ρ ⊨ F <-> (env_subst ρ x d) ⊨ F).
+\end{minted}
+\begin{minted}{coq}
+Lemma strong_form_subst_sanity2 :
+    forall (Σ : signature) (F : formula Σ)
+      (M : structure Σ) (ρ : env M)
+      (σ : var -> term Σ),
+      ρ ⊨ (subst_formula σ F) <-> (σ >> eval ρ) ⊨ F.
+\end{minted}
 \end{lemma}
 
 \section{Standardni modeli}\label{sec:standardni-modeli}

@@ -274,7 +274,9 @@ Prisjetimo se, za proizvoljni predikat \(P\) nad prirodnim brojevima, princip ma
 Ako je \(n = 0\), tvrdnja slijedi iz \textit{baze} indukcije.
 Ako pak je \(n = n^{\prime} + 1\) za neki \(n^{\prime}\), tada rekurzivno konstruiramo dokaz za \(P(n^{\prime})\), a konačna tvrdnja slijedi primjenom \textit{koraka} indukcije na rekurzivno konstruirani dokaz.
 \begin{minted}{coq}
-Definition nat_ind (P : nat -> Prop) (baza : P 0) (korak : forall n, P n -> P (S n))
+Definition nat_ind (P : nat -> Prop)
+                   (baza : P 0)
+                   (korak : forall n, P n -> P (S n))
   : forall n, P n :=
   fix F (n : nat) : P n :=
     match n with
