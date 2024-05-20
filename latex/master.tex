@@ -3,6 +3,7 @@
 
 \usepackage{amsmath}
 \usepackage{amsthm}
+\usepackage{enumitem}
 \usepackage{hyperref}
 \usepackage{booktabs}
 \usepackage{minted}
@@ -11,7 +12,21 @@
 \usepackage{forest}
 \usepackage{pmboxdraw}
 \usepackage{textgreek}
+\usepackage{bussproofs}
 
+% smanjenje proreda u itemize i enumerate okolinama
+\setlist{nosep,topsep=-20pt}
+
+% smanjenje proreda u minted okolini
+\BeforeBeginEnvironment{minted}{\begin{spacing}{1.0}}
+\AfterEndEnvironment{minted}{\end{spacing}}
+\AfterEndEnvironment{minted}{\vspace{0pt}}
+
+% % smanjenje razmaka između itemize/enumerate okoline i prethodnog teksta
+% \BeforeBeginEnvironment{itemize}{\vspace{-\topsep}}
+% \BeforeBeginEnvironment{enumerate}{\vspace{-\topsep}}
+
+% BEGIN okoline za definicije
 \theoremstyle{definition}
 \newtheorem{definition}{Definicija}
 
@@ -21,15 +36,28 @@
 \theoremstyle{plain}
 \newtheorem{lemma}{Lema}
 \newtheorem{theorem}{Teorem}
+% END okoline za definicije
 
-\setminted[coq]{frame=lines, framesep=2mm, fontsize=\footnotesize, linenos, obeytabs}
+% postavke za coq unutar minted okoline
+\setminted[coq]{frame=single, linenos, obeytabs}
+
 \title{Applications of the Coq Proof Assistant in mathematics and computer science}
 \naslov{Primjene Coq alata za dokazivanje u matematici i računarstvu}
 \brojrada{578}
 \author{Miho Hren}
 \mentor{}
 
+% makro za engleske prijevode
 \renewcommand{\engl}[1]{(\textit{#1})}
+
+% za pisati todo
+\newcommand\misao[1]{ \textcolor{red}{\textbf{Misao:} \textit{#1}} }
+
+% 
+\newcommand\coqset{\texttt{Set}}
+\newcommand\coqprop{\texttt{Prop}}
+\newcommand\coqtype[1]{\texttt{Type\(_{#1}\)}}
+
 \begin{document}
 \maketitle
 \zadatak{zadatak.pdf}
@@ -40,14 +68,8 @@
 
 \mainmatter{}
 
-% Sadržaj se automatski generira / Table of contents is automatically generated
 \tableofcontents
 
-% za pisati todo
-\newcommand\misao[1]{ \textcolor{red}{\textbf{Misao:} \textit{#1}} }
-\newcommand\coqset{\texttt{Set}}
-\newcommand\coqprop{\texttt{Prop}}
-\newcommand\coqtype[1]{\texttt{Type\(_{#1}\)}}
 \include{uvod}
 \include{coq}
 \include{logika}
