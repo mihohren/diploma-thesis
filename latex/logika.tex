@@ -12,7 +12,7 @@ sustava \(LKID\) s obzirom na standardnu semantiku,
 
 Svaka definicija i lema u ovom poglavlju bit će popraćena svojim pandanom u Coqu.
 Jedan je od ciljeva diplomskog rada prikazati primjene Coqa u matematici,
-zbog čega leme nećemo dokazivati ``na papiru'',
+zbog čega leme nećemo dokazivati \enquote{na papiru},
 već se dokaz svake leme može pronaći na GitHub repozitoriju rada.\footnote{TODO: REPO LINK}
 Zainteresiranom čitatelju predlažemo interaktivni prolazak kroz dokaze lema.
 
@@ -54,7 +54,7 @@ Većina definicija i lema u ovom radu su napisane upravo unutar \texttt{Section}
   \textit{Varijabla} je prirodan broj. Skup \textbf{terma} konstruiramo rekurzivno na način:
   \begin{enumerate}
   \item svaka varijabla je term;
-  \item ako je \(f\) funkcijski simbol mjesnosti \(n\) te su \(t_{1}\), \ldots, \(t_{n}\) termi\footnote{Primijetimo, broj terma ovisi o mjesnosti funkcijskog simbola. U Coq implementaciji ovog ``konstruktora'' možemo vidjeti da je on zavisnog tipa.},
+  \item ako je \(f\) funkcijski simbol mjesnosti \(n\) te su \(t_{1}\), \ldots, \(t_{n}\) termi\footnote{Primijetimo, broj terma ovisi o mjesnosti funkcijskog simbola. U Coq implementaciji ovog \enquote{konstruktora} možemo vidjeti da je on zavisnog tipa.},
     onda je \(f(t_{1}, \ldots, t_{n})\) također term.
   \end{enumerate}
 \begin{minted}{coq}
@@ -123,7 +123,7 @@ Inductive formula : Type :=
 \noindent Za univerzalnu kvantifikaciju odstupamo od tradicionalne defincije formule.
 Umjesto kvantificiranja po eksplicitnoj varijabli,
 mi ćemo implicitno kvantificirati po varijabli \(0\).
-Ovaj pristup kvantifikaciji (ili općenitije, vezivanju varijabli), imena ``de Bruijnovo indeksiranje'', bitno olakšava rad sa supstitucijama, a uveden je u članku~\cite{debruijnamelessdummies}.
+Ovaj pristup kvantifikaciji (ili općenitije, vezivanju varijabli), imena \enquote{de Bruijnovo indeksiranje}, bitno olakšava rad sa supstitucijama, a uveden je u članku~\cite{debruijnamelessdummies}.
 O samoj implementaciji de Bruijnovog indeksiranja više se može pročitati u knjizi
 \textit{Types and Programming Languages}~\cite{pierce2002tapl}.
 Za potrebe ovog rada koristili smo paket \textit{Autosubst2}\footnote{\url{https://github.com/uds-psl/autosubst2}} za automatsko generiranje tipova terma i formula te

@@ -4,7 +4,7 @@ Section structure.
   Context {Σ : signature}.
 
   Structure structure := {
-      domain : Type;
+      domain :> Set;
       interpF (f : FuncS Σ) : vec domain (fun_ar f) -> domain;
       interpP (P : PredS Σ) : vec domain (pred_ar P) -> Prop;
       interpIP (P : IndPredS Σ) : vec domain (indpred_ar P) -> Prop;
@@ -15,23 +15,22 @@ Arguments structure : clear implicits.
 Arguments interpF {Σ M} _ _ : rename.
 Arguments interpP {Σ M} _ _ : rename.
 Arguments interpIP {Σ M} _ _ : rename.
-Notation "| M |" := (domain M) (no associativity, at level 150).
 
 Section environment.
   Context {Σ : signature} {M : structure Σ}.
 
-  Definition env := var -> |M|.
+  Definition env := var -> M.
 
-  Definition env_subst (ρ : env) (x : var) (d : |M|) : var -> |M| :=
+  Definition env_subst (ρ : env) (x : var) (d : M) : var -> M :=
     fun (y : var) => if y =? x then d else ρ y.
 
-  Fixpoint eval (ρ : env) (t : term Σ) : |M| :=
+  Fixpoint eval (ρ : env) (t : term Σ) : M :=
     match t with
     | var_term x => ρ x
     | TFunc f args => interpF f (V.map (eval ρ) args)
     end.
 
-  Fixpoint eval_subst (ρ : env) (t : term Σ) (x : var) (d : |M|) : |M| :=
+  Fixpoint eval_subst (ρ : env) (t : term Σ) (x : var) (d : M) : M :=
     match t with
     | var_term y => env_subst ρ x d y
     | TFunc f args => interpF f (V.map (fun st => eval_subst ρ st x d) args)
@@ -46,7 +45,7 @@ Section lemma_2_1_5.
   Variable t : term Σ.
   Variable x : var.
   
-  Lemma eval_subst_sanity1 : forall (d : |M|),
+  Lemma eval_subst_sanity1 : forall (d : M),
       ~ TV t x -> eval_subst ρ t x d = eval ρ t.
   Proof.
     induction t as [v | f args IH];
@@ -222,7 +221,7 @@ End Sat_facts.
 Section lemma_2_1_9.
   Lemma form_subst_sanity1 :
     forall (Σ : signature) (F : formula Σ) (M : structure Σ)
-      (ρ : env M) (d : |M|) (x : var),
+      (ρ : env M) (d : M) (x : var),
     ~ FV F x -> (ρ ⊨ F <-> (env_subst ρ x d) ⊨ F).
   Proof.
     intros Σ; induction F; intros M ρ d x Hfv;

@@ -22,7 +22,7 @@ Kod formaliziranja i dokazivanja, korisnik će najčešće koristiti interaktivn
 
 Kao programski jezik, Coq se sastoji od više podjezika različitih namjena, od kojih spominjemo \textit{Vernacular}, \textit{Gallinu} i \textit{Ltac}.
 \begin{description}
-\item[Vernacular] \misao{\textit{vernacular} znači ``govorni jezik''} je jezik naredbi kojima korisnik komunicira sa sustavom (i u interaktivnom i u skupnom načinu rada);
+\item[Vernacular] \misao{\textit{vernacular} znači \enquote{govorni jezik}} je jezik naredbi kojima korisnik komunicira sa sustavom (i u interaktivnom i u skupnom načinu rada);
   svaka Coq skripta (datoteka s nastavkom \texttt{.v}) je niz naredbi.
   Neke od najčešće korištenih naredbi su \texttt{Check}, \texttt{Definition}, \texttt{Inductive}, \texttt{Fixpoint} i \texttt{Lemma}.
   Pomoću naredbi za tvrdnje, kao što je \texttt{Lemma}, Coq prelazi iz \textit{toplevela}\misao{treba bolji prevod} u način dokazivanja~\engl{proof mode}.
@@ -68,10 +68,10 @@ Primjeri koje ćemo vidjeti u ostatku ovog odjeljka dijelom se oslanjanju na tip
 
 Gallina je strogo statički tipiziran jezik, što znači da se svakom termu prilikom prevođenja dodjeljuje tip\footnote{Tipovi su kolekcije srodnih objekata.}.
 Naredbom \texttt{Check} možemo provjeriti tip nekog terma ili doznati da se termu ne može dodijeliti tip.
-Dalje u radu pod ``term'' mislimo na dobro formirane terme, odnosno na one terme kojima se može dodijeliti tip.
+Dalje u radu pod \enquote{term} mislimo na dobro formirane terme, odnosno na one terme kojima se može dodijeliti tip.
 Kažemo da je term \textit{stanovnik} tipa koji mu je dodijeljen.
 Za tip kažemo da je \textit{nastanjen}, odnosno \textit{nenastanjen}, ako postoji, odnosno ne postoji, stanovnik tog tipa.
-Kako su u Coqu i tipovi termi, radi razumljivosti i zvučnosti umjesto ``tip tipa'' kažemo ``sorta tipa''.
+Kako su u Coqu i tipovi termi, radi razumljivosti i zvučnosti umjesto \enquote{tip tipa} kažemo \enquote{sorta tipa}.
 
 Kao i u ostalim jezicima, kod programiranja u Coqu korisnik se oslanja na dostupne primitivne izraze,
 od kojih su najvažniji:
@@ -148,7 +148,7 @@ Ovime je definirana funkcija \texttt{from} koja za ulazni argument \texttt{n} vr
 
 Razlika induktivnih i koinduktivnih tipova može se izreći epigramom:\\
 \[
-  \textrm{``Induktivni tipovi su domene rekurzivnih funkcija, a koinduktivni tipovi su kodomene korekurzivnih funkcija''.}
+  \textrm{\enquote{Induktivni tipovi su domene rekurzivnih funkcija, a koinduktivni tipovi su kodomene korekurzivnih funkcija}.}
 \]
 \noindent Time se želi reći da se termi induktivnih tipova destrukturiraju u rekurzivnim funkcijama,
 dok se termi koinduktivnih tipova konstruiraju u korekurzivnim funkcijama.
@@ -158,15 +158,15 @@ dok se termi koinduktivnih tipova konstruiraju u korekurzivnim funkcijama.
 \section{Hijerarhija tipova}\label{sec:kumul-hijer-tipova}
 U usporedbi s tradicionalnim programskim jezicima, Coqov tipski sustav je ekspresivniji jer dopušta tipove koji mogu ovisiti o termima.
 Takvi tipovi se u Coqu konstruiraju \texttt{forall} izrazom.
-Primjer jednog takvog tipa je ``lista duljine \(n\)'', gdje je \(n\) neki prirodan broj, a čiji su stanovnici \(n\)-torke.
-Općeniti tip tada glasi ``za svaki \(n\), lista duljine \(n\)'' --- on ovisi o stanovniku drugog tipa (u ovom slučaju, tipa \texttt{nat}).
+Primjer jednog takvog tipa je \enquote{lista duljine \(n\)}, gdje je \(n\) neki prirodan broj, a čiji su stanovnici \(n\)-torke.
+Općeniti tip tada glasi \enquote{za svaki \(n\), lista duljine \(n\)} --- on ovisi o stanovniku drugog tipa (u ovom slučaju, tipa \texttt{nat}).
 
 Spomenuli smo da su i tipovi termi te im se može dodijeliti sorta.
 Postoji li najveći tip, odnosno postoji li tip \texttt{Type} čiji su stanovnici svi dobro formirani termi?
 Prisjetimo se, svaki term ima svoj tip.
 Kada bi takav \texttt{Type} postojao, tada bi vrijedilo \verb|Type:Type|, što može dovesti do paradoksa lašca\footnote{Ova rečenica je lažna. U teoriji skupova to je Russellov paradoks, u teoriji tipova to je Girardov paradoks}.
 Takav dokazivač teorema bio bi inkonzistentan te bismo njime mogli dokazati kontradikciju, čime dokazivač efektivno gubi svoju svrhu.
-Umjesto jedne ``velike'' sorte \texttt{Type}, u Coqu postoji niz monotono rastućih sorti \coqtype{n} za sve prirodne brojeve \(n\),
+Umjesto jedne \enquote{velike} sorte \texttt{Type}, u Coqu postoji niz monotono rastućih sorti \coqtype{n} za sve prirodne brojeve \(n\),
 takav da vrijedi \(\coqtype{n} : \coqtype{m}\) kad god vrijedi \(n < m\).
 Ilustracija ove \textbf{kumulativne hijerarhije tipova} prikazana je na slici~\ref{fig:kum-hijer-tip}.
 Dvije najvažnije sorte u Coqu su sorta \texttt{Set} i sorta \texttt{Prop}.
@@ -242,7 +242,7 @@ S druge strane, ako tip nema konstruktore, nije moguće definirati vrijednost to
 Ako pak tip ima barem jedan konstruktor, tada postoje i njegovi stanovnici.
 Kroz ove primjere vidimo fenomen \textbf{Curry--Howardove korespondencije}, koju možemo sažeti epigramom:
 \[
-  \textrm{``Propozicije su tipovi, dokazi su programi.''}
+  \textrm{\enquote{Propozicije su tipovi, dokazi su programi.}}
 \]
 \\ Time se dokazivanje svodi na programiranje. Pogledi na dvije strane ovog novčića mogu se vidjeti u tablici~\ref{tab:curryhoward}.
 \begin{table}[!hbt]
@@ -341,12 +341,12 @@ CoFixpoint bar : NatStream := {| nat_hd := 0; nat_tl := bar |}.
 Posljednje ograničenje koje spominjemo vezano je uz irelevantnost dokaza \engl{proof irrelevance}.
 Naime, mnogi teoremi mogu se dokazati na više načina, ali svaki pojedini dokaz (dakle, postupak kojim smo od pretpostavka došli do konkluzije) \textit{nije bitan}.
 Matematičarima su bitni samo iskaz teorema i činjenica da se teorem \textit{može dokazati}.
-Sam postupak dokazivanja smatra se ``implementacijskim detaljom''.
+Sam postupak dokazivanja smatra se \enquote{implementacijskim detaljom}.
 Upravo zato analiza dokaza ima smisla samo kada se dokazuje, ali ne i kada se programira.
 U našoj terminologiji to znači da se \textit{pattern matching} nad dokazima smije provoditi samo kod definiranja terma sorte \texttt{Prop}.
 U suprotnom, mogli bismo definirati programe koji ovise o \textit{konkretnom dokazu}, umjesto o iskazanom teoremu.
 \textbf{Ograničenje eliminacije propozicije} nastalo je radi ekstrakcije ---
-svi termi sorte \texttt{Prop} se ``brišu'' prilikom prevođenja iz Coqovog tipskog sustava u tipske sustave niže razine apstrakcije.
+svi termi sorte \texttt{Prop} se \enquote{brišu} prilikom prevođenja iz Coqovog tipskog sustava u tipske sustave niže razine apstrakcije.
 Kada ovog ograničenja ne bi bilo, ekstrakcija u jednostavnije jezike naprosto ne bi bila moguća.
 
 

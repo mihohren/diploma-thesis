@@ -100,17 +100,15 @@ Section lkid.
       let minor_premises :=
         (forall pr (Hdep : mutually_dependent (indcons pr) Pj),
             let Qs := shift_formulas_by shift_factor (FPreds_from_preds (preds pr)) in
-            let Gs := map (fun p =>
-                             let P := p.1 in
-                             let args := p.2 in
+            let Gs := map (fun '(P; args) =>
                              let shifted_args := V.map (shift_term_by shift_factor) args in
                              let σ := finite_subst (z_i P) (shifted_args) in
                              let G := G_i P in
                              subst_formula σ G)
                         (indpreds pr) in
             let Pi := indcons pr in
-            let tx := V.map (shift_term_by shift_factor) (indargs pr) in
-            let Fi := subst_formula (finite_subst (z_i Pi) tx) (G_i Pi) in
+            let ty := V.map (shift_term_by shift_factor) (indargs pr) in
+            let Fi := subst_formula (finite_subst (z_i Pi) ty) (G_i Pi) in
             LKID (Qs ++ Gs ++ Γ ⊢ Fi :: Δ))
       in
       minor_premises ->

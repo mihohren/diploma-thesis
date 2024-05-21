@@ -1,11 +1,11 @@
 Require Import Base.
 
 Structure signature := {
-    FuncS : Type;
+    FuncS : Set;
     fun_ar : FuncS -> nat;
-    PredS : Type;
+    PredS : Set;
     pred_ar : PredS -> nat;
-    IndPredS : Type;
+    IndPredS : Set;
     indpred_ar : IndPredS -> nat
   }.
 
@@ -20,7 +20,7 @@ Section term.
 
   Unset Elimination Schemes.
   
-  Inductive term  : Type :=
+  Inductive term  : Set :=
   | var_term : var -> term 
   | TFunc : forall (f : FuncS Σ), vec term (fun_ar f) -> term.
   
@@ -169,8 +169,7 @@ Section term_facts.
   Lemma var_not_in_Func_not_in_args : forall (f : FuncS Σ) args x,
       ~ TV (TFunc f args) x -> forall st, V.In st args -> ~ TV st x.
   Proof.
-    intros f args x Hnotin; unfold E.In in *.
-    intros t Hin Hvar. apply Hnotin.
+    intros f args x Hnotin t Hin Hvar; apply Hnotin.
     apply TVFunc with t; assumption.
   Qed.
     
@@ -266,7 +265,7 @@ End term_facts.
 Section formula.
   Context {Σ : signature}.
   
-  Inductive formula : Type :=
+  Inductive formula : Set :=
   | FPred (P : PredS Σ) : vec (term Σ) (pred_ar P) -> formula 
   | FIndPred (P : IndPredS Σ) : vec (term Σ) (indpred_ar P) -> formula 
   | FNeg : formula -> formula 
@@ -282,7 +281,7 @@ Section formula.
   Definition FExist (φ : formula) : formula :=
     FNeg (FAll (FNeg φ)).
   
-  Inductive FV : formula -> E.Ensemble var :=
+  Inductive FV : formula -> var -> Prop :=
   | FV_Pred : forall R args v st,
       V.In st args -> TV st v -> FV (FPred R args) v
   | FV_IndPred : forall R args v st,

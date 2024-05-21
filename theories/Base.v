@@ -12,10 +12,6 @@ Arguments V.nil {A}.
 Arguments V.cons {A} _ {n} _.
 Arguments V.In {A} a {n} v.
 
-Require Sets.Ensembles.
-Module E := Ensembles.
-Arguments E.In {U} A x.
-
 Lemma vec_Exists_exists : forall A (P : A -> Prop) n (v : vec A n),
     V.Exists P v <-> exists t, V.In t v /\ P t.
 Proof.
