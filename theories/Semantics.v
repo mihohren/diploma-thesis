@@ -262,14 +262,13 @@ Section lemma_2_1_9.
   Open Scope subst_scope.
 
   Lemma strong_form_subst_sanity2 :
-    forall (Σ : signature) (F : formula Σ)
-      (M : structure Σ) (ρ : env M)
-      (σ : var -> term Σ),
-      ρ ⊨ (subst_formula σ F) <-> (σ >> eval ρ) ⊨ F.
+    forall (Σ : signature) (φ : formula Σ) (σ : var -> term Σ)
+      (M : structure Σ) (ρ : env M),
+      ρ ⊨ (subst_formula σ φ) <-> (σ >> eval ρ) ⊨ φ.
   Proof.
-    intros Σ F; induction F; intros M ρ σ; cbn; intuition.
+    intros Σ φ; induction φ; intros σ M ρ; cbn; intuition.
     - erewrite <- vec_comp.
-      + eapply H.
+      + eauto.
       + intros u; asimpl; now rewrite eval_comp.
     - erewrite vec_comp.
       + eapply H.
@@ -280,16 +279,15 @@ Section lemma_2_1_9.
     - erewrite vec_comp.
       + eapply H.
       + intros u; asimpl; now rewrite eval_comp.
-    - now apply H, IHF.
-    - now apply H, IHF. 
-    - apply IHF2; apply H; apply IHF1; auto.
-    - apply IHF2; apply H; apply IHF1; auto.
+    - now apply H, IHφ.
+    - now apply H, IHφ. 
+    - apply IHφ2; apply H; apply IHφ1; auto.
+    - apply IHφ2; apply H; apply IHφ1; auto.
     - asimpl in H. specialize H with d.
-      apply IHF in H. asimpl in H. simpl in H.
+      apply IHφ in H. asimpl in H. simpl in H.
       rewrite eval_shift in H. apply H.
-    - rewrite IHF. asimpl. simpl.
+    - rewrite IHφ. asimpl. simpl.
       rewrite eval_shift.
       apply H.
   Qed.
-  
 End lemma_2_1_9.

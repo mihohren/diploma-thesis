@@ -1,6 +1,6 @@
 Require Import Relations.
 Require Export Utf8.
-Require Export Arith Bool Lia.
+Require Export Arith Bool Lia Program.
 Require Export unscoped.
 
 Export SigTNotations.

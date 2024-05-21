@@ -1,5 +1,4 @@
 Require Import Base Syntax Semantics.
-Require Import Arith.
 
 Section inductive_definition_set.
   Context {Σ : signature}.
@@ -106,17 +105,13 @@ Section approximants.
   Proof.
     unfold approximant_of; induction α; intros P v H.
     - inversion H.
-    - apply φ_Φ_monotone with (fun P => φ_Φ_n P α).
-      + intros Q u H'. cbn. apply IHα. apply H'.
-      + apply H.
+    - apply φ_Φ_monotone with (fun P => φ_Φ_n P α); auto.
   Qed.
   
   Lemma approximant_monotone : forall α β, α < β -> forall P v, approximant_of P α v -> approximant_of P β v.
   Proof.
     unfold approximant_of. intros α β Hle P v Hφ.
-    induction Hle.
-    - now apply approximant_succ.
-    - now apply approximant_succ.
+    induction Hle; now apply approximant_succ.
   Qed.  
       
   Lemma approximant_characterization : forall α P v,
@@ -153,44 +148,9 @@ Section approximants.
     - exists (S α). apply Hφ.
   Qed.
 
-  Require Import List Lia Arith.
   Import ListNotations.
 
-  Section experiment.
-    Variable T : Type.
-    Variable P : T -> nat -> Prop.
-    Hypothesis P_succ : forall t n, P t n -> P t (S n).
-
-    Lemma P_monotone : forall t n m, n < m -> P t n -> P t m.
-    Proof.
-      intros t n m Hle. induction Hle.
-      - apply P_succ.
-      - intros H. apply P_succ. auto.
-    Qed.
-
-    Variable ls : list T.
-    Hypothesis In_ls_P : forall t, In t ls -> exists n, P t n.
-
-    Lemma supremum : exists α, forall t, In t ls -> P t α.
-    Proof.
-      induction ls.
-      - exists 0. cbn; intros; subst; contradiction.
-      - assert (In_a : In a (a :: l)) by now left.
-        destruct (In_ls_P a In_a) as [α HPα].
-        assert (In_tail_P : forall t, In t l -> exists n, P t n).
-        { intros t Hin. apply In_ls_P. now right. }
-        pose proof (IHl In_tail_P) as [β HPβ].
-        set (γ := Nat.max α β).
-        exists (S γ). intros t Hin.
-        inversion Hin.
-        + subst. apply P_monotone with α; [lia | assumption].
-        + clear Hin. apply P_monotone with β; [lia | auto].
-    Qed.
-  End experiment.
-
-  Require Import Program.
-  
-  Section lemma_2_2_11.
+  Section lemma_2_2_11.         (* uses proof irrelevance *)
     Lemma ω_prefixed : forall P v, @φ_Φ Σ M Φ φ_Φ_ω P v -> φ_Φ_ω P v.
     Proof.
       intros P y H.
@@ -227,8 +187,6 @@ Section approximants.
       exists pr, (conj eq_refl Hpr).
       unfold φ_pr. exists ρ; split; auto.
     Qed.
-
-    Print Assumptions ω_prefixed. (* Axioms: proof irrelevance *)
 
     Lemma ω_least : forall args, (forall P v, @φ_Φ Σ M Φ args P v -> args P v) ->
                             forall P v, φ_Φ_ω P v -> args P v.

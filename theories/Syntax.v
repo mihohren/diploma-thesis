@@ -343,14 +343,14 @@ Section formula.
   Proof. congruence. Qed.
 
   Fixpoint subst_formula
-    (σ : var -> term Σ) (s : formula )
+    (σ : var -> term Σ) (φ : formula )
     : formula  :=
-    match s return formula  with
-    | FPred  P s0 => FPred  P ((V.map (subst_term σ)) s0)
-    | FIndPred  P s0 => FIndPred  P ((V.map (subst_term σ)) s0)
-    | FNeg  s0 => FNeg  ((subst_formula σ) s0)
-    | FImp  s0 s1 => FImp  ((subst_formula σ) s0) ((subst_formula σ) s1)
-    | FAll  s0 => FAll  ((subst_formula (up_term_term σ)) s0)
+    match φ return formula  with
+    | FPred P args => FPred P (V.map (subst_term σ) args)
+    | FIndPred P args => FIndPred P (V.map (subst_term σ) args)
+    | FNeg ψ => FNeg (subst_formula σ ψ)
+    | FImp ψ ξ => FImp (subst_formula σ ψ) (subst_formula σ ξ)
+    | FAll ψ => FAll (subst_formula (up_term_term σ) ψ)
     end.
 
   Definition shift_formula := subst_formula (funcomp (@var_term Σ) shift).
