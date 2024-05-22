@@ -73,6 +73,9 @@ Inductive term : Set :=
 | TFunc : forall (f : FuncS Σ), vec term (fun_ar f) -> term.
 \end{minted}
 \end{definition}
+Općenitije prezentacije logike prvog reda za skup varijabli uzimaju proizvoljan skup \(\mathcal{V}\),
+no za formalizaciju je pogodniji skup prirodnih brojeva \(\mathbb{N}\).
+Kasnije ćemo objasniti zašto.
 
 \noindent Princip indukcije za \texttt{term} potrebno je ručno definirati.
 Naime, induktivni tip \texttt{term} je \textit{ugniježđen} po konstruktoru \texttt{TFunc} što znači da se
@@ -117,9 +120,14 @@ Inductive formula : Set :=
 | FImp : formula -> formula -> formula 
 | FAll : formula -> formula.
 \end{minted}
+  \noindent Ostale veznike definiramo kao sintaksne pokrate.
+\begin{minted}{coq}
+Definition FAnd (φ ψ : formula) : formula := FNeg (FImp φ (FNeg ψ)).
+Definition FOr (φ ψ : formula) : formula := FImp (FNeg φ) ψ.
+Definition FExist (φ : formula) : formula := FNeg (FAll (FNeg φ)).
+\end{minted}
 \end{definition}
-\noindent Za univerzalnu kvantifikaciju odstupamo od tradicionalne defincije formule.
-Umjesto kvantificiranja po eksplicitnoj varijabli,
+Umjesto eksplicitne kvantifikacije po nekoj varijabli \(v\),
 mi ćemo implicitno kvantificirati po varijabli \(0\).
 Ovaj pristup kvantifikaciji\footnote{Ili općenitije, vezivanju varijabli.}, imena \enquote{de Bruijnovo indeksiranje},
 bitno olakšava rad sa supstitucijama, a uveden je u članku~\cite{debruijnamelessdummies}.
@@ -171,6 +179,7 @@ Fixpoint subst_formula
   | FAll ψ => FAll (subst_formula (up_term_term σ) ψ)
   end.
 \end{minted}
+  \noindent Ovdje funkcija \textit{up\_term\_term} brine da supstitucija \(\sigma\) mijenja samo one varijable koje nisu vezane.
 \end{definition}
 
 Konačno, potrebno je definirati sintaksu za indukciju.
@@ -202,7 +211,8 @@ Record production := mkProd {
     indargs : vec (term Σ) (indpred_ar indcons);
   }.
 \end{minted}
-  \textit{Skup induktivnih definicija} je skup produkcija.
+  \textit{Skup induktivnih definicija} \(\Phi\) je skup produkcija.
+  U ostatku rada promatramu neki proizvoljan, ali fiksiran skup induktivnih definicija \(\Phi\).
 \begin{minted}{coq}
 Definition IndDefSet := production -> Prop.
 \end{minted}
@@ -276,9 +286,175 @@ Lemma strong_form_subst_sanity2 :
 \misao{Zvuči kul. Je li jasno što je to semantička supstitucija i zašto kažem da komutiraju?}
 
 \section{Standardni modeli}\label{sec:standardni-modeli}
-Operator \(\varphi_{\Phi}\). Aproksimanti. Standardni model.
+Želimo ograničiti semantička razmatranja na samo one strukture koje \enquote{imaju smisla} za induktivne predikate.
+Prisjetimo se, predikatni simbol \(P\) mjesnosti \(n\) interpretira se na strukturi \(M\)  podskupom skupa \(M^{n}\).
+Indukciju smatramo dokazivanjem \textup{u razinama} pa ima smisla promatrati \textit{razine interpretacije} induktivnog predikata,
+gdje je nulta razina prazan skup,
+a svaku iduću razinu konstruiramo pomoću produkcija induktivnog skupa definicija i prethodnih razina.
+Tako je prva razina onaj podskup kojeg možemo dobiti samo jednom \enquote{primjenom produkcija},
+druga je razina onaj podskup kojeg možemo dobiti pomoću dvije primjene produkcija, i tako dalje.
+Na taj se način, korak po korak, gradi \textit{smislena} interpretacija induktivnih predikata.
+Napominjemo da se zbog mogućih međuovisnosti induktivnih predikata razine interpretacije definiraju simultano.
+Ovaj odjeljak posvećujemo formalizaciji ovih pojmova.
+
+\begin{definition}[Operator skupa definicija]
+  Neka je \(M\) proizvoljna struktura te neka je \(pr\) proizvoljna produkcija induktivnog skupa definicija \(\Phi\)
+  u čijoj se konkluziji javlja induktivni predikatni simbol \(P\), primjerice:
+  \begin{prooftree}
+  \AxiomC{\(  Q_{1}\mathbf{u}_{1}  \ldots   Q_{n}\mathbf{u}_{n}  \)}
+  \AxiomC{\(  P_{1}\mathbf{v}_{1}  \ldots   P_{m}\mathbf{v}_{m}  \)}
+  \BinaryInfC{\(P\mathbf{t}\)}
+  \end{prooftree}
+\noindent Neka je \(f\) funkcija koja svakom induktivnom predikatnom simbolu \(R\) pridružuje podskup skupa \(M^{|R|}\).
+Tada je \(\varphi_{pr}(f)\) skup svih \(|P|\)-torki \(\mathbf{d}\) elemenata nosača \(M\) za koje postoji okolina \(\rho\) za \(M\) takva da:
+\begin{itemize}
+\item za sve \( i \in \{ 1, \ldots, n \} \) vrijedi \( \mathbf{u}_{i}^{\rho} \in Q_{i}^{M} \), % TODO uvesti ovu notaciju za u
+\item za sve \( j \in \{ 1, \ldots, m \} \) vrijedi \( \mathbf{v_{i}^{\rho}} \in f(P_{i}) \) i
+\item \(\mathbf{d} = \mathbf{t}^{\rho}\).
+\end{itemize}
+\begin{minted}{coq}
+Definition φ_pr
+  (pr : production)
+  (args : forall P : IndPredS Σ, vec D (indpred_ar P) -> Prop)
+  (ds : vec D (indpred_ar (indcons pr)))
+  : Prop :=
+      exists (ρ : env M),
+      (forall Q us, List.In (Q; us) (preds pr) ->
+               interpP Q (V.map (eval ρ) us))
+      /\
+        ( forall P ts, List.In (P; ts) (indpreds pr) ->
+                  args P (V.map (eval ρ) ts))
+      /\
+        ds = V.map (eval ρ) (indargs pr).
+\end{minted}
+\noindent Operator \(\varphi_{pr}\) je formalizacija ideje primjene produkcije.
+Nadalje, potrebno je definirati operator koji će uzeti u obzir \textit{sve} produkcije koje se odnose na \(P\).
+Definiramo \(\varphi_{P}(f)\) kao uniju svih \(\varphi_{pr^{\prime}}(f)\) gdje je \(pr^{\prime}\) produkcija u kojoj se \(P\) javlja u konkluziciji.
+\begin{minted}{coq}
+Definition φ_P
+  (P : IndPredS Σ)
+  (args : forall P : IndPredS Σ, vec D (indpred_ar P) -> Prop)
+  : vec D (indpred_ar P) -> Prop.
+  refine (fun ds => _).
+  refine (@ex production (fun pr => _)).
+  refine (@ex (P = indcons pr /\ Φ pr) (fun H => _)).
+  destruct H as [Heq HΦ].
+  rewrite Heq in ds.
+  exact (φ_pr pr args ds).
+Defined.
+\end{minted}
+\noindent Konačno, definiramo operator skupa definicija \(\varphi_{\Phi}\) kao preslikavanje
+koje induktivnom predikatnom simbolu \(P\) pridružuje skup \(\varphi_{P}(f)\).
+\begin{minted}{coq}
+Definition φ_Φ
+  (args : forall P : IndPredS Σ, vec D (indpred_ar P) -> Prop)
+    : forall P : IndPredS Σ, vec D (indpred_ar P) -> Prop :=
+    fun P => φ_P P args.
+\end{minted}
+\noindent Operator \(\varphi_{\Phi}\) omogućuje simultanu primjenu produkcija.
+\end{definition}
+
+\begin{remark}
+  Kako je funkcija \(f\) bila uvedena na samom početku prethodne definicije,
+  u stvari definicija operatora \(\varphi_{\Phi}\) glasi
+  \(
+    \varphi_{\Phi}(f)(P) = \varphi_{P}(f)
+  \).
+\end{remark}
+
+\misao{Ova duga definicija vapi za primjerom. Meni je jasno, ali slutim da bi dragom čitatelju bilo incomprehensible.}
+
+\begin{proposition}
+  Operator \(\varphi_{\Phi}\) je monoton.
+\begin{minted}{coq}
+Proposition φ_Φ_monotone :
+  forall (f g : forall P, vec D (indpred_ar P) -> Prop),
+    (forall P v, f P v -> g P v) ->
+    (forall P v, φ_Φ f P v -> φ_Φ g P v).
+\end{minted}
+\end{proposition}
+
+\begin{definition}[Aproksimanti]
+  Neka je \(M\) proizvoljna struktura.
+  Definiramo aproksimaciju skupa induktivnih definicija \(\Phi\) razine \(\alpha\), u oznaci \(\varphi_{\Phi}^{\alpha}\), rekurzivno na način:
+  \begin{enumerate}
+  \item \( \varphi_{\Phi}^{0}(P) = \varnothing \) i
+  \item \( \varphi_{\Phi}^{\alpha + 1} = \varphi_{\Phi}(\varphi_{\Phi}^{\alpha}) \).
+  \end{enumerate}
+\begin{minted}{coq}
+Fixpoint φ_Φ_n P (α : nat) (v : vec M (indpred_ar P)) : Prop :=
+  match α with
+  | 0 => False
+  | S α => @φ_Φ Σ M Φ (fun P => φ_Φ_n P α) P v
+  end.
+\end{minted}
+  \noindent Tada je aproksimant induktivnog predikatnost simbola \(P\) razine \(\alpha\) upravo \(\varphi_{\Phi}^{\alpha}(P)\).
+\begin{minted}{coq}
+Definition approximant_of (P : IndPredS Σ)
+  : nat -> vec M (indpred_ar P) -> Prop :=
+  φ_Φ_n P.
+\end{minted}
+\end{definition}
+
+\misao{Redoslijed argumenata u approximant\_of je zbunjujuć s obzirom na čitanje simbola: fi fi na alfa od pe.}
+\misao{O redoslijedu smo na nekom sastanku raspravljali i zaključili da bi ipak trebao biti ovakav kakav jest.}
+
+\begin{remark}
+  Brotherston je definirao aproksimaciju razine \(\alpha\) kao uniju aproksimacija svih nižih razina.
+  Takva je definicija ekvivalentna našoj.
+\end{remark}
+\misao{Malo je neprezicno reći ``unija'', ustvari se misli na uniju za svaki pojedini \(P\).}
+
+\begin{lemma}
+  Za sve prirodne brojeve \(\alpha\) i induktivne predikatne simbole \(P\) vrijedi
+  \[
+    \varphi_{\Phi}^{\alpha}(P) = \bigcup_{\beta < \alpha} \varphi_{\Phi}^{\beta}(P).
+  \]
+\begin{minted}{coq}
+Lemma approximant_characterization : forall α P v,
+      φ_Φ_n P α v <-> exists β,
+                      β < α /\ @φ_Φ Σ M Φ (fun P => φ_Φ_n P β) P v.
+\end{minted}
+\end{lemma}
+
+\begin{definition}
+  Aproksimacija razine \(\omega\), u oznaci \(\varphi_{\Phi}^{\omega}\), je unija aproksimacija razina manjih od \(\omega\).
+\begin{minted}{coq}
+Definition φ_Φ_ω P v := exists α, φ_Φ_n P α v.
+\end{minted}
+\end{definition}
+\misao{Opet, ``unija'' nije precizno.}
+
+\begin{lemma}
+  Aproksimacija razine \(\omega\) najmanji je skup sa svojstvom \(\varphi_{\Phi}(\varphi_{\Phi}^{\omega}) \subseteq \varphi_{\Phi}^{\omega}\).
+\begin{minted}{coq}
+Lemma ω_prefixed : forall P v, @φ_Φ Σ M Φ φ_Φ_ω P v -> φ_Φ_ω P v.
+Lemma ω_least : forall args,
+                (forall P v, @φ_Φ Σ M Φ args P v -> args P v) ->
+                forall P v, φ_Φ_ω P v -> args P v.
+\end{minted}
+\end{lemma}
+
+\begin{definition}[Standardni model]
+  Kažemo da je struktura \(M\) standardni model za \(\Phi\) ako
+  interpretira svaki induktivni predikatni simbol njegovim aproksimantom razine \(\omega\).
+\begin{minted}{coq}
+Definition standard_model
+  (Σ : signature) (Φ: @IndDefSet Σ)
+  : structure Σ -> Prop :=
+  fun M =>
+    forall (P : IndPredS Σ) ts, interpIP P ts <-> @φ_Φ_ω Σ M Φ P ts.
+\end{minted}
+\end{definition}
+\noindent Standardni modeli su upravo one strukture koje imaju smisla za skup induktivnih definicija.
+
 
 \section{Sistem sekvenata s induktivnim definicijama}\label{sec:sistem-sekvenata}
+Kako to da je Brotherston definirao signaturu, ali onda nije uključio aksiome u LKID?
+Primjerice, u \( \Sigma_{PA} \) imamo simbol jednakosti, ali ne možemo dokazati refleksivnost.
+Valjda su aksiomi uključeni u \(\Gamma\), u smislu LKID je općenit dokazni sustav, pa bi neka
+``aksiomatizirana teorija'' u stvari bili dokazi \(\mathit{akiomi} \vDash \varphi\). Možda.
+
 LKID. Dopustiva pravila. Primjeri dokaza.
 
 \section{Adekvatnost}\label{sec:adekvatnost}

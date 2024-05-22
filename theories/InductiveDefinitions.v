@@ -57,11 +57,11 @@ Section definition_set_operator.
     : forall P : IndPredS Σ, vec D (indpred_ar P) -> Prop :=
     fun P => φ_P P args.
 
-  Proposition φ_Φ_monotone : forall (x y : forall P, vec D (indpred_ar P) -> Prop),
-      (forall P v, x P v -> y P v) ->
-      (forall P v, φ_Φ x P v -> φ_Φ y P v).
+  Proposition φ_Φ_monotone : forall (f g : forall P, vec D (indpred_ar P) -> Prop),
+      (forall P v, f P v -> g P v) ->
+      (forall P v, φ_Φ f P v -> φ_Φ g P v).
   Proof.
-    intros x y Hle P v Hφ.
+    intros f g Hle P v Hφ.
     unfold φ_Φ, φ_P in *.
     destruct Hφ as (pr & (Heq & HΦ) & Hφ_P_pr).
     destruct Hφ_P_pr as (ρ & Hpreds & Hindpreds & Hcons).
@@ -77,9 +77,8 @@ End definition_set_operator.
 Section approximants.
   Context {Σ : signature} {M : structure Σ}.
   Context {Φ : @IndDefSet Σ}.
-  Let D := domain M.
 
-  Fixpoint φ_Φ_n P (α : nat) (v : vec D (indpred_ar P)) : Prop :=
+  Fixpoint φ_Φ_n P (α : nat) (v : vec M (indpred_ar P)) : Prop :=
     match α with
     | 0 => False
     | S α => @φ_Φ Σ M Φ (fun P => φ_Φ_n P α) P v
@@ -92,7 +91,7 @@ Section approximants.
   Qed.
     
   Definition approximant_of (P : IndPredS Σ)
-    : nat -> vec D (indpred_ar P) -> Prop :=
+    : nat -> vec M (indpred_ar P) -> Prop :=
     φ_Φ_n P.
 
   Lemma zeroth_approximant_empty :

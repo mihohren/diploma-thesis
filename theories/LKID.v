@@ -6,7 +6,7 @@ Import ListNotations.
 Section lkid.
   Context {Σ : signature} {Φ : @IndDefSet Σ}.
 
-  Inductive sequent : Type :=
+  Inductive sequent : Set :=
   | mkSeq (left : list (formula Σ)) (right : list (formula Σ)).
 
   Notation "Γ ⊢ Δ" := (mkSeq Γ Δ) (no associativity, at level 61).
