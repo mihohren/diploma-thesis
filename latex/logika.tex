@@ -3,6 +3,7 @@ U ovom poglavlju predstavljamo glavne rezultate diplomskog rada koji uključuju 
 logike prvog reda s induktivnim definicijama \(\mathit{FOL_{ID}}\)
 te dokaznog sustava \(\mathit{LKID}\), koje je prvi uveo Brotherston~\cite{brotherston2005}.
 Definicije, leme i dokazi u ovom poglavlju preuzete su iz Brotherstonove disertacije~\cite{brotherstonphd}.
+Za općeniti uvod u logiku čitatelja upućujemo na knjigu \textit{Matematička logika}~\cite{vukovic}.
 
 Prvo ćemo definirati sintaksu i semantiku logike \(\mathit{FOL_{ID}}\),
 nakon čega ćemo definirati njene standardne modele.
@@ -61,7 +62,7 @@ pod uvjetom da se korisnik nalazi u \texttt{Section} okolini.\footnote{\url{http
 Većina definicija i lema u ovom radu su napisane upravo unutar \texttt{Section} okoline.
 
 \begin{definition}[Term]\label{def:term}
-  \textit{Varijabla} je prirodan broj. Skup terma konstruiramo rekurzivno na način:
+  \textit{Varijabla} je prirodan broj. Skup svih terma konstruiramo rekurzivno na način:
   \begin{enumerate}
   \item svaka varijabla je term;
   \item ako je \(f\) funkcijski simbol mjesnosti \(n\) te su \(t_{1}\), \ldots, \(t_{n}\) termi\footnote{Primijetimo, broj terma ovisi o mjesnosti funkcijskog simbola. U Coq implementaciji ovog \enquote{konstruktora} možemo vidjeti da je on zavisnog tipa.},
@@ -93,8 +94,8 @@ Lemma term_ind
 \begin{definition}
   Skup svih varijabli koje se javljaju u termu \(t\), u oznaci \(\mathit{TV}(t)\), konstruiramo rekurzivno na način:
   \begin{enumerate}
-  \item za varijablu \(v\) vrijedi \( \mathit{TV}(v) = \{ v \} \),
-  \item za \(n\)-mjesni funkcijski simbol \(f\) i terme \(t_{1}, \ldots, t_{n}\) vrijedi \( \mathit{TV}(f(t_{1}, \ldots, t_{n})) = \bigcup_{1 \le i \le n} \mathit{TV}(t_{i}) \).
+  \item za varijablu \(v\) vrijedi \( \mathit{TV}(v) \coloneq \{ v \} \),
+  \item za \(n\)-mjesni funkcijski simbol \(f\) i terme \(t_{1}, \ldots, t_{n}\) vrijedi \( \mathit{TV}(f(t_{1}, \ldots, t_{n})) \coloneq \bigcup_{1 \le i \le n} \mathit{TV}(t_{i}) \).
   \end{enumerate}
 \begin{minted}{coq}
 Inductive TV : term -> var -> Prop :=
@@ -105,7 +106,7 @@ Inductive TV : term -> var -> Prop :=
 \end{definition}
 
 \begin{definition}[Formula]\label{def:formula}
-  Skup formula konstruiramo rekurzivno na način:
+  Skup svih formula konstruiramo rekurzivno na način:
   \begin{enumerate}
   \item ako je \(Q\) običan ili induktivan predikatni simbol mjesnosti \(n\) te su \(t_{1}\), \ldots, \(t_{n}\) termi,
     onda je \(Q(t_{1}, \ldots, t_{n})\) \textit{atomarna} formula;
@@ -140,10 +141,10 @@ za automatsko generiranje tipova terma i formula te pripadajućih funkcija supst
 \begin{definition}
   Skup slobodnih varijabli formule \(\varphi\), u oznaci \(\mathit{FV}(\varphi)\), konstruiramo rekurzivno na način:
   \begin{enumerate}
-  \item \( \mathit{FV}(P(u_{1}, \ldots, u_{n})) = \bigcup_{1 \le i \le n} \mathit{TV}(u_{i}) \),
-  \item \( \mathit{FV}(\neg\varphi) = \mathit{FV}(\varphi)\),
-  \item \( \mathit{FV}(\varphi \rightarrow \psi) = \mathit{FV}(\varphi) \cup \mathit{FV}(\psi) \),
-  \item \( \mathit{FV(\forall \varphi)} = \{ v \mid 1 + v \in \mathit{FV}(\varphi) \} \).
+  \item \( \mathit{FV}(P(u_{1}, \ldots, u_{n})) \coloneq \bigcup_{1 \le i \le n} \mathit{TV}(u_{i}) \),
+  \item \( \mathit{FV}(\neg\varphi) \coloneq \mathit{FV}(\varphi)\),
+  \item \( \mathit{FV}(\varphi \rightarrow \psi) \coloneq \mathit{FV}(\varphi) \cup \mathit{FV}(\psi) \),
+  \item \( \mathit{FV(\forall \varphi)} \coloneq \{ v \mid 1 + v \in \mathit{FV}(\varphi) \} \).
   \end{enumerate}
 \begin{minted}{coq}
 Inductive FV : formula -> var -> Prop :=
@@ -159,7 +160,10 @@ Inductive FV : formula -> var -> Prop :=
 \end{definition}
 
 \begin{definition}[Supstitucija]
-  Supstitucija je svaka funkcija iz skupa \(\mathbb{N}\) u skup terma, a domena joj se može rekurzivno proširiti na skup terma i skup formula.
+  Supstitucija je svaka funkcija iz skupa \(\mathbb{N}\) u skup svih terma.
+  Supstituciju \(\sigma\) možemo promatrati kao niz terma \(t_{0}, t_{1}, t_{2}, \ldots\).
+  Tada je \textit{pomaknuta supstitucija}, u oznaci \(t \cdot \sigma\), supstitucija koja odgovara nizu \(t, t_{0}, t_{1}, t_{2}, \ldots\).\\
+  \noindent Domena supstitucije može se rekurzivno proširiti na skup svih terma i skup svih formula.
 \begin{minted}{coq}
 Fixpoint subst_term  (σ : var -> term) (t : term) : term :=
   match t with
@@ -179,7 +183,8 @@ Fixpoint subst_formula
   | FAll ψ => FAll (subst_formula (up_term_term σ) ψ)
   end.
 \end{minted}
-  \noindent Ovdje funkcija \textit{up\_term\_term} brine da supstitucija \(\sigma\) mijenja samo one varijable koje nisu vezane.
+  \noindent Ovdje funkcija \texttt{up\_term\_term} brine da supstitucija \(\sigma\) mijenja samo one varijable koje nisu vezane.
+  \noindent Pišemo \(\varphi[\sigma]\) za primjenu supstitucije \(\sigma\) na formulu \(\varphi\). Posebno,  pišemo \(\varphi[t/x]\) za supstituciju varijable \(x\) termom \(t\) u formuli \(\varphi\) te pišemo \(\varphi^{\uparrow}\) za inkrementaciju svake varijable u formuli \(\varphi\). Iste notacije koristimo i za supstitucije na termima, listama terma i listama formula.
 \end{definition}
 
 Konačno, potrebno je definirati sintaksu za indukciju.
@@ -192,15 +197,15 @@ induktivne definicije s atomarnim formulama, a pišemo ih u stilu prirodne deduk
   \BinaryInfC{\(P\mathbf{t}\)}
 \end{prooftree}
 \noindent Ovdje su \(Q_{1}, \ldots, Q_{n}\) obični predikatni simboli, \(P_{1}, \ldots, P_{m}\) i \(P\) su induktivni predikatni simboli,
-a podebljani znakovi predstavljaju vektore terma odgovarajućih duljina.
+a podebljani znakovi predstavljaju \(n\)-torke terma, gdje je \(n\) mjesnost odgovarajućeg predikata.
 
 \begin{definition}[Produkcija]
   Uređene četvorke
   \begin{enumerate}
-  \item listi parova običnih predikatnih simbola i vektora terma odgovarajućih duljina,
-  \item listi parova induktivnih predikatnih simbola i vektora terma odgovarajućih duljina,
-  \item induktivnog predikatnog simbola \(P\) mjesnosti \(n\) i
-  \item vektora terma duljine \(n\)
+  \item listi parova običnih predikatnih simbola i \(n\)-torki terma odgovarajućih duljina,
+  \item listi parova induktivnih predikatnih simbola i \(n\)-torki terma odgovarajućih duljina,
+  \item induktivnog predikatnog simbola \(P\) mjesnosti \(m\) i
+  \item \(m\)-torke terma
   \end{enumerate}
   nazivamo produkcijama.
 \begin{minted}{coq}
@@ -242,7 +247,7 @@ Definition env := var -> M.
 \end{minted}
   \noindent Okolina se može interpretirati kao niz \(d_{0}, d_{1}, d_{2}, \ldots\). Tada je \textit{pomaknuta okolina}, u oznaci \(d \cdot \rho\),
   niz \(d, d_{0}, d_{1}, d_{2}, \ldots\) za neki \(d \in M\).
-  \noindent Proširenje domene okoline \(\rho\) na skup terma zovemo \textit{evaluacijom}.
+  \noindent Proširenje domene okoline \(\rho\) na skup svih terma zovemo \textit{evaluacijom}.
 \begin{minted}{coq}
 Fixpoint eval (ρ : env) (t : term Σ) : M :=
   match t with
@@ -250,6 +255,8 @@ Fixpoint eval (ρ : env) (t : term Σ) : M :=
   | TFunc f args => interpF f (V.map (eval ρ) args)
   end.
 \end{minted}
+  Pišemo \(t^{\rho}\) za evaluaciju terma \(t\) u okolini \(\rho\).
+  Istu notaciju koristimo i za evaluaciju \(n\)-torki terma.
 \end{definition}
 
 \begin{definition}[Relacija ispunjivosti]
@@ -358,7 +365,7 @@ Definition φ_Φ
   Kako je funkcija \(f\) bila uvedena na samom početku prethodne definicije,
   u stvari definicija operatora \(\varphi_{\Phi}\) glasi
   \(
-    \varphi_{\Phi}(f)(P) = \varphi_{P}(f)
+    \varphi_{\Phi}(f)(P) \coloneq \varphi_{P}(f)
   \).
 \end{remark}
 
@@ -378,8 +385,8 @@ Proposition φ_Φ_monotone :
   Neka je \(M\) proizvoljna struktura.
   Definiramo aproksimaciju skupa induktivnih definicija \(\Phi\) razine \(\alpha\), u oznaci \(\varphi_{\Phi}^{\alpha}\), rekurzivno na način:
   \begin{enumerate}
-  \item \( \varphi_{\Phi}^{0}(P) = \varnothing \) i
-  \item \( \varphi_{\Phi}^{\alpha + 1} = \varphi_{\Phi}(\varphi_{\Phi}^{\alpha}) \).
+  \item \( \varphi_{\Phi}^{0}(P) \coloneq \varnothing \) i
+  \item \( \varphi_{\Phi}^{\alpha + 1} \coloneq \varphi_{\Phi}(\varphi_{\Phi}^{\alpha}) \).
   \end{enumerate}
 \begin{minted}{coq}
 Fixpoint φ_Φ_n P (α : nat) (v : vec M (indpred_ar P)) : Prop :=
@@ -450,13 +457,238 @@ Definition standard_model
 
 
 \section{Sistem sekvenata s induktivnim definicijama}\label{sec:sistem-sekvenata}
-Kako to da je Brotherston definirao signaturu, ali onda nije uključio aksiome u LKID?
+Ovaj odlomak je za diskusiju na sastanku. Kako to da je Brotherston definirao signaturu, ali onda nije uključio aksiome u LKID?
 Primjerice, u \( \Sigma_{PA} \) imamo simbol jednakosti, ali ne možemo dokazati refleksivnost.
 Valjda su aksiomi uključeni u \(\Gamma\), u smislu LKID je općenit dokazni sustav, pa bi neka
-``aksiomatizirana teorija'' u stvari bili dokazi \(\mathit{akiomi} \vDash \varphi\). Možda.
+``aksiomatizirana teorija'' u stvari bili dokazi \(\mathit{akiomi} \vdash \varphi\). Možda.
 
-LKID. Dopustiva pravila. Primjeri dokaza.
+Cilj je ovog odjeljka definirati dokazni sustav \(\mathit{LKID}\) za logiku \(\mathit{FOL_{ID}}\).
+Ovaj dokazni sustav temelji se na Gentzenovom računu sekvenata, a proširen je lijevim i desnim pravilima za indukciju.
+Prije no što definiramo \(\mathit{LKID}\), potrebno je definirati pojmove sekvenata i međusobnih zavisnosti induktivnih predikata.
 
+\begin{definition}[Sekvent]
+  Neka su \(\Gamma\) i \(\Delta\) proizvoljne liste formula. Tada je sekvent uređeni par \((\Gamma,\Delta)\), a označavamo ga s \(\Gamma \vdash \Delta\).
+\begin{minted}{coq}
+Inductive sequent : Set :=
+| mkSeq (left : list (formula Σ)) (right : list (formula Σ)).
+\end{minted}
+\end{definition}
+\noindent Sekventom \(\Gamma \vdash \Delta\) konceptualno tvrdimo da istinitost \textit{svake}
+tvrdnje u \(\Gamma\) povlači istinitost \textit{neke} tvrdnje u \(\Delta\).
+Kažemo da je sekvent \(\Gamma \vdash \Delta\) \textit{dokaziv}, ili da iz \(\Gamma\) postoji izvod za \(\Delta\), ako u sustavu \(\mathit{LKID}\) postoji dokaz za \(\Gamma \vdash \Delta\). Kasnije ćemo precizirati što je točno \textit{dokaz}.
+
+\begin{definition}[Relacija \(\mathit{Prem}\)]
+  Neka su \(P_{i}\) i \(P_{j}\) proizvoljni induktivni predikatni simboli.
+  Kažemo da je simbol \(P_{i}\) u relaciji \(\mathit{Prem}\) sa simbolom \(P_{j}\)
+  ako postoji produkcija u skupu induktivnih definicija \(\Phi\) takva da
+  se simbol \(P_{i}\) javlja u njenom konzekvensu te
+  se simbol \(P_{j}\) javlja u njenim premisama.
+\begin{minted}{coq}
+Definition Prem (Pi Pj : IndPredS Σ) :=
+  exists pr, Φ pr /\
+             indcons pr = Pi /\
+             exists ts, List.In (Pj; ts) (indpreds pr).
+\end{minted}
+\end{definition}
+
+\begin{definition}[Međusobna zavisnost]
+  Definiramo relaciju \(\mathit{Prem}^{\ast}\) kao refleksivno i tranzitivno zatvorenje relacije \(\mathit{Prem}\).
+\begin{minted}{coq}
+Definition Prem_star := clos_refl_trans (IndPredS Σ) Prem.
+\end{minted}
+  \noindent Tada za induktivne predikatne simbole \(P\) i \(Q\) kažemo da su
+  međusobno zavisni ako vrijedi \(\mathit{Prem}^{\ast}(P, Q)\) i \(\mathit{Prem}^{\ast}(Q, P)\).
+\begin{minted}{coq}
+Definition mutually_dependent (P Q : IndPredS Σ) :=
+  Prem_star P Q /\ Prem_star Q P.
+\end{minted}
+\end{definition}
+
+\begin{lemma}
+  Međusobna zavisnost je relacija ekvivalencije na skupu induktivnih predikatnih simbola. \misao{Ova lema zvuči kao da je bitna, ali čini mi se da nije.}
+\begin{minted}{coq}
+Lemma mutually_dependent_refl : forall P, mutually_dependent P P.
+Lemma mutually_dependent_symm : forall P Q,
+      mutually_dependent P Q ->
+      mutually_dependent Q P.
+Lemma mutually_dependent_trans : forall P Q R,
+      mutually_dependent P Q ->
+      mutually_dependent Q R ->
+      mutually_dependent P R.
+\end{minted}
+\end{lemma}
+
+Sada ćemo definirati sustav \(\mathit{LKID}\) u četiri koraka.
+U prva tri koraka ćemo definirati strukturalna, propozicijska i kvantifikatorska pravila izvoda. U zadnjem koraku ćemo definirati pravila izvoda za indukciju. Sve varijable koje se javljaju u pravilima izvoda su implicitno univerzalno kvantificirana.
+
+\misao{Rado bih koristio nešto što nije \texttt{figure} za pravila izvoda, ali ne znam što.}
+
+Strukturalna pravila su prikazana u slici~\ref{fig:lkid-structural}, a služe baratanju strukture sekvenata,
+dok ostala pravila služe logičkom zaključivanju.
+Pravilo \(\mathit{Ax}\) kaže da je sekvent dokaziv ako se ista formula nalazi s lijeve i s desne strane znaka \(\vdash\).
+Pravilo \(\mathit{Wk}\), ili pravilo \textit{slabljenja},
+kaže da je uvijek moguće dokazati tvrdnje koje su slabije od već dokazanih.
+Drugim riječima, dodavanje formula u pretpostavke ili zaključak ne mijenja dokazivost.
+Pravilo \(\mathit{Cut}\) je svojevrsni \textit{modus ponens}.
+Konačno, pravilo \(\mathit{Subst}\) kaže da se u već dokazanom sekventu varijable mogu proizvoljno mijenjati.
+\begin{figure}[!htb]
+  \centering
+
+  \begin{prooftree}
+    \AxiomC{\(\Gamma \cap \Delta \not = \varnothing \)}
+    \RightLabel{\( \mathit{ (Ax) } \)}
+    \UnaryInfC{\( \Gamma \vdash \Delta \)}
+  \end{prooftree}
+
+  \begin{prooftree}
+    \AxiomC{\(\Gamma^{\prime} \vdash \Delta^{\prime}\)}
+    \AxiomC{\(\Gamma^{\prime} \subseteq \Gamma\)}
+    \AxiomC{\(\Delta^{\prime} \subseteq \Delta\)}
+    \RightLabel{\( \mathit{ (Wk) } \)}
+    \TrinaryInfC{\(\Gamma \subseteq \Delta\)}
+  \end{prooftree}
+  
+  \begin{prooftree}
+    \AxiomC{\( \Gamma \vdash \varphi, \Delta\)}
+    \AxiomC{\( \varphi, \Gamma \vdash \Delta \)}
+    \RightLabel{\( \mathit{ (Cut) } \)}
+    \BinaryInfC{\( \Gamma \vdash \Delta \)}
+  \end{prooftree}
+
+  \begin{prooftree}
+    \AxiomC{\( \Gamma \vdash \Delta \)}
+    \RightLabel{\( \mathit{ (Subst) } \)}
+    \UnaryInfC{\( \Gamma[\sigma] \vdash \Delta[\sigma] \)}
+  \end{prooftree}
+  
+  \caption{Strukturalna pravila sustava \(\mathit{LKID}\).}\label{fig:lkid-structural}
+\end{figure}
+
+Propozicijska pravila prikazana su na slici~\ref{fig:lkid-propositional},
+a odnose se na propozicijski dio logike \(\mathit{FOL_{ID}}\), odnosno na negaciju i implikaciju. \misao{Treba li tu neka motivacija? Ja bih rekao da ne.}
+\begin{figure}[!htb]
+  \centering
+  \begin{prooftree}
+    \AxiomC{\( \Gamma \vdash \varphi, \Delta \)}
+    \RightLabel{\( \mathit{ (NegL) } \)}
+    \UnaryInfC{\( \neg \varphi, \Gamma \vdash \Delta \)}
+  \end{prooftree}
+
+  \begin{prooftree}
+    \AxiomC{\( \varphi, \Gamma \vdash \Delta \)}
+    \RightLabel{\( \mathit{ (NegR) } \)}
+    \UnaryInfC{\( \Gamma \vdash \neg \varphi, \Delta \)}
+  \end{prooftree}
+
+  \begin{prooftree}
+    \AxiomC{\( \Gamma \vdash \varphi, \Delta \)}
+    \AxiomC{\( \psi, \Gamma \vdash \Delta \)}
+    \RightLabel{\( \mathit{ (ImpL) } \)}
+    \BinaryInfC{\( \varphi \rightarrow \psi, \Gamma \vdash \Delta \)}
+  \end{prooftree}
+
+  \begin{prooftree}
+    \AxiomC{\( \varphi, \Gamma \vdash \psi, \Delta \)}
+    \RightLabel{\( \mathit{ (ImpR) } \)}
+    \UnaryInfC{\( \Gamma \vdash \varphi \rightarrow \psi, \Delta \)}
+  \end{prooftree}
+  
+  \caption{Propozicijska pravila sustava \(\mathit{LKID}\).}\label{fig:lkid-propositional}
+\end{figure}
+
+Kvantifikacijska pravila prikazana su na slici~\ref{fig:lkid-quantificational}, a odnose se na univerzalnu kvantifikaciju.
+Supstitucija \(\sigma_{\mathit{id}}\) je supstitucija identiteta.
+Lijevo pravilo za kvantifikaciju kaže da dokaz
+koji počinje s instanciranom formulom \(\varphi\) u kojoj se javlja term \(t\) na mjestu varijable \(0\) isto tako smije
+započeti s univerzalno kvantificiranom formulom \(\forall\varphi\).
+Za desno pravilo kvantifikacije primijetimo da se varijabla \(0\) ne javlja u listama \(\Gamma^{\uparrow}\) i \(\Delta^{\uparrow}\) zbog pomicanja.
+Kako naše formule zbog de Bruijnovog indeksiranja implicitno kvantificiraju po varijabli \(0\),
+a varijabla \(0\) se možda javlja u formuli \(\varphi\),
+ustvari je dokaz sekventa \(\Gamma \vdash \forall\varphi, \Delta\) posve analogan
+dokazu sekventa \(\Gamma^{\uparrow} \vdash \varphi, \Delta\).
+\misao{Ovo vjerojatno treba preformulirati.}
+\begin{figure}[!htb]
+  \centering
+  \begin{prooftree}
+    \AxiomC{\( \varphi[t \cdot \sigma_{\mathit{id}}], \Gamma \vdash \Delta \)}
+    \RightLabel{\( \mathit{ (AllL) } \)}
+    \UnaryInfC{\( \forall\varphi, \Gamma \vdash \Delta \)}
+  \end{prooftree}
+
+  \begin{prooftree}
+    \AxiomC{\( \Gamma^{\uparrow} \vdash \varphi, \Delta^{\uparrow}\)}
+    \RightLabel{\( \mathit{ (AllR) } \)}
+    \UnaryInfC{\( \Gamma \vdash \forall\varphi, \Delta \)}
+  \end{prooftree}
+  \caption{Kvantifikacijska pravila sustava \(\mathit{LKID}\).}\label{fig:lkid-quantificational}
+\end{figure}
+
+
+\begin{minted}{coq}
+Inductive LKID : sequent -> Prop := 
+  (* Structural rules. *)
+  | Ax : forall Γ Δ φ, In φ Γ -> In φ Δ -> LKID (Γ ⊢ Δ)
+  | Wk : forall Γ' Δ' Γ Δ,
+      Γ' ⊆ Γ ->
+      Δ' ⊆ Δ ->
+      LKID (Γ' ⊢ Δ') ->
+      LKID (Γ ⊢ Δ)
+  | Cut : forall Γ Δ φ,
+      LKID (Γ ⊢ φ :: Δ) ->
+      LKID (φ :: Γ ⊢ Δ) ->
+      LKID (Γ ⊢ Δ)
+  | Subst : forall Γ Δ,
+      LKID (Γ ⊢ Δ) ->
+      forall σ, LKID (map (subst_formula σ) Γ ⊢ map (subst_formula σ) Δ)
+  (* Propositional rules. *)
+  | NegL : forall Γ Δ φ, LKID (Γ ⊢ φ :: Δ) -> LKID (FNeg φ :: Γ ⊢ Δ)
+  | NegR : forall Γ Δ φ, LKID (φ :: Γ ⊢ Δ) -> LKID (Γ ⊢ FNeg φ :: Δ)
+  | ImpL : forall Γ Δ φ ψ,
+      LKID (Γ ⊢ φ :: Δ) -> LKID (ψ :: Γ ⊢ Δ) ->
+      LKID (FImp φ ψ :: Γ ⊢ Δ)
+  | ImpR : forall Γ Δ φ ψ,
+      LKID (φ :: Γ ⊢ ψ :: Δ) -> LKID (Γ ⊢ (FImp φ ψ) :: Δ)
+  (* Quantifier rules. *)
+  | AllL : forall Γ Δ φ t,
+      LKID (subst_formula (t .: ids) φ :: Γ ⊢ Δ) -> 
+      LKID (FAll φ :: Γ ⊢ Δ)
+  | AllR : forall Γ Δ φ,
+      LKID (shift_formulas Γ ⊢ φ :: shift_formulas Δ) ->
+      LKID (Γ ⊢ (FAll φ) :: Δ)
+  | IndL : forall Γ Δ (Pj : IndPredS Σ) (u : vec (term Σ) (indpred_ar Pj))
+             (z_i : forall P, vec var (indpred_ar P)) (* dodati pretpostavku forall P, NoDup (z_i P)? *)
+             (G_i : IndPredS Σ -> formula Σ)
+             (HG2 : forall Pi, ~mutually_dependent Pi Pj -> G_i Pi = FIndPred Pi (V.map var_term (z_i Pi))),
+      let maxΓ := max_fold (map some_var_not_in_formula Γ) in
+      let maxΔ := max_fold (map some_var_not_in_formula Δ) in
+      let maxP := some_var_not_in_formula (FIndPred Pj u) in
+      let shift_factor := max maxP (max maxΓ maxΔ) in
+      let Fj := subst_formula (finite_subst (z_i Pj) u) (G_i Pj) in
+      let minor_premises :=
+        (forall pr (Hdep : mutually_dependent (indcons pr) Pj),
+            let Qs := shift_formulas_by shift_factor (FPreds_from_preds (preds pr)) in
+            let Gs := map (fun '(P; args) =>
+                             let shifted_args := V.map (shift_term_by shift_factor) args in
+                             let σ := finite_subst (z_i P) (shifted_args) in
+                             let G := G_i P in
+                             subst_formula σ G)
+                        (indpreds pr) in
+            let Pi := indcons pr in
+            let ty := V.map (shift_term_by shift_factor) (indargs pr) in
+            let Fi := subst_formula (finite_subst (z_i Pi) ty) (G_i Pi) in
+            LKID (Qs ++ Gs ++ Γ ⊢ Fi :: Δ))
+      in
+      minor_premises ->
+      LKID (Fj :: Γ ⊢ Δ) ->
+      LKID (FIndPred Pj u :: Γ ⊢ Δ)
+  | IndR : forall Γ Δ pr σ,
+      Φ pr ->
+      (forall Q us, In (Q; us) (preds pr) ->
+               LKID (Γ ⊢ (FPred Q (V.map (subst_term σ) us) :: Δ))) ->
+      (forall P ts, In (P; ts) (indpreds pr) ->
+               LKID (Γ ⊢ (FIndPred P (V.map (subst_term σ) ts) :: Δ))) ->
+      LKID ( Γ ⊢ FIndPred (indcons pr) (V.map (subst_term σ) (indargs pr)) :: Δ).
+\end{minted}
 \section{Adekvatnost}\label{sec:adekvatnost}
 Lokalne adekvatnosti za pravila izvoda. Glavni teorem.
 

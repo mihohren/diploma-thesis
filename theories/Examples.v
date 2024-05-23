@@ -121,4 +121,3 @@ Defined.
 
 Lemma standard_model__PA : @standard_model Σ__PA Φ__PA M__PA.
 Admitted.
-
