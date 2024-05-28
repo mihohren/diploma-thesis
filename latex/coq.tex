@@ -1,74 +1,71 @@
 \chapter{Coq}\label{pog:glavni_dio}
-U ovom poglavlju dajemo pogled svisoka na programski sustav Coq.
+U ovom poglavlju dajemo pregled visoke razine na programski sustav Coq.
 Prvo ćemo objasniti što je uopće Coq, u kojem je kontekstu nastao, i od kojih komponenti se sastoji.
 Zatim ćemo dati kratak pregled programiranja u Coqu, nakon čega ćemo se baviti naprednijim konceptima i spomenuti neka ograničenja.
 Za širi opseg gradiva, čitatelja upućujemo na knjige \textit{Coq'Art}~\cite{coqart}, \textit{Software Foundations}~\cite{sf-lf, sf-plf, sf-vfa} i \textit{Certified Programming with Dependent Types}~\cite{cpdt} te na službenu dokumentaciju~\cite{coqrefman}.
 
 \section{Što je Coq?}\label{sec:osnovno-o-coqu}
 Alat za dokazivanje Coq\footnote{\url{https://coq.inria.fr/}}, punog naziva \textit{The Coq Proof Assistant},
-programski je sustav pomoću kojeg korisnici mogu dokazivati matematičke tvrdnje. \misao{ne sluzi samo tome, moze biti i opceniti funkcijski programski jezik, moze sluziti za programiranje sa zavisnim tipovima}
+programski je sustav pomoću kojeg korisnici mogu dokazivati matematičke tvrdnje, a može se koristiti i kao funkcijski programski jezik sa zavisnim tipovima.
 Alat se temelji na \(\lambda\)-računu i teoriji tipova, a prva je inačica implementirana godine 1984.~\cite{coqrefman}
 Ovaj rad koristi inačicu \(8.18\) iz rujna godine 2023.
 
 Program Coq može se pokrenuti u interaktivnom ili u skupnom načinu rada.
-Interaktivni način rada pokreće se naredbom \texttt{coqtop}, a korisniku omogućuje rad u ljusci sličnoj \texttt{bash} i \texttt{python} ljuskama.
-Interaktivna ljuska (također poznata pod imenom \textit{toplevel}) služi unosu definicija i iskazivanju lema.
-Skupni način rada pokreće se naredbom \texttt{coqc}, a korisniku omogućuje semantičku provjeru i prevođenje izvornih datoteka u jednostavnije formate.
+Interaktivni način rada pokreće se naredbom \texttt{coqtop}, a korisniku omogućuje rad u ljusci sličnoj ljuskama \texttt{bash} i \texttt{python}.
+Interaktivna ljuska (također poznata pod imenom \textit{toplevel}) služi unosu definicija te iskazivanju i dokazivanju tvrdnji.
+Skupni način rada pokreće se naredbom \texttt{coqc}, a korisniku omogućuje semantičku provjeru i prevođenje izvornih datoteka u strojno čitljive formate.
 Kod formaliziranja i dokazivanja, korisnik će najčešće koristiti interaktivni način rada, po mogućnosti kroz neku od dostupnih razvojnih okolina.
 \footnote{Autor rada koristio je paket \textit{Proof General} za uređivač teksta \textit{Emacs}. Druge često korištene okoline su \textit{VsCoq} i \textit{CoqIDE}.}
-
-\misao{spomenuti proof mode? spomenuti workflow dokazivanja? ima jedna zgodna slika u QED at Large}
-\misao{treba naglasiti da je Coq \textit{interaktivni} dokazivač teorema}
 
 Kao programski jezik, Coq se sastoji od više podjezika različitih namjena, od kojih spominjemo \textit{Vernacular}, \textit{Gallinu} i \textit{Ltac}.
 \begin{description}
 \item[Vernacular] \misao{\textit{vernacular} znači \enquote{govorni jezik}} je jezik naredbi kojima korisnik komunicira sa sustavom (i u interaktivnom i u skupnom načinu rada);
   svaka Coq skripta (datoteka s nastavkom \texttt{.v}) je niz naredbi.
   Neke od najčešće korištenih naredbi su \texttt{Check}, \texttt{Definition}, \texttt{Inductive}, \texttt{Fixpoint} i \texttt{Lemma}.
-  Pomoću naredbi za tvrdnje, kao što je \texttt{Lemma}, Coq prelazi iz \textit{toplevela}\misao{treba bolji prevod} u način dokazivanja~\engl{proof mode}.
+  Pomoću naredbi za iskazivanje tvrdnji, kao što je \texttt{Lemma}, Coq ulazi u način dokazivanja~\engl{proof mode}.
 \item[Gallina] je Coqov strogo statički tipiziran specifikacijski jezik.
+  Dokazi svih tvrdnji predstavljeni su interno kao programi u Gallini.
   Kako se glavnina programiranja u Coqu svodi upravo na programiranje u Gallini, posvećujemo joj idući odjeljak.
-\item[Ltac] je Coqov netipiziran jezik za definiciju i korištenje taktika.
+\item[Ltac] je Coqov netipizirani jezik za definiciju i korištenje taktika.
   Taktike su pomoćne naredbe kojima se u načinu dokazivanja konstruira dokaz.
   Može se reći da je Ltac jezik za metaprogramiranje Galline.
   Primjeri taktika su \texttt{intros}, \texttt{destruct}, \texttt{apply} i \texttt{rewrite}.
 \end{description} % https://coq.discourse.group/t/what-is-the-difference-between-gallina-and-ltac/1184 
 \noindent Pogledajmo ilustrativan primjer.
 \begin{minted}{coq}
-  Lemma example_lemma : 1 + 1 = 2.
+  Lemma example_lemma: 1 + 1 = 2.
   Proof.
     cbn. reflexivity.
   Qed.
 \end{minted}
 \noindent Ključne riječi \texttt{Lemma}, \texttt{Proof} i \texttt{Qed} dio su Vernaculara,
-izraz \texttt{example\_lemma : 1 + 1 = 2} dio je Galline,
+izraz \texttt{example\_lemma:1+1=2} dio je Galline,
 a pomoćne naredbe \texttt{cbn} i \texttt{reflexivity} dio su Ltaca.
 
-Jezgra programskog sustava Coq je algoritam za provjeru tipova \engl{type checking} implementiran u OCamlu ---
-svaka tvrdnja koja se dokazuje izrečena je pomoću tipova.
-Ostatak sustava u načelu služi za knjigovodstvo i poboljšanje korisničkog iskustva.
+Jezgra je programskog sustava Coq algoritam za provjeru tipova \engl{type checking} -- svaka tvrdnja koja se dokazuje iskazana je tipovima.
+Ostatak sustava u načelu služi za knjigovodstvo i poboljšanje korisničkog iskustva.\footnote{I jezgra i ostatak sustava implementirani su u OCamlu.}
 Nužno je da jezgra sustava bude relativno mala kako bismo se mogli uvjeriti u njenu točnost.
 U suprotnom, možemo li biti sigurni da su naše dokazane tvrdnje doista istinite?
-\misao{kažem istinite, ali u stvari mislim dokazive, no to je nespretno za napisati i diskusija oko toga je preopćenita}
 
-Prve inačice Coqa implementirale su račun konstrukcija, no kasnije je dodana podrška za induktivno i koinduktivno definirane tipove~\cite{cic, coinductive}.
-Danas se može reći da Coq implementira polimorfni kumulativni račun induktivnih konstrukcija~\cite{coqcoqcorrect}.
-\misao{mogu spomenuti i preteče računa konstrukcija i jezike koji ih implementiraju, npr.~ Lisp je implementacija \(\lambda\)-računa}
+Prve inačice Coqa implementirale su samo račun konstrukcija~\cite{coc} --
+proširenje \(\lambda\)-računa polimorfnim i zavisnim tipovima te tipskim konstruktorima.
+Kasnije je dodana podrška za induktivno i koinduktivno definirane tipove~\cite{cic, coinductive},
+a danas se može reći da Coq implementira polimorfni kumulativni račun induktivnih konstrukcija~\cite{coqcoqcorrect}.
 Coq se, osim kao dokazivač teorema, može koristiti i za programiranje sa zavisnim tipovima.
 U toj sferi konkuriraju jezici Agda\footnote{\url{https://wiki.portal.chalmers.se/agda/}}, Idris\footnote{\url{https://www.idris-lang.org/}} i Lean\footnote{\url{https://lean-lang.org/}}. Coq se između njih ističe po usmjerenosti prema dokazivanju, posebno po korištenju taktika (jezik Ltac) i nepredikativnoj sorti \texttt{Prop} (o kojoj će kasnije biti riječi).
-Još jedna prednost Coqa je mehanizam \textit{ekstrakcije} pomoću kojeg korisnik može proizvoljnu funkciju\footnote{Za koju je dokazao točnost, štogod to značilo.} prevesti u jezik niže razine apstrakcije.\footnote{Trenutno su podržani Haskell, OCaml i Scheme.}
-Mehanizam ekstrakcije nije dokazano točan, no poželjno je da funkcije zadržavaju točnost i nakon ekstrakcije pa se radi na verifikaciji ekstrakcije~\cite{coqcoqcorrect}.
+Još jedna prednost Coqa je mehanizam \textit{ekstrakcije} pomoću kojeg korisnik može proizvoljnu funkciju prevesti u jezik niže razine apstrakcije.\footnote{Trenutno su podržani Haskell, OCaml i Scheme.}
+Mehanizam ekstrakcije nije dokazano točan, no poželjno je da izvorne funkcije budu ekvivalentne ekstrahiranima pa se radi na verifikaciji ekstrakcije~\cite{coqcoqcorrect}.
 
 \section{Programiranje u Coqu}\label{sec:programiranje-u-gallini}
 Gallina je funkcijski programski jezik, što znači da su funkcije prvoklasni objekti ---
-funkcije mogu biti argumenti i povratne vrijednosti drugih funkcija.
-Dodatno, varijable su nepromjenjive \engl{immutable} te se iteracija ostvaruje rekurzijom.
+one mogu biti argumenti i povratne vrijednosti drugih funkcija.
+Dodatno, iteracija se ostvaruje rekurzijom te ne postoje tradicionalne varijable, već se koriste nepromjenjiva \engl{immutable} imena.
 Za uvod u funkcijsko programiranje, čitatelja upućujemo na knjigu \textit{Programming in Haskell}~\cite{Hutton_2016}.
-Primjeri koje ćemo vidjeti u ostatku ovog odjeljka dijelom se oslanjanju na tipove i funkcije definirane u Coqovoj standardnoj knjižnici.\footnote{\url{https://coq.inria.fr/library/}}
+Primjeri koje ćemo vidjeti u ostatku ovog odjeljka oslanjanju se na tipove i funkcije definirane u Coqovoj standardnoj knjižnici.\footnote{\url{https://coq.inria.fr/library/}}
 
-Gallina je strogo statički tipiziran jezik, što znači da se svakom termu prilikom prevođenja dodjeljuje tip\footnote{Tipovi su kolekcije srodnih objekata.}.
+Gallina je strogo statički tipiziran jezik, što znači da se svakom termu prilikom prevođenja dodjeljuje tip\footnote{Tipovi su kolekcije objekata na kojima je moguće provoditi srodne operacije.}.
 Naredbom \texttt{Check} možemo provjeriti tip nekog terma ili doznati da se termu ne može dodijeliti tip.
-Dalje u radu pod \enquote{term} mislimo na dobro formirane terme, odnosno na one terme kojima se može dodijeliti tip.
+Dalje u radu pod \enquote{term} mislimo na dobro formirane terme, odnosno na one kojima se može dodijeliti tip.
 Kažemo da je term \textit{stanovnik} tipa koji mu je dodijeljen.
 Za tip kažemo da je \textit{nastanjen}, odnosno \textit{nenastanjen}, ako postoji, odnosno ne postoji, stanovnik tog tipa.
 Kako su u Coqu i tipovi termi, radi razumljivosti i zvučnosti umjesto \enquote{tip tipa} kažemo \enquote{sorta tipa}.
@@ -76,14 +73,27 @@ Kako su u Coqu i tipovi termi, radi razumljivosti i zvučnosti umjesto \enquote{
 Kao i u ostalim jezicima, kod programiranja u Coqu korisnik se oslanja na dostupne primitivne izraze,
 od kojih su najvažniji:
 \begin{itemize}
-\item \texttt{forall}, pomoću kojeg se konstruiraju funkcijski tipovi i zavisni produkti;
-\item \texttt{match}, pomoću kojeg se provodi \textit{pattern matching};
-\item \texttt{fun}, pomoću kojeg se definiraju funkcije;
-\item \texttt{fix}, pomoću kojeg se definiraju rekurzivne funkcije i
-\item \texttt{cofix}, pomoću kojeg se definiraju korekurzivne funkcije.
+\item \texttt{forall} za konstrukciju funkcijskih tipova i zavisnih produkata, 
+\item \texttt{match} za rad sa stanovnicima induktivnih tipova te
+\item \texttt{fun}, \texttt{fix} i \texttt{cofix} za definiciju funkcija.
 \end{itemize}
 
-Jedna od osnovnih naredbi za stvaranje novih terma je naredba \texttt{Definition}.
+Naredbom \texttt{\textbf{Inductive}} definira se \textit{induktivni} tip te se automatski za njega generiraju principi \textit{indukcije} i \textit{rekurzije}.
+\begin{minted}{coq}
+Inductive nat : Set :=
+| O : nat
+| S : nat -> nat.
+\end{minted}
+\noindent Ovim kodom definirali smo tri terma:
+\begin{itemize}
+\item \texttt{nat} (tip prirodnih brojeva) je term sorte \texttt{Set},
+\item \texttt{O} (broj nula) je term tipa \texttt{nat} i
+\item \texttt{S} (funkcija sljedbenika) je term tipa \texttt{nat\(\rightarrow\)nat}.
+\end{itemize}
+\noindent Za term \texttt{nat} kažemo da je konstruktor tipa \engl{type constructor}, a za terme \texttt{O} i \texttt{S} kažemo da su konstruktori objekata \engl{object constructors}.
+
+
+Jedna od osnovnih naredbi za imenovanje novih terma je naredba \texttt{Definition}.
 \begin{minted}{coq}
 Definition negb (b : bool) : bool :=
 match b with
@@ -92,38 +102,27 @@ match b with
 end.
 \end{minted}
 \noindent U gornjem kodu definirana je funkcija \texttt{negb} čiji se argument \texttt{b} tipa \texttt{bool} destrukturira te se vraća njegova negacija, također tipa \texttt{bool}.
-Važno je napomenuti da svaki \texttt{match} izraz mora imati po jednu granu za svaki konstruktor tipa.\footnote{U tandemu s uvjetom strukturalne rekurzije, ovime je osigurana totalnost svake funkcije.}
+Važno je napomenuti da izrazi koji počinju s \texttt{match t},
+gdje je \texttt{t} stanovnik tipa \texttt{T}, moraju imati po jednu granu za svaki konstruktor tipa \texttt{T}.\footnote{U tandemu s uvjetom strukturalne rekurzije, ovime je osigurana totalnost svake funkcije.}
 U ovom su primjeru konstante \texttt{false} i \texttt{true} jedini konstruktori tipa \textit{bool}.
 Funkcija \texttt{negb} je tipa \texttt{bool\(\rightarrow\)bool}.
 \begin{minted}{coq}
 Definition mult_zero_r : Prop := forall (n : nat), n * 0 = 0.
 \end{minted}
-Ovdje je definirana propozicija (tip) imena \texttt{mult\_zero\_r} kao univerzalno kvantificirana tvrdnja po prirodnim brojevima.
+\noindent Ovdje je definirana propozicija (tip) imena \texttt{mult\_zero\_r} kao tvrdnja univerzalno kvantificirana po prirodnim brojevima.
 
-Naredbom \texttt{\textbf{Inductive}} definira se \textit{induktivni} tip te se automatski za njega generiraju principi \textit{indukcije} i \textit{rekurzije}.
-\begin{minted}{coq}
-Inductive nat : Set :=
-| O : nat
-| S : nat -> nat.
-\end{minted}
-Ovim kodom definirali smo tri terma:
-\begin{itemize}
-\item \texttt{nat} (tip prirodnih brojeva) je term sorte \texttt{Set},
-\item \texttt{O} (broj nula) je term tipa \texttt{nat} i
-\item \texttt{S} (funkcija sljedbenika) je term tipa \texttt{nat\(\rightarrow\)nat}.
-\end{itemize}
-\noindent Za term \texttt{nat} kažemo da je konstruktor tipa \engl{type constructor}, a za terme \texttt{O} i \texttt{S} kažemo da su konstruktori objekata \engl{object constructors}.
 
-Rekurzija nad induktivnim tipovima može se ostvariti naredbom \texttt{Fixpoint}, koja u pozadini koristi izraz \texttt{fix}.
+Rekurzija nad induktivnim tipovima može se ostvariti naredbom \texttt{Fixpoint}, koja u pozadini koristi naredbu \texttt{Definition} te izraz \texttt{fix}.
 \begin{minted}{coq}
 Fixpoint plus (n m : nat) {struct n} : nat :=
+(* Definition plus := fix plus (n m : nat) {struct n} := *)
 match n with
 | O => m
 | S n' => S (plus n' m)
 end.
 \end{minted}
 U ovom primjeru definirana je funkcija \texttt{plus} koja prima dva argumenta tipa \texttt{nat}.
-Funkcija je rekurzivna po prvom argumentu što je vidljivo oznakom \texttt{\{struct n\}}.
+Funkcija je rekurzivna s obzirom na prvi argument što je vidljivo iz oznake  \texttt{\{struct n\}}.
 Napominjemo da su induktivni tipovi dobro utemeljeni, to jest svaki term induktivnog tipa je konačan.
 
 Osim induktivnih, u Coqu postoje i koinduktivni tipovi, koji nisu dobro utemeljeni,
@@ -132,7 +131,7 @@ Umjesto rekurzije, koinduktivni tipovi koriste se u korekurzivnim funkcijama.
 Standardan primjer koinduktivnog tipa je beskonačna lista.
 \begin{minted}{coq}
 Set Primitive Projections.
-CoInductive Stream (A : Type) := {
+CoInductive Stream (A : Type) := Cons {
       hd : A;
       tl : Stream A;
     }.
@@ -140,36 +139,36 @@ CoInductive Stream (A : Type) := {
 Ovime smo definirali familiju tipova \texttt{Stream} indeksiranu tipskom varijablom \texttt{A}.
 Svaki \texttt{Stream} ima glavu i rep koji je također \texttt{Stream}.
 
-Stanovnici koinduktivnih tipova konstruiraju se korekurzivnim funkcijama naredbom \texttt{CoFixpoint}, koja u pozadini koristi \texttt{cofix}.
+Stanovnici koinduktivnih tipova konstruiraju se korekurzivnim funkcijama naredbom \texttt{CoFixpoint}, koja u pozadini koristi naredbu \texttt{Definition} te izraz \texttt{cofix}.
 \begin{minted}{coq}
 CoFixpoint from (n : nat) : Stream nat := Cons _ n (from (n + 1)).
+(* Definition from := cofix from (n : nat) := Cons _ n (from n + 1) *)
 \end{minted}
 Ovime je definirana funkcija \texttt{from} koja za ulazni argument \texttt{n} vraća niz prirodnih brojeva od \(n\) na dalje.
 
-Razlika induktivnih i koinduktivnih tipova može se izreći epigramom:\\
-\[
-  \textrm{\enquote{Induktivni tipovi su domene rekurzivnih funkcija, a koinduktivni tipovi su kodomene korekurzivnih funkcija}.}
-\]
+Razlika induktivnih i koinduktivnih tipova može se sumirati epigramom:
+\begin{displayquote}
+  \enquote{Induktivni tipovi su domene rekurzivnih funkcija, koinduktivni tipovi su kodomene korekurzivnih funkcija}.
+\end{displayquote}
 \noindent Time se želi reći da se termi induktivnih tipova destrukturiraju u rekurzivnim funkcijama,
 dok se termi koinduktivnih tipova konstruiraju u korekurzivnim funkcijama.
 
-\misao{Barendregtova kocka, term koji ovisi o termu, term koji ovisi o tipu, tip koji ovisi o termu, tip koji ovisi o tipu}
-
 \section{Hijerarhija tipova}\label{sec:kumul-hijer-tipova}
 U usporedbi s tradicionalnim programskim jezicima, Coqov tipski sustav je ekspresivniji jer dopušta tipove koji mogu ovisiti o termima.
-Takvi tipovi se u Coqu konstruiraju \texttt{forall} izrazom.
-Primjer jednog takvog tipa je \enquote{lista duljine \(n\)}, gdje je \(n\) neki prirodan broj, a čiji su stanovnici \(n\)-torke.
-Općeniti tip tada glasi \enquote{za svaki \(n\), lista duljine \(n\)} --- on ovisi o stanovniku drugog tipa (u ovom slučaju, tipa \texttt{nat}).
+Takvi tipovi se u Coqu konstruiraju izrazom oblika \texttt{forall}.
+Primjer jednog takvog tipa je \enquote{lista duljine \(n\)},
+gdje je \(n\) neki prirodan broj.
+Njegovi su stanovnici \(n\)-torke, a on ovisi o stanovniku drugog tipa (u ovom slučaju, o \texttt{n} tipa \texttt{nat}).
 
 Spomenuli smo da su i tipovi termi te im se može dodijeliti sorta.
-Postoji li najveći tip, odnosno postoji li tip \texttt{Type} čiji su stanovnici svi dobro formirani termi?
+Postoji li najveća sorta, odnosno postoji li tip \texttt{Type} čiji su stanovnici svi tipovi?
 Prisjetimo se, svaki term ima svoj tip.
-Kada bi takav \texttt{Type} postojao, tada bi vrijedilo \verb|Type:Type|, što može dovesti do paradoksa lašca\footnote{Ova rečenica je lažna. U teoriji skupova to je Russellov paradoks, u teoriji tipova to je Girardov paradoks}.
+Kada bi takav \texttt{Type} postojao, tada bi vrijedilo \verb|Type:Type|, što može dovesti do paradoksa samoreferenciranja.\footnote{ U naivnoj logici to je Epimenidov paradoks (\enquote{Ova je rečenica lažna.}), u naivnoj teoriji skupova to je Russellov paradoks, u naivnoj teoriji tipova to je Girardov paradoks.}
 Takav dokazivač teorema bio bi inkonzistentan te bismo njime mogli dokazati kontradikciju, čime dokazivač efektivno gubi svoju svrhu.
-Umjesto jedne \enquote{velike} sorte \texttt{Type}, u Coqu postoji niz monotono rastućih sorti \coqtype{n} za sve prirodne brojeve \(n\),
+Umjesto jedne \enquote{velike} sorte \texttt{Type}, u Coqu postoji rastući niz sorti \coqtype{n} za sve prirodne brojeve \(n\),
 takav da vrijedi \(\coqtype{n} : \coqtype{m}\) kad god vrijedi \(n < m\).
 Ilustracija ove \textbf{kumulativne hijerarhije tipova} prikazana je na slici~\ref{fig:kum-hijer-tip}.
-Dvije najvažnije sorte u Coqu su sorta \texttt{Set} i sorta \texttt{Prop}.
+Dvije najvažnije sorte u Coqu su \texttt{Set} i \texttt{Prop}.
 
 \begin{figure}[htb]
   \centering
@@ -195,15 +194,15 @@ Dvije najvažnije sorte u Coqu su sorta \texttt{Set} i sorta \texttt{Prop}.
 \end{figure}
 
 Naziv \coqset{} sinonim je za sortu \coqtype{0}, a njeni stanovnici su \textbf{mali tipovi}.
-\misao{NB: Tu je prije pisalo da su stanovnici od \texttt{Set} programi, no to nije tako. Stanovnici sorte \texttt{Set} su mali tipovi (ne znam kako ih drugačije nazvati), a tek onda su stanovnici malih tipova programi.} 
+\misao{Ostavio sam naziv \enquote{mali tipovi} jer kasnije kažem da za \texttt{Set} nema kvantifikacije po velikim tipovima, pa da zadržim taj kontrast.} 
 Primjerice, tipovi \texttt{nat} i \texttt{bool} su mali tipovi.
-Dodatno, funkcije koje primaju i vraćaju male tipove su također mali tipovi.
-Tada su i produkti, sume, liste i stabla malih tipova također mali tipovi.
+Dodatno, tipovi funkcija koje primaju i vraćaju male tipove su također mali tipovi.
+Također su i produkti, sume, liste i stabla malih tipova ponovo mali tipovi.
 Intuitivno se može reći da su mali oni tipovi s čijim se stanovnicima može efektivno računati.
 Stanovnike malih tipova nazivamo \textbf{programima}.
 
-Stanovnici sorte \texttt{Prop} su \textbf{propozicije}.
-Za razliku od programa, sa propozicijama ne možemo efektivno računati, već ih moramo dokazivati.
+Stanovnici sorte \texttt{Prop} su \textbf{propozicije} (izjave).
+Za razliku od programa, s propozicijama ne možemo efektivno računati, ali ih možemo dokazivati.
 Stanovnici propozicija su njihovi \textbf{dokazi}.
 
 Za dokazivače teorema, poželjna je mogućnost definicije predikata (propozicija) nad proizvoljnim tipovima.
@@ -213,7 +212,7 @@ Zbog toga u Coqu prilikom definicije terma sorte \texttt{Prop} možemo raditi kv
 Inductive isNat : Set -> Prop :=
 | IsNat : isNat nat.
 \end{minted}
-\noindent Tako je ovdje \texttt{isNat} predikat nad sortom \coqset{}, a u primjeru ispod \texttt{not} je predikat nad sortom \coqprop{}.
+\noindent Tako je ovdje \texttt{isNat} predikat nad sortom \coqset{}, a u primjeru ispod, \texttt{not} je predikat nad sortom \coqprop{}.
 \begin{minted}{coq}
 Definition not (P : Prop) := P -> False.
 \end{minted}
@@ -225,9 +224,10 @@ Na praktičnoj strani, predikativnost ograničava korisnika da prilikom definici
 
 \section{Propozicije i tipovi, dokazi i termi}\label{sec:propozicije-i-tipovi}
 U decimalnom zapisu broja \(\pi\), barem jedna znamenka pojavljuje se beskonačno mnogo puta.
-Doista, kada bi se svaka znamenka javljala samo konačno mnogo puta, broj \(\pi\) bio bi racionalan.
+Doista, kada bi se svaka znamenka pojavljivala samo konačno mnogo puta, broj \(\pi\) bio bi racionalan.
 Međutim, nije jasno \textit{koja} znamenka ima to svojstvo.
-Da bismo odgovorili na to pitanje, morali bismo prebrojiti \textit{sve} broja \(\pi\),
+Možda ih ima više. Štoviše, vjerujemo da su \textit{sve} znamenke takve.
+Da bismo odgovorili na to pitanje, morali bismo prebrojiti sve znamenke broja \(\pi\),
 što nije moguće u konačno mnogo koraka.
 
 Sličnim pitanjima bavili su se logičari dvadesetog stoljeća. \textit{Klasični} logičari bi gornju tvrdnju smjesta prihvatili,
@@ -236,21 +236,21 @@ Između ostalog, ovakva razmatranja rezultirala su fundamentalnim uvidom u povez
 Naime, želimo li dokazati konjunkciju, dovoljno je zasebno dokazati njene konjunkte.
 S druge strane, želimo li konstruirati par objekata, dovoljno je zapakirati prvi i drugi objekt u konstruktor para.
 Na sličan način, želimo li dokazati implikaciju, dovoljno je pretpostaviti njen antecedent te pomoću njega dokazati konzekvens.
-Ako pak želimo konstruirati funkciju, smijemo uzeti jedan argument i pomoću njega konstruirati povratnu vrijednost.
+Ako pak želimo konstruirati funkciju, smijemo uzeti njen argument i pomoću njega konstruirati povratnu vrijednost.
 Dodatno, nemoguće je dokazati laž, a istina trivijalno vrijedi.
-S druge strane, ako tip nema konstruktore, nije moguće definirati vrijednost tog tipa.
-Ako pak tip ima barem jedan konstruktor, tada postoje i njegovi stanovnici.
+S druge strane, ako induktivni tip nema konstruktore, onda je nenastanjen jer nije moguće definirati vrijednost tog tipa.
+Ako pak tip ima barem jedan konstruktor bez argumenata, tada postoje i njegovi stanovnici.
 Kroz ove primjere vidimo fenomen \textbf{Curry--Howardove korespondencije}, koju možemo sažeti epigramom:
-\[
-  \textrm{\enquote{Propozicije su tipovi, dokazi su programi.}}
-\]
-\\ Time se dokazivanje svodi na programiranje. Pogledi na dvije strane ovog novčića mogu se vidjeti u tablici~\ref{tab:curryhoward}.
+\begin{displayquote}
+  \enquote{Propozicije su tipovi, dokazi su programi.}
+\end{displayquote}
+\noindent Time se dokazivanje svodi na programiranje. Pogledi na dvije strane ovog novčića mogu se vidjeti u tablici~\ref{tab:curryhoward}.
 \begin{table}[!hbt]
   \centering
   \begin{tabular}[!htb]{rl}
-    \toprule \\
+    \toprule
     Dokazivanje & Programiranje \\
-    \midrule \\
+    \midrule
     propozicija & tip \\
     dokaz & program \\
     laž & prazan tip \\
@@ -259,20 +259,20 @@ Kroz ove primjere vidimo fenomen \textbf{Curry--Howardove korespondencije}, koju
     disjunkcija & zbrojni tip \\
     implikacija & funkcijski tip \\
     univerzalna kvantifikacija & zavisni produkt \\
-    egzistencijalna kvantifikacija & zavisni koprodukt \\
+    egzistencijalna kvantifikacija & zavisna suma \\
     \bottomrule
   \end{tabular}
   \caption{Sličnosti dokazivanja i programiranja}\label{tab:curryhoward}
 \end{table}
 
 Za bolju ilustraciju, prikazujemo princip matematičke indukcije u Coqu.
-Prisjetimo se, za proizvoljni predikat \(P\) nad prirodnim brojevima, princip matematičke indukcije glasi:
+Prisjetimo se, za proizvoljni predikat \(P\) na prirodnim brojevima, princip matematičke indukcije glasi:
 \[
-  P(0) \land (\forall n, P(n) \rightarrow P(n + 1)) \rightarrow \forall n, P(n).
+  P(0) \land \forall n, P(n) \rightarrow P(n + 1) \rightarrow \forall n, P(n).
 \]
 \noindent Tvrdnju dokazujemo analizom broja \(n\).
 Ako je \(n = 0\), tvrdnja slijedi iz \textit{baze} indukcije.
-Ako pak je \(n = n^{\prime} + 1\) za neki \(n^{\prime}\), tada rekurzivno konstruiramo dokaz za \(P(n^{\prime})\), a konačna tvrdnja slijedi primjenom \textit{koraka} indukcije na rekurzivno konstruirani dokaz.
+Ako je pak \(n = n^{\prime} + 1\) za neki \(n^{\prime}\), tada rekurzivno konstruiramo dokaz za \(P(n^{\prime})\), a konačna tvrdnja slijedi primjenom \textit{koraka} indukcije na rekurzivno konstruirani dokaz.
 \begin{minted}{coq}
 Definition nat_ind (P : nat -> Prop)
                    (baza : P 0)
@@ -284,15 +284,15 @@ Definition nat_ind (P : nat -> Prop)
     | S n' => korak n' (F n')
     end.
 \end{minted}
-Za term \texttt{nat\_ind} kažemo da je dokazni objekt \engl{proof object} za tvrdnju matematičke indukcije.
-Princip matematičke indukcije je samo poseban slučaj \textbf{principa indukcije}, kojeg Coq automatski generira za svaki induktivno definiran tip.
+Za term \texttt{nat\_ind} kažemo da je dokazni term \engl{proof term} za tvrdnju matematičke indukcije.
+Princip matematičke indukcije je samo poseban slučaj \textbf{principa indukcije},
+koji Coq automatski generira za svaki induktivno definiran tip pri njegovoj definiciji.
 
 \section{Ograničenja tipskog sustava}\label{sec:ogranicenja}
-Kao što smo već vidjeli, Coqov tipski sustav je ekspresivniji od tipskih sustava tradicionalnih programskih jezika.
+Kao što smo već vidjeli, Coqov tipski sustav je izražajniji od tipskih sustava uobičajenih programskih jezika.
 Međutim, kako bi se sačuvala poželjna svojstva algoritma provjere tipova, ipak se tipski sustav mora ograničiti.
 
-\textbf{Uvjet pozitivnosti} odnosi se na definiciju induktivnih i koinduktivnih tipova.
-\misao{NB: uvjet pozitivnosti mora vrijediti i u pozitivnim i u negativnim koinduktivnim tipovima.}
+\textbf{Uvjet pozitivnosti} odnosi se na definiciju induktivnih i koinduktivnih tipova. 
 Ovo ograničenje zabranjuje \textit{negativne} pojave tipa kojeg definiramo u argumentima njegovih konstruktora.
 \begin{minted}{coq}
 Inductive Lam :=

@@ -689,6 +689,14 @@ Inductive LKID : sequent -> Prop :=
                LKID (Γ ⊢ (FIndPred P (V.map (subst_term σ) ts) :: Δ))) ->
       LKID ( Γ ⊢ FIndPred (indcons pr) (V.map (subst_term σ) (indargs pr)) :: Δ).
 \end{minted}
+
+Za neko pravilo izvoda kažemo da je \textit{dopustivo} ako nije u definiciji sustava \(\mathit{LKID}\),
+ali je iz originalnih pravila izvedivo.
+\begin{example}
+  Obično se kod definicije sistema sekvenata za varijacije logike prvog reda dodaju i pravila za egzistencijalnu kvantifikaciju.
+  Lijevo i desno pravilo za egzistencijalnu kvantifikaciju je dopustivo u sustavu \(\mathit{LKID}\).
+\end{example}
+
 \section{Adekvatnost}\label{sec:adekvatnost}
 Lokalne adekvatnosti za pravila izvoda. Glavni teorem.
 
