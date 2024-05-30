@@ -218,9 +218,9 @@ Definition not (P : Prop) := P -> False.
 \end{minted}
 \noindent Ovaj stil kvantifikacije omogućuje nam definiciju proizvoljnih propozicija i propozicijskih veznika.
 Kažemo da je sorta \coqprop{} \textbf{nepredikativna}.
-S druge strane, sorta \coqset{} je \textbf{predikativna}, to jest \textit{ne dopušta} kvantifikaciju po proizvoljno velikim tipovima.
+S druge strane, sorta \coqset{} je \textbf{predikativna}, to jest \textit{ne dopušta} kvantifikaciju po \coqset{} i ostalim proizvoljno velikim tipovima.
 Posljedično, svaki term koji u sebi sadrži \texttt{Set} ili \texttt{Type} nužno nije stanovnik sorte \texttt{Set}.
-Na praktičnoj strani, predikativnost ograničava korisnika da prilikom definicije programa smije kvantificirati samo po malim tipovima, odnosno da smije koristiti samo druge programe.
+Na praktičnoj strani, predikativnost ograničava korisnika da prilikom definicije programa smije kvantificirati samo po malim tipovima, odnosno da smije pozivati samo druge programe.
 \misao{Ja bih rekao da je ovo ipak dobro objašnjeje. Budemo ponovo raspravili na sastanku. }
 
 
