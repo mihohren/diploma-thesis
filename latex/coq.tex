@@ -219,7 +219,9 @@ Definition not (P : Prop) := P -> False.
 \noindent Ovaj stil kvantifikacije omogućuje nam definiciju proizvoljnih propozicija i propozicijskih veznika.
 Kažemo da je sorta \coqprop{} \textbf{nepredikativna}.
 S druge strane, sorta \coqset{} je \textbf{predikativna}, to jest \textit{ne dopušta} kvantifikaciju po proizvoljno velikim tipovima.
-Na praktičnoj strani, predikativnost ograničava korisnika da prilikom definicije programa smije koristiti samo druge programe.
+Posljedično, svaki term koji u sebi sadrži \texttt{Set} ili \texttt{Type} nužno nije stanovnik sorte \texttt{Set}.
+Na praktičnoj strani, predikativnost ograničava korisnika da prilikom definicije programa smije kvantificirati samo po malim tipovima, odnosno da smije koristiti samo druge programe.
+\misao{Ja bih rekao da je ovo ipak dobro objašnjeje. Budemo ponovo raspravili na sastanku. }
 
 
 \section{Propozicije i tipovi, dokazi i termi}\label{sec:propozicije-i-tipovi}
@@ -305,10 +307,11 @@ drugim riječima, tip \texttt{Lam} se javlja negativno u konstruktoru \texttt{La
 Ovaj uvjet štiti korisnika od inkonzistentnosti, a za točnu definiciju pozitivnosti čitatelja upućujemo na dokumentaciju.\footnote{\url{https://coq.inria.fr/doc/v8.18/refman/language/core/inductive.html\#well-formed-inductive-definitions}}
 Uz uvjet pozitivnosti za induktivne tipove vezan je \textbf{uvjet strukturalne rekurzije}.
 Ovim uvjetom osigurava se totalnost rekurzivno definirane funkcije
-tako da se argument po kojem je funkcija rekurzivna strukturalno smanjuje u svakom koraku rekurzije.
+tako da se argument po kojem je funkcija rekurzivna strukturalno smanjuje u svakom koraku rekurzije 
+(funkcija se poziva samo na pravom podtermu originalnog argumenta).
 
 \textbf{Uvjet produktivnosti} odnosi se na definiciju korekurzivnih funkcija, a dualan je uvjetu strukturalne rekurzije.
-Ovaj uvjet također štiti korisnika od inkonzistentnosti, a glasi: svaki korekurzivni poziv smije se javljati točno kao izravan argument konstruktora koinduktivnog tipa čiji element definiramo.\footnote{\url{https://coq.inria.fr/doc/v8.18/refman/language/core/coinductive.html\#co-recursive-functions-cofix}}
+Ovaj uvjet također štiti korisnika od inkonzistentnosti, a glasi: svaki korekurzivni poziv smije se pojaviti samo kao izravni argument konstruktora koinduktivnog tipa čiji element definiramo (poziv funkcije mora stvoriti pravi nadterm originalnog poziva).\footnote{\url{https://coq.inria.fr/doc/v8.18/refman/language/core/coinductive.html\#co-recursive-functions-cofix}}
 Zbog tog uvjeta, iduća definicija nije moguća.
 \begin{minted}{coq}
 Set Primitive Projections.
@@ -326,28 +329,18 @@ S druge strane, definicija
 CoFixpoint bar : NatStream := {| nat_hd := 0; nat_tl := bar |}.
 \end{minted}
 \noindent je sasvim legalna.
-\misao{Tu se baš i ne vidi zašto se \texttt{bar} javlja kao izravan argument konstruktora jer koristimo negativni koinduktivni tip. Ispod haube je to sve zamotano u neki \texttt{Build\_NatStream}.}
-
-\misao{Bili smo spomenuli četiri ograničenja na sastanku.
-  Uvjet strukturalne rekurzije i uvjet produktivnosti su na neki način dualni.
-  Treće ograničenje bio je uvjet pozitivnosti.
-  Čovjek očekuje da onda postoji nešto dualno uvjetu pozitivnosti za koinduktivne tipove.
-  Nije li to opet uvjet pozitivnosti?
-}
-
-\misao{Ipak neću spomenuti razlike između pozitivnih i negativnih koinduktivnih tipova.
-  Mislim da je to izvan dosega ovog rada.}
 
 Posljednje ograničenje koje spominjemo vezano je uz irelevantnost dokaza \engl{proof irrelevance}.
-Naime, mnogi teoremi mogu se dokazati na više načina, ali svaki pojedini dokaz (dakle, postupak kojim smo od pretpostavka došli do konkluzije) \textit{nije bitan}.
+Naime, mnogi teoremi mogu se dokazati na više načina, ali pojedini dokaz (dakle, postupak kojim smo od pretpostavki došli do konkluzije) \textit{nije bitan}.
 Matematičarima su bitni samo iskaz teorema i činjenica da se teorem \textit{može dokazati}.
-Sam postupak dokazivanja smatra se \enquote{implementacijskim detaljom}.
+Sam postupak dokazivanja smatra se \enquote{implementacijskim detaljem}.
 Upravo zato analiza dokaza ima smisla samo kada se dokazuje, ali ne i kada se programira.
 U našoj terminologiji to znači da se \textit{pattern matching} nad dokazima smije provoditi samo kod definiranja terma sorte \texttt{Prop}.
 U suprotnom, mogli bismo definirati programe koji ovise o \textit{konkretnom dokazu}, umjesto o iskazanom teoremu.
-\textbf{Ograničenje eliminacije propozicije} nastalo je radi ekstrakcije ---
+\textbf{Ograničenje eliminacije propozicije} nastalo je radi omogućavanja ekstrakcije ---
 svi termi sorte \texttt{Prop} se \enquote{brišu} prilikom prevođenja iz Coqovog tipskog sustava u tipske sustave niže razine apstrakcije.
-Kada ovog ograničenja ne bi bilo, ekstrakcija u jednostavnije jezike naprosto ne bi bila moguća.
+Kada ovog ograničenja ne bi bilo, ekstrakcija u jednostavnije jezike naprosto ne bi bila moguća,
+jer bi prilikom ekstrakcije bilo nužno zadržati i sve dokaze uz svu kompleksnost njihovih tipova.
 
 
 %%% Local Variables:
