@@ -564,7 +564,7 @@ Posljedično, pravilo slabljenja \(\mathit{Wk}\) sa sobom povlači pravila permu
   
   \caption{Strukturalna pravila sustava \(\mathit{LKID}\).}\label{fig:lkid-structural}
 \end{figure}
-\begin{minted}{coq}
+\begin{minted}[firstnumber=last]{coq}
 (* Structural rules. *)
 | Ax : forall Γ Δ φ, In φ Γ -> In φ Δ -> LKID (Γ ⊢ Δ)
 | Wk : forall Γ' Δ' Γ Δ,
@@ -613,7 +613,7 @@ Ova su pravila identična u sustavima \(\mathit{LK}\) i \(\mathit{LKID}\).
   
   \caption{Propozicijska pravila sustava \(\mathit{LKID}\).}\label{fig:lkid-propositional}
 \end{figure}
-\begin{minted}{coq}
+\begin{minted}[firstnumber=last]{coq}
 (* Propositional rules. *)
 | NegL : forall Γ Δ φ, LKID (Γ ⊢ φ :: Δ) -> LKID (FNeg φ :: Γ ⊢ Δ)
 | NegR : forall Γ Δ φ, LKID (φ :: Γ ⊢ Δ) -> LKID (Γ ⊢ FNeg φ :: Δ)
@@ -647,7 +647,7 @@ Kako implicitno kvantificiramo po varijabli \(0\), a  ona se javlja
   \end{prooftree}
   \caption{Kvantifikacijska pravila sustava \(\mathit{LKID}\).}\label{fig:lkid-quantificational}
 \end{figure}
-\begin{minted}{coq}
+\begin{minted}[firstnumber=last]{coq}
 (* Quantifier rules. *)
 | AllL : forall Γ Δ φ t,
     LKID (subst_formula (t .: ids) φ :: Γ ⊢ Δ) -> 
