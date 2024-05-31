@@ -1,5 +1,5 @@
 \chapter{Logika prvog reda s induktivnim definicijama}\label{cha:logika-prvog-reda}
-U ovom poglavlju predstavljamo glavne rezultate diplomskog rada koji uključuju formalizaciju
+U ovom poglavlju predstavljamo glavne rezultate diplomskog rada: formalizaciju
 logike prvog reda s induktivnim definicijama \(\mathit{FOL_{ID}}\)
 te dokaznog sustava \(\mathit{LKID}\), koje je prvi uveo Brotherston~\cite{brotherston2005}.
 Definicije, leme i dokazi u ovom poglavlju preuzete su iz Brotherstonove disertacije~\cite{brotherstonphd}.
@@ -7,37 +7,38 @@ Za općeniti uvod u logiku čitatelja upućujemo na knjigu \textit{Matematička 
 
 Prvo ćemo definirati sintaksu i semantiku logike \(\mathit{FOL_{ID}}\),
 nakon čega ćemo definirati njene standardne modele.
-Zatim ćemo prikazati dokazni sustav \(\mathit{LKID}\) te konačno dokazati adekvatnost
+Zatim ćemo prikazati dokazni sustav \(\mathit{LKID}\) te konačno dokazati dio adekvatnosti
 sustava \(LKID\) s obzirom na standardnu semantiku,
 što je ujedno i glavni rezultat ovog diplomskog rada.
+\misao{Ovo ću preformulirati ako uspijem dokazati zadnje pravilo.}
 
-Svaka definicija i lema u ovom poglavlju bit će popraćena svojim pandanom u Coqu.
+Svaka definicija i lema u ovom poglavlju bit će popraćena svojom formalizacijom u Coqu.
 Jedan je od ciljeva diplomskog rada prikazati primjene Coqa u matematici,
 zbog čega leme nećemo dokazivati \enquote{na papiru},
-već se dokaz svake leme može pronaći na GitHub repozitoriju rada.\footnote{TODO: REPO LINK}
+već se dokaz svake leme može pronaći u repozitoriju rada.\footnote{TODO: repo link, na kraju}
 Zainteresiranom čitatelju predlažemo interaktivni prolazak kroz dokaze lema.
 
-Prije no što krenemo na formalizaciju, valja prokomentirati odnos matematičkog i Coqovog vokabulara.
+Prije no što krenemo na formalizaciju, valja prokomentirati odnos matematičkog i Coqovog vokabulara
+što se tiče riječi \enquote{skup}.
 U matematici pojam \enquote{skup} može imati dva značenja;
 prvo se odnosi na skupove kao \textit{domene diskursa},
-dok se drugo odnosi na skupove kao \textit{predikate}, odnosno podskupove.
+dok se drugo odnosi na skupove kao \textit{predikate}, odnosno podskupove domene diskursa.
 Primjerice, skup prirodnih brojeva \(\mathbb{N}\) je domena diskursa kada je riječ o svim prirodnim brojevima
 te zbog toga pišemo \(n \in \mathbb{N}\) umjesto \(\mathbb{N}(n)\).
-S druge strane, skup svih parnih brojeva \(E\) je podskup skupa \(\mathbb{N}\), a može se interpretirati
-kao predikat na prirodnim brojevima te pišemo \(E(n)\) umjesto \(n \in E\).
+S druge strane, skup svih parnih prirodnih brojeva \(E\) je podskup skupa \(\mathbb{N}\), a može se interpretirati
+kao predikat na prirodnim brojevima te možemo pisati \(E(n)\) umjesto \(n \in E\).
 U Coqu se skupovi kao domene diskursa formaliziraju tipovima sorte \coqset\footnote{Ili općenito kao tipovi sorte \texttt{Type}.},
 dok se skupovi kao predikati formaliziraju funkcijama iz domene diskursa u sortu \coqprop.
 Na primjer, tip prirodnih brojeva \texttt{nat} je sorte \texttt{Set}, a predikat \texttt{Nat.Even} je tipa \texttt{nat\(\rightarrow\)Prop}.
 
 \section{Sintaksa}\label{sec:sintaksa}
 Kao i u svakom izlaganju logike, na početku je potrebno definirati sintaksu.
-\begin{definition}[Signatura]\label{def:signatura}
-  \textit{Jezik prvog reda s induktivnim predikatima} (kratko signatura), u oznaci \(\Sigma\),
+\begin{definition}\label{def:signatura}
+  \textit{Signatura prvog reda s induktivnim predikatima} (kratko: signatura), u oznaci \(\Sigma\),
   je skup simbola od kojih razlikujemo \textit{funkcijske}, \textit{obične predikatne}
   i \textit{induktivne predikatne} simbole.
-  Mjesnost simbola reprezentiramo funkcijom iz odgovarajućeg skupa simbola u skup \(\mathbb{N}\).
-  Funkcijski simboli mjesnosti nula nazivaju se \textit{konstante},
-  a predikatni simboli mjesnosti nula nazivaju se \textit{propozicije}.
+  \textit{Mjesnost} simbola reprezentiramo funkcijom iz odgovarajućeg skupa simbola u skup \(\mathbb{N}\),
+  a označujemo ju s \(|f|\) za funkcijske, odnosno s \(|P|\) za predikatne simbole.
   \begin{minted}{coq}
 Structure signature := {
   FuncS : Set;
@@ -49,23 +50,24 @@ Structure signature := {
 }.
 \end{minted}
 \end{definition}
+\noindent U ostatku poglavlja promatramo jednu proizvoljnu, ali fiksiranu signaturu \(\Sigma\).
+Fiksiranje nekog proizvoljnog objekta je česta pojava u matematici,
+prvenstveno zato što finksirane argumente ne trebamo spominjati eksplicitno.
+Coq omogućuje fiksiranje naredbom \texttt{Context},
+pod uvjetom da se korisnik nalazi u okolini \texttt{Section}.\footnote{\url{https://coq.inria.fr/doc/v8.18/refman/language/core/sections.html}}
+Većina definicija i lema u ovom radu su napisane upravo unutar takvih okolina.
 
 \begin{example}
   \misao{\(\Sigma_{PA}\)}
 \end{example}
 
-\noindent U ostatku poglavlja promatramo jednu proizvoljnu, ali fiksiranu signaturu \(\Sigma\).
-Fiksiranje nekog proizvoljnog objekta je česta pojava u matematici,
-prvenstveno zato što finksirane argumente ne trebamo spominjati eksplicitno.
-Coq omogućuje fiksiranje naredbom \texttt{Context},
-pod uvjetom da se korisnik nalazi u \texttt{Section} okolini.\footnote{\url{https://coq.inria.fr/doc/v8.18/refman/language/core/sections.html}}
-Većina definicija i lema u ovom radu su napisane upravo unutar \texttt{Section} okoline.
 
-\begin{definition}[Term]\label{def:term}
-  \textit{Varijabla} je prirodan broj. Skup svih terma konstruiramo rekurzivno na način:
+\pagebreak
+\begin{definition}\label{def:term}
+  \textit{Varijabla} je prirodan broj. \textit{Skup svih terma} konstruiramo rekurzivno na način:
   \begin{enumerate}
   \item svaka varijabla je term;
-  \item ako je \(f\) funkcijski simbol mjesnosti \(n\) te su \(t_{1}\), \ldots, \(t_{n}\) termi\footnote{Primijetimo, broj terma ovisi o mjesnosti funkcijskog simbola. U Coq implementaciji ovog \enquote{konstruktora} možemo vidjeti da je on zavisnog tipa.},
+  \item ako je \(f\) funkcijski simbol mjesnosti \(n\) te su \(t_{1}\), \ldots, \(t_{n}\) termi\footnote{Primijetimo, broj terma ovisi o mjesnosti funkcijskog simbola. U Coqovoj implementaciji ovog \enquote{konstruktora} možemo vidjeti da je on zavisnog tipa.},
     onda je \(f(t_{1}, \ldots, t_{n})\) također term.
   \end{enumerate}
 \begin{minted}{coq}
@@ -74,14 +76,23 @@ Inductive term : Set :=
 | TFunc : forall (f : FuncS Σ), vec term (fun_ar f) -> term.
 \end{minted}
 \end{definition}
-Općenitije prezentacije logike prvog reda za skup varijabli uzimaju proizvoljan skup \(\mathcal{V}\),
+\noindent Uobičajene prezentacije logike prvog reda za
+skup varijabli uzimaju proizvoljan skup \(\mathcal{V}\),
 no za formalizaciju je pogodniji skup prirodnih brojeva \(\mathbb{N}\).
-Kasnije ćemo objasniti zašto.
+Umjesto eksplicitne kvantifikacije po nekoj varijabli \(v\),
+implicitno ćemo kvantificirati po varijabli \(0\).
+Ovaj pristup kvantifikaciji\footnote{Ili općenitije, vezivanju varijabli.}, imena \enquote{de Bruijnovo indeksiranje},
+bitno olakšava rad sa supstitucijama, a uveden je u članku~\cite{debruijnamelessdummies}.
+O samoj implementaciji de Bruijnovog indeksiranja više se može pročitati u knjizi
+\textit{Types and Programming Languages}~\cite{pierce2002tapl}.
+Za potrebe ovog rada koristili smo program \textit{Autosubst2}\footnote{\url{https://github.com/uds-psl/autosubst2}}~\cite{stark-phd,autosubst2}
+za automatsko generiranje tipova terma i formula te pripadajućih funkcija supstitucija i pomoćnih lema.
 
-\noindent Princip indukcije za \texttt{term} potrebno je ručno definirati.
-Naime, induktivni tip \texttt{term} je \textit{ugniježđen} po konstruktoru \texttt{TFunc} što znači da se
-javlja omotan oko drugog induktivnog tipa\footnote{Ovdje \texttt{vec}.} kao argument.
-Za ugniježđene induktivne tipove, Coq generira \textit{neprikladne} principe indukcije.
+Princip indukcije za \texttt{term} potrebno je ručno definirati.
+Naime, induktivni tip \texttt{term} je \textit{ugniježđen} po konstruktoru \texttt{TFunc} zato što
+se javlja omotan oko drugog induktivnog tipa\footnote{Ovdje \texttt{vec}.} kao argument.
+Za ugniježđene induktivne tipove, Coq generira neprikladne principe indukcije jer ne zna
+kako izraziti tvrdnju \enquote{predikat vrijedi za sve ugniježđene elemente.}
 \begin{minted}{coq}
 Lemma term_ind
      : forall P : term Σ -> Prop,
@@ -91,11 +102,12 @@ Lemma term_ind
        forall t : term Σ, P t.
 \end{minted}
 
+\pagebreak
 \begin{definition}
-  Skup svih varijabli koje se javljaju u termu \(t\), u oznaci \(\mathit{TV}(t)\), konstruiramo rekurzivno na način:
+  \textit{Skup svih varijabli terma} \(t\), u oznaci \(\mathit{TV}(t)\), konstruiramo rekurzivno na način:
   \begin{enumerate}
-  \item za varijablu \(v\) vrijedi \( \mathit{TV}(v) \coloneq \{ v \} \),
-  \item za \(n\)-mjesni funkcijski simbol \(f\) i terme \(t_{1}, \ldots, t_{n}\) vrijedi \( \mathit{TV}(f(t_{1}, \ldots, t_{n})) \coloneq \bigcup_{1 \le i \le n} \mathit{TV}(t_{i}) \).
+  \item \( \mathit{TV}(v) \coloneq \{ v \} \) za varijablu \(v\) i
+  \item \( \mathit{TV}(f(t_{1}, \ldots, t_{n})) \coloneq \bigcup_{1 \le i \le n} \mathit{TV}(t_{i}) \) za \(n\)-mjesni funkcijski simbol \(f\) i terme \(t_{1}, \ldots, t_{n}\).
   \end{enumerate}
 \begin{minted}{coq}
 Inductive TV : term -> var -> Prop :=
@@ -105,10 +117,10 @@ Inductive TV : term -> var -> Prop :=
 \end{minted}
 \end{definition}
 
-\begin{definition}[Formula]\label{def:formula}
-  Skup svih formula konstruiramo rekurzivno na način:
+\begin{definition}\label{def:formula}
+  \textit{Skup svih formula} konstruiramo rekurzivno na način:
   \begin{enumerate}
-  \item ako je \(Q\) običan ili induktivan predikatni simbol mjesnosti \(n\) te su \(t_{1}\), \ldots, \(t_{n}\) termi,
+  \item ako je \(Q\) (obični ili induktivni) predikatni simbol mjesnosti \(n\) te su \(t_{1}\), \ldots, \(t_{n}\) termi,
     onda je \(Q(t_{1}, \ldots, t_{n})\) \textit{atomarna} formula;
   \item ako je \(\varphi\) formula, onda su \(\neg\varphi\) i \(\forall\varphi\) također formule;
   \item ako su \(\varphi\) i \(\psi\) formule, onda je \(\varphi \rightarrow \psi\) također formula.
@@ -128,23 +140,15 @@ Definition FOr (φ ψ : formula) : formula := FImp (FNeg φ) ψ.
 Definition FExist (φ : formula) : formula := FNeg (FAll (FNeg φ)).
 \end{minted}
 \end{definition}
-Umjesto eksplicitne kvantifikacije po nekoj varijabli \(v\),
-mi ćemo implicitno kvantificirati po varijabli \(0\).
-Ovaj pristup kvantifikaciji\footnote{Ili općenitije, vezivanju varijabli.}, imena \enquote{de Bruijnovo indeksiranje},
-bitno olakšava rad sa supstitucijama, a uveden je u članku~\cite{debruijnamelessdummies}.
-O samoj implementaciji de Bruijnovog indeksiranja više se može pročitati u knjizi
-\textit{Types and Programming Languages}~\cite{pierce2002tapl}.
-Za potrebe ovog rada koristili smo program \textit{Autosubst2}\footnote{\url{https://github.com/uds-psl/autosubst2}}~\cite{stark-phd,autosubst2}
-za automatsko generiranje tipova terma i formula te pripadajućih funkcija supstitucija i pomoćnih lema.
-\misao{Ovaj odlomak preseliti nekamo na početak odjeljka.}
+
 
 \begin{definition}
-  Skup slobodnih varijabli formule \(\varphi\), u oznaci \(\mathit{FV}(\varphi)\), konstruiramo rekurzivno na način:
+  \textit{Skup slobodnih varijabli formule} \(\varphi\), u oznaci \(\mathit{FV}(\varphi)\), konstruiramo rekurzivno na način:
   \begin{enumerate}
   \item \( \mathit{FV}(P(u_{1}, \ldots, u_{n})) \coloneq \bigcup_{1 \le i \le n} \mathit{TV}(u_{i}) \),
   \item \( \mathit{FV}(\neg\varphi) \coloneq \mathit{FV}(\varphi)\),
   \item \( \mathit{FV}(\varphi \rightarrow \psi) \coloneq \mathit{FV}(\varphi) \cup \mathit{FV}(\psi) \),
-  \item \( \mathit{FV(\forall \varphi)} \coloneq \{ v \mid 1 + v \in \mathit{FV}(\varphi) \} \).
+  \item \( \mathit{FV(\forall \varphi)} \coloneq \{ v \mid v + 1 \in \mathit{FV}(\varphi) \} \).
   \end{enumerate}
 \begin{minted}{coq}
 Inductive FV : formula -> var -> Prop :=
@@ -159,10 +163,10 @@ Inductive FV : formula -> var -> Prop :=
 \end{minted}
 \end{definition}
 
-\begin{definition}[Supstitucija]
-  Supstitucija je svaka funkcija iz skupa \(\mathbb{N}\) u skup svih terma.
+\begin{definition}
+  \textit{Supstitucija} je svaka funkcija iz skupa \(\mathbb{N}\) u skup svih terma.
   Supstituciju \(\sigma\) možemo promatrati kao niz terma \(t_{0}, t_{1}, t_{2}, \ldots\).
-  Tada je \textit{pomaknuta supstitucija}, u oznaci \(t \cdot \sigma\), supstitucija koja odgovara nizu \(t, t_{0}, t_{1}, t_{2}, \ldots\).\\
+  Tada je \textit{pomaknuta supstitucija}, s oznakom \(t \cdot \sigma\), supstitucija koja odgovara nizu \(t, t_{0}, t_{1}, t_{2}, \ldots\), za neki term \(t\).\\
   \noindent Domena supstitucije može se rekurzivno proširiti na skup svih terma i skup svih formula.
 \begin{minted}{coq}
 Fixpoint subst_term  (σ : var -> term) (t : term) : term :=
@@ -184,7 +188,11 @@ Fixpoint subst_formula
   end.
 \end{minted}
   \noindent Ovdje funkcija \texttt{up\_term\_term} brine da supstitucija \(\sigma\) mijenja samo one varijable koje nisu vezane.
-  \noindent Pišemo \(\varphi[\sigma]\) za primjenu supstitucije \(\sigma\) na formulu \(\varphi\). Posebno,  pišemo \(\varphi[t/x]\) za supstituciju varijable \(x\) termom \(t\) u formuli \(\varphi\) te pišemo \(\varphi^{\uparrow}\) za inkrementaciju svake varijable u formuli \(\varphi\). Iste notacije koristimo i za supstitucije na termima, listama terma i listama formula.
+  \noindent Pišemo \(\varphi[\sigma]\) za primjenu supstitucije \(\sigma\) na formulu \(\varphi\).
+  Često korištene supstitucije formula su
+  supstitucija varijable \(x\) termom \(t\) u formuli \(\varphi\), s oznakom \(\varphi[t/x]\),
+  te supstitucija svake varijable \(n\) u formuli \(\varphi\) varijablom \(n + 1\), s oznakom \(\varphi^{\uparrow}\).
+  Iste notacije koristimo i za supstitucije na termima, listama terma i listama formula.
 \end{definition}
 
 Konačno, potrebno je definirati sintaksu za indukciju.
@@ -199,25 +207,26 @@ induktivne definicije s atomarnim formulama, a pišemo ih u stilu prirodne deduk
 \noindent Ovdje su \(Q_{1}, \ldots, Q_{n}\) obični predikatni simboli, \(P_{1}, \ldots, P_{m}\) i \(P\) su induktivni predikatni simboli,
 a podebljani znakovi predstavljaju \(n\)-torke terma, gdje je \(n\) mjesnost odgovarajućeg predikata.
 
-\begin{definition}[Produkcija]
-  Uređene četvorke
+\begin{definition}
+  Produkcija je uređena četvorka
   \begin{enumerate}
-  \item listi parova običnih predikatnih simbola i \(n\)-torki terma odgovarajućih duljina,
-  \item listi parova induktivnih predikatnih simbola i \(n\)-torki terma odgovarajućih duljina,
+  \item liste parova običnih predikatnih simbola i \(n\)-torki terma odgovarajućih duljina,
+  \item liste parova induktivnih predikatnih simbola i \(n\)-torki terma odgovarajućih duljina,
   \item induktivnog predikatnog simbola \(P\) mjesnosti \(m\) i
-  \item \(m\)-torke terma
+  \item \(m\)-torke terma.
   \end{enumerate}
-  nazivamo produkcijama.
 \begin{minted}{coq}
-Record production := mkProd {
-    preds : list ({ P : PredS Σ & vec (term Σ) (pred_ar P) });
-    indpreds : list ({ P : IndPredS Σ & vec (term Σ) (indpred_ar P) });
-    indcons : IndPredS Σ;
-    indargs : vec (term Σ) (indpred_ar indcons);
-  }.
+Record production :=
+  mkProd {
+      preds : list { P : PredS Σ & vec (term Σ) (pred_ar P) };
+      indpreds : list { P : IndPredS Σ & vec (term Σ) (indpred_ar P) };
+      indcons : IndPredS Σ;
+      indargs : vec (term Σ) (indpred_ar indcons);
+    }.
 \end{minted}
-  \textit{Skup induktivnih definicija} \(\Phi\) je skup produkcija.
-  U ostatku rada promatramu neki proizvoljan, ali fiksiran skup induktivnih definicija \(\Phi\).
+  Prvi i drugi član četvorke zovemo \textit{premisama}, a treći i četvrti \textit{konkluzijom}.
+  U ostatku rada odabiremo neki podskup skupa svih produkcija koji zovemo
+  \textit{skupom induktivnih definicija}, a označavamo s \(\Phi\).
 \begin{minted}{coq}
 Definition IndDefSet := production -> Prop.
 \end{minted}
@@ -225,11 +234,12 @@ Definition IndDefSet := production -> Prop.
 
 
 \section{Semantika}\label{sec:semantika}
-\begin{definition}[Struktura]
-  Struktura prvog reda \(M\) je uređena četvorka skupa kojeg nazivamo \textit{nosačem}
+\begin{definition}
+  \textit{Struktura prvog reda} (kratko: struktura) je uređena četvorka skupa \(M\) koji nazivamo \textit{nosačem}
   te interpretacija funkcijskih, običnih predikatnih i induktivnih predikatnih simbola.
-  Funkcijski se simboli interpretiraju kao \(n\)-mjesne funkcije, a predikatni simboli kao \(n\)-mjesne relacije na nosaču.
-  Koristit ćemo ime strukture kao sinonim za njen nosač, a interpretacije označavamo sa \(f^{M}\) odnosno \(P^{M}\).
+  Funkcijski simboli mjesnosti \(n\) interpretiraju se kao \(n\)-mjesne funkcije, a predikatni simboli mjesnosti \(n\) kao \(n\)-mjesne relacije na nosaču.
+  Koristit ćemo ime nosača kao sinonim za čitavu strukturu,
+  a interpretacije označavati s \(f^{M}\) odnosno \(P^{M}\).
 \begin{minted}{coq}
 Structure structure := {
     domain :> Set;
@@ -245,7 +255,7 @@ Structure structure := {
 \begin{minted}{coq}
 Definition env := var -> M.
 \end{minted}
-  \noindent Okolina se može interpretirati kao niz \(d_{0}, d_{1}, d_{2}, \ldots\). Tada je \textit{pomaknuta okolina}, u oznaci \(d \cdot \rho\),
+  \noindent Okolina se može interpretirati kao niz \(d_{0}, d_{1}, d_{2}, \ldots\). Tada je \textit{pomaknuta okolina}, s oznakom \(d \cdot \rho\),
   niz \(d, d_{0}, d_{1}, d_{2}, \ldots\) za neki \(d \in M\).
   \noindent Proširenje domene okoline \(\rho\) na skup svih terma zovemo \textit{evaluacijom}.
 \begin{minted}{coq}
@@ -259,14 +269,16 @@ Fixpoint eval (ρ : env) (t : term Σ) : M :=
   Istu notaciju koristimo i za evaluaciju \(n\)-torki terma.
 \end{definition}
 
-\begin{definition}[Relacija ispunjivosti]
+\begin{definition}
   Neka je \(M\) proizvoljna struktura te \(\rho\) okolina za \(M\).
-  Ispunjivost formule \(\varphi\) u okolini \(\rho\) pišemo \(\rho \vDash \varphi\), a definiramo rekurzivno na način:
+  \textit{Istinitost formule} \(\varphi\) u okolini \(\rho\) pišemo \(\rho \vDash \varphi\),
+  a definiramo rekurzivno na način:
   \begin{enumerate}
-  \item ako je \(P\) običan ili induktivan predikatni simbol mjesnosti \(n\) te su \(u_{1}, \ldots, u_{n}\) termi,
+  \item ako je \(P\) (obični ili induktivni) predikatni simbol mjesnosti \(n\)
+    te su \(u_{1}, \ldots, u_{n}\) termi,
     onda vrijedi \(\rho \vDash P(u_{1}, \ldots, u_{n})\) ako i samo ako vrijedi \(P^{M}(\rho(u_{1}), \ldots, \rho(u_{n}))\),
-  \item vrijedi \(\rho \vDash \neg \varphi \) ako i samo ako ne vrijedi \(\rho \vDash \varphi\),
-  \item vrijedi \(\rho \vDash \varphi \rightarrow \psi \) ako i samo ako \(\rho \vDash \varphi\) povlači \(\rho \vDash \psi\) i
+  \item vrijedi \(\rho \vDash \neg \varphi \) ako i samo ako ne vrijedi \(\rho \vDash \varphi\) (što još pišemo \(\rho \not \vDash \varphi\)),
+  \item vrijedi \(\rho \vDash \varphi \rightarrow \psi \) ako i samo ako vrijedi \(\rho \not \vDash \varphi\) ili \(\rho \vDash \psi\) i
   \item vrijedi \(\rho \vDash \forall \varphi\) ako i samo ako za sve \(d \in M\) vrijedi \(d \cdot \rho \vDash \varphi\)
   \end{enumerate}
 \begin{minted}{coq}
@@ -282,15 +294,23 @@ Fixpoint Sat (ρ : env M) (F : formula Σ) : Prop :=
 \end{definition}
 
 \begin{lemma}
-  Sintaktička i semantička supstitucija komutiraju pod relacijom ispunjivosti.
+  Neka su \(\varphi\), \(\sigma\), \(M\) i \(\rho\) redom
+  proizvoljna formula, supstitucija, struktura i okolina za \(M\).
+  Tada vrijedi \(\rho \vDash \varphi[\sigma]\) ako i samo ako vrijedi \( (t \mapsto t^{\rho}) \, \circ \, \sigma \vDash \varphi\).
 \begin{minted}{coq}
 Lemma strong_form_subst_sanity2 :
   forall (φ : formula Σ) (σ : var -> term Σ)
       (M : structure Σ) (ρ : env M),
       ρ ⊨ (subst_formula σ φ) <-> (σ >> eval ρ) ⊨ φ.
 \end{minted}
+  \noindent Kompoziciju supstitucije \(\sigma\) i evaluacije \(t \mapsto t^{\rho}\)
+  možemo nazvati \textit{semantičkom} supstitucijom
+  jer prvo provodi \textit{sintaktičku} supstituciju \(\sigma\) nakon čega provodi evaluaciju.
+  Tada možemo neformalno reći da sintaktička i semantička supstitucija
+  komutiraju pod relacijom istinitosti.
 \end{lemma}
-\misao{Zvuči kul. Je li jasno što je to semantička supstitucija i zašto kažem da komutiraju?}
+% \misao{Ne znam zašto, ali meni se simbol \(\mapsto\) (\verb|\mapsto|)
+% prikazuje kao kombinacija \(\vdash \rightarrow\) (\verb|\vdash \rightarrow|) u PDF-u.}
 
 \section{Standardni modeli}\label{sec:standardni-modeli}
 Želimo ograničiti semantička razmatranja na samo one strukture koje \enquote{imaju smisla} za induktivne predikate.
@@ -298,22 +318,21 @@ Prisjetimo se, predikatni simbol \(P\) mjesnosti \(n\) interpretira se na strukt
 Indukciju smatramo dokazivanjem \textup{u razinama} pa ima smisla promatrati \textit{razine interpretacije} induktivnog predikata,
 gdje je nulta razina prazan skup,
 a svaku iduću razinu konstruiramo pomoću produkcija induktivnog skupa definicija i prethodnih razina.
-Tako je prva razina onaj podskup kojeg možemo dobiti samo jednom \enquote{primjenom produkcija},
-druga je razina onaj podskup kojeg možemo dobiti pomoću dvije primjene produkcija, i tako dalje.
+Tako je prva razina onaj podskup kojeg možemo dobiti najviše jednom \enquote{primjenom produkcija},
+druga je razina onaj podskup kojeg možemo dobiti pomoću najviše dviju primjena produkcija, i tako dalje.
 Na taj se način, korak po korak, gradi \textit{smislena} interpretacija induktivnih predikata.
 Napominjemo da se zbog mogućih međuovisnosti induktivnih predikata razine interpretacije definiraju simultano.
 Ovaj odjeljak posvećujemo formalizaciji ovih pojmova.
 
-\begin{definition}[Operator skupa definicija]
-  Neka je \(M\) proizvoljna struktura te neka je \(pr\) proizvoljna produkcija induktivnog skupa definicija \(\Phi\)
-  u čijoj se konkluziji javlja induktivni predikatni simbol \(P\), primjerice:
+\begin{definition}
+  Neka je \(M\) proizvoljna struktura te neka je \(pr\) proizvoljna produkcija induktivnog skupa definicija \(\Phi\), primjerice:
   \begin{prooftree}
   \AxiomC{\(  Q_{1}\mathbf{u}_{1}  \ldots   Q_{n}\mathbf{u}_{n}  \)}
   \AxiomC{\(  P_{1}\mathbf{v}_{1}  \ldots   P_{m}\mathbf{v}_{m}  \)}
   \BinaryInfC{\(P\mathbf{t}\)}
   \end{prooftree}
-\noindent Neka je \(f\) funkcija koja svakom induktivnom predikatnom simbolu \(R\) pridružuje podskup skupa \(M^{|R|}\).
-Tada je \(\varphi_{pr}(f)\) skup svih \(|P|\)-torki \(\mathbf{d}\) elemenata nosača \(M\) za koje postoji okolina \(\rho\) za \(M\) takva da:
+\noindent Neka je \(f\) proizvoljna interpretacija induktivnih predikatnih simbola.
+Tada definiramo \(\varphi_{pr}(f)\) kao skup svih \(|P|\)-torki \(\mathbf{d}\) elemenata nosača \(M\) za koje postoji okolina \(\rho\) za \(M\) takva da:
 \begin{itemize}
 \item za sve \( i \in \{ 1, \ldots, n \} \) vrijedi \( \mathbf{u}_{i}^{\rho} \in Q_{i}^{M} \), % TODO uvesti ovu notaciju za u
 \item za sve \( j \in \{ 1, \ldots, m \} \) vrijedi \( \mathbf{v_{i}^{\rho}} \in f(P_{i}) \) i
@@ -327,16 +346,15 @@ Definition φ_pr
   : Prop :=
       exists (ρ : env M),
       (forall Q us, List.In (Q; us) (preds pr) ->
-               interpP Q (V.map (eval ρ) us))
-      /\
-        ( forall P ts, List.In (P; ts) (indpreds pr) ->
-                  args P (V.map (eval ρ) ts))
-      /\
+               interpP Q (V.map (eval ρ) us)) /\
+        (forall P ts, List.In (P; ts) (indpreds pr) ->
+                  args P (V.map (eval ρ) ts)) /\
         ds = V.map (eval ρ) (indargs pr).
 \end{minted}
 \noindent Operator \(\varphi_{pr}\) je formalizacija ideje primjene produkcije.
 Nadalje, potrebno je definirati operator koji će uzeti u obzir \textit{sve} produkcije koje se odnose na \(P\).
-Definiramo \(\varphi_{P}(f)\) kao uniju svih \(\varphi_{pr^{\prime}}(f)\) gdje je \(pr^{\prime}\) produkcija u kojoj se \(P\) javlja u konkluziciji.
+Definiramo \(\varphi_{P}(f)\) kao uniju svih \(\varphi_{pr^{\prime}}(f)\)
+gdje je \(pr^{\prime}\) produkcija u kojoj se \(P\) javlja u konkluziji.
 \begin{minted}{coq}
 Definition φ_P
   (P : IndPredS Σ)
@@ -344,14 +362,13 @@ Definition φ_P
   : vec D (indpred_ar P) -> Prop.
   refine (fun ds => _).
   refine (@ex production (fun pr => _)).
-  refine (@ex (P = indcons pr /\ Φ pr) (fun H => _)).
-  destruct H as [Heq HΦ].
+  refine (@ex (P = indcons pr /\ Φ pr) (fun '(conj Heq HΦ) => _)).
   rewrite Heq in ds.
   exact (φ_pr pr args ds).
 Defined.
 \end{minted}
 \noindent Konačno, definiramo operator skupa definicija \(\varphi_{\Phi}\) kao preslikavanje
-koje induktivnom predikatnom simbolu \(P\) pridružuje skup \(\varphi_{P}(f)\).
+koje svakom induktivnom predikatnom simbolu \(P\) pridružuje skup \(\varphi_{P}(f)\).
 \begin{minted}{coq}
 Definition φ_Φ
   (args : forall P : IndPredS Σ, vec D (indpred_ar P) -> Prop)
@@ -369,7 +386,7 @@ Definition φ_Φ
   \).
 \end{remark}
 
-\misao{Ova duga definicija vapi za primjerom. Meni je jasno, ali slutim da bi dragom čitatelju bilo incomprehensible.}
+\misao{TODO: primjer.}
 
 \begin{proposition}
   Operator \(\varphi_{\Phi}\) je monoton.
@@ -381,9 +398,9 @@ Proposition φ_Φ_monotone :
 \end{minted}
 \end{proposition}
 
-\begin{definition}[Aproksimanti]
+\begin{definition}
   Neka je \(M\) proizvoljna struktura.
-  Definiramo aproksimaciju skupa induktivnih definicija \(\Phi\) razine \(\alpha\), u oznaci \(\varphi_{\Phi}^{\alpha}\), rekurzivno na način:
+  Definiramo aproksimaciju skupa induktivnih definicija \(\Phi\) razine \(\alpha \in \mathbb{N}\), u oznaci \(\varphi_{\Phi}^{\alpha}\), rekurzivno na način:
   \begin{enumerate}
   \item \( \varphi_{\Phi}^{0}(P) \coloneq \varnothing \) i
   \item \( \varphi_{\Phi}^{\alpha + 1} \coloneq \varphi_{\Phi}(\varphi_{\Phi}^{\alpha}) \).
@@ -395,7 +412,7 @@ Fixpoint φ_Φ_n P (α : nat) (v : vec M (indpred_ar P)) : Prop :=
   | S α => @φ_Φ Σ M Φ (fun P => φ_Φ_n P α) P v
   end.
 \end{minted}
-  \noindent Tada je aproksimant induktivnog predikatnost simbola \(P\) razine \(\alpha\) upravo \(\varphi_{\Phi}^{\alpha}(P)\).
+  \noindent Tada je \textit{aproksimant} induktivnog predikatnog simbola \(P\) razine \(\alpha\) upravo \(\varphi_{\Phi}^{\alpha}(P)\).
 \begin{minted}{coq}
 Definition approximant_of (P : IndPredS Σ)
   : nat -> vec M (indpred_ar P) -> Prop :=
@@ -403,17 +420,14 @@ Definition approximant_of (P : IndPredS Σ)
 \end{minted}
 \end{definition}
 
-\misao{Redoslijed argumenata u approximant\_of je zbunjujuć s obzirom na čitanje simbola: fi fi na alfa od pe.}
-\misao{O redoslijedu smo na nekom sastanku raspravljali i zaključili da bi ipak trebao biti ovakav kakav jest.}
-
 \begin{remark}
-  Brotherston je definirao aproksimaciju razine \(\alpha\) kao uniju aproksimacija svih nižih razina.
+  Brotherston je definirao aproksimaciju razine \(\alpha\) za pojedini induktivni predikatni simbol
+  kao uniju aproksimacija svih nižih razina
   Takva je definicija ekvivalentna našoj.
 \end{remark}
-\misao{Malo je neprezicno reći ``unija'', ustvari se misli na uniju za svaki pojedini \(P\).}
 
-\begin{lemma}
-  Za sve prirodne brojeve \(\alpha\) i induktivne predikatne simbole \(P\) vrijedi
+\begin{lemma}\label{lemma:ekvivalentnost-definicija-aproksimacija}
+  Za svaki prirodni broj \(\alpha\) i induktivni predikatni simbol \(P\) vrijedi
   \[
     \varphi_{\Phi}^{\alpha}(P) = \bigcup_{\beta < \alpha} \varphi_{\Phi}^{\beta}(P).
   \]
@@ -425,15 +439,15 @@ Lemma approximant_characterization : forall α P v,
 \end{lemma}
 
 \begin{definition}
-  Aproksimacija razine \(\omega\), u oznaci \(\varphi_{\Phi}^{\omega}\), je unija aproksimacija razina manjih od \(\omega\).
+  \textit{Aproksimacija razine} \(\omega\), u oznaci \(\varphi_{\Phi}^{\omega}\), je za svaki pojedini predikatni simbol
+  unija aproksimacija razina manjih od \(\omega\).
 \begin{minted}{coq}
 Definition φ_Φ_ω P v := exists α, φ_Φ_n P α v.
 \end{minted}
 \end{definition}
-\misao{Opet, ``unija'' nije precizno.}
 
-\begin{lemma}
-  Aproksimacija razine \(\omega\) najmanji je skup sa svojstvom \(\varphi_{\Phi}(\varphi_{\Phi}^{\omega}) \subseteq \varphi_{\Phi}^{\omega}\).
+\begin{lemma}\label{lemma:omega-least-prefixed}
+  Aproksimacija razine \(\omega\) je najmanji skup sa svojstvom \(\varphi_{\Phi}(\varphi_{\Phi}^{\omega}) \subseteq \varphi_{\Phi}^{\omega}\).
 \begin{minted}{coq}
 Lemma ω_prefixed : forall P v, @φ_Φ Σ M Φ φ_Φ_ω P v -> φ_Φ_ω P v.
 Lemma ω_least : forall args,
@@ -442,46 +456,40 @@ Lemma ω_least : forall args,
 \end{minted}
 \end{lemma}
 
-\begin{definition}[Standardni model]
-  Kažemo da je struktura \(M\) standardni model za \(\Phi\) ako
+\begin{definition}
+  Kažemo da je struktura \(M\) \textit{standardni model} za \(\Phi\) ako
   interpretira svaki induktivni predikatni simbol njegovim aproksimantom razine \(\omega\).
 \begin{minted}{coq}
 Definition standard_model
-  (Σ : signature) (Φ: @IndDefSet Σ)
-  : structure Σ -> Prop :=
-  fun M =>
-    forall (P : IndPredS Σ) ts, interpIP P ts <-> @φ_Φ_ω Σ M Φ P ts.
+  (Σ : signature) (Φ: @IndDefSet Σ) (M : structure Σ) : Prop :=
+  forall (P : IndPredS Σ) ts, interpIP P ts <-> @φ_Φ_ω Σ M Φ P ts.
 \end{minted}
 \end{definition}
-\noindent Standardni modeli su upravo one strukture koje imaju smisla za skup induktivnih definicija.
+\noindent Prema lemi~\ref{lemma:omega-least-prefixed}, standardni model je
+najmanja struktura koja ima smisla za zadani skup induktivnih definicija.
 
 
 \section{Sistem sekvenata s induktivnim definicijama}\label{sec:sistem-sekvenata}
-Ovaj odlomak je za diskusiju na sastanku. Kako to da je Brotherston definirao signaturu, ali onda nije uključio aksiome u LKID?
-Primjerice, u \( \Sigma_{PA} \) imamo simbol jednakosti, ali ne možemo dokazati refleksivnost.
-Valjda su aksiomi uključeni u \(\Gamma\), u smislu LKID je općenit dokazni sustav, pa bi neka
-``aksiomatizirana teorija'' u stvari bili dokazi \(\mathit{akiomi} \vdash \varphi\). Možda.
-
 Cilj je ovog odjeljka definirati dokazni sustav \(\mathit{LKID}\) za logiku \(\mathit{FOL_{ID}}\).
-Ovaj dokazni sustav temelji se na Gentzenovom računu sekvenata, a proširen je lijevim i desnim pravilima za indukciju.
-Prije no što definiramo \(\mathit{LKID}\), potrebno je definirati pojmove sekvenata i međusobnih zavisnosti induktivnih predikata.
+Ovaj dokazni sustav temelji se na Gentzenovu računu sekvenata, a proširen je lijevim i desnim pravilima za indukciju.
+Prije no što definiramo \(\mathit{LKID}\), potrebno je definirati pojam sekvente i međusobne zavisnosti induktivnih predikata.
 
-\begin{definition}[Sekvent]
-  Neka su \(\Gamma\) i \(\Delta\) proizvoljne liste formula. Tada je sekvent uređeni par \((\Gamma,\Delta)\), a označavamo ga s \(\Gamma \vdash \Delta\).
+\begin{definition}
+  Neka su \(\Gamma\) i \(\Delta\) proizvoljne liste formula. Tada je \textit{sekventa} uređeni par \((\Gamma,\Delta)\), a označavamo ju s \(\Gamma \vdash \Delta\).
 \begin{minted}{coq}
 Inductive sequent : Set :=
-| mkSeq (left : list (formula Σ)) (right : list (formula Σ)).
+| mkSeq (Γ Δ : list (formula Σ)).
 \end{minted}
 \end{definition}
 \noindent Sekventom \(\Gamma \vdash \Delta\) konceptualno tvrdimo da istinitost \textit{svake}
 tvrdnje u \(\Gamma\) povlači istinitost \textit{neke} tvrdnje u \(\Delta\).
-Kažemo da je sekvent \(\Gamma \vdash \Delta\) \textit{dokaziv}, ili da iz \(\Gamma\) postoji izvod za \(\Delta\), ako u sustavu \(\mathit{LKID}\) postoji dokaz za \(\Gamma \vdash \Delta\). Kasnije ćemo precizirati što je točno \textit{dokaz}.
+Kažemo da je sekventa \(\Gamma \vdash \Delta\) \textit{dokaziva}, ili da iz \(\Gamma\) postoji izvod za \(\Delta\), ako u sustavu \(\mathit{LKID}\) postoji \textit{dokaz} za \(\Gamma \vdash \Delta\). Pojam dokaza ćemo precizirati kasnije.
 
-\begin{definition}[Relacija \(\mathit{Prem}\)]
+\begin{definition}
   Neka su \(P_{i}\) i \(P_{j}\) proizvoljni induktivni predikatni simboli.
-  Kažemo da je simbol \(P_{i}\) u relaciji \(\mathit{Prem}\) sa simbolom \(P_{j}\)
+  Kažemo da je simbol \(P_{i}\) u \textit{relaciji} \(\mathit{Prem}\) sa simbolom \(P_{j}\)
   ako postoji produkcija u skupu induktivnih definicija \(\Phi\) takva da
-  se simbol \(P_{i}\) javlja u njenom konzekvensu te
+  se simbol \(P_{i}\) javlja u njenoj konkluziji te
   se simbol \(P_{j}\) javlja u njenim premisama.
 \begin{minted}{coq}
 Definition Prem (Pi Pj : IndPredS Σ) :=
@@ -491,13 +499,13 @@ Definition Prem (Pi Pj : IndPredS Σ) :=
 \end{minted}
 \end{definition}
 
-\begin{definition}[Međusobna zavisnost]
-  Definiramo relaciju \(\mathit{Prem}^{\ast}\) kao refleksivno i tranzitivno zatvorenje relacije \(\mathit{Prem}\).
+\begin{definition}
+  Definiramo relaciju \(\mathit{Prem}^{\ast}\) kao refleksivno i tranzitivno zatvorenje relacije \(\mathit{Prem}\) na skupu induktivnih predikatnih simbola.
 \begin{minted}{coq}
 Definition Prem_star := clos_refl_trans (IndPredS Σ) Prem.
 \end{minted}
-  \noindent Tada za induktivne predikatne simbole \(P\) i \(Q\) kažemo da su
-  međusobno zavisni ako vrijedi \(\mathit{Prem}^{\ast}(P, Q)\) i \(\mathit{Prem}^{\ast}(Q, P)\).
+  \noindent Za induktivne predikatne simbole \(P\) i \(Q\) kažemo da su
+  \textit{međusobno zavisni} ako vrijedi \(\mathit{Prem}^{\ast}(P, Q)\) i \(\mathit{Prem}^{\ast}(Q, P)\).
 \begin{minted}{coq}
 Definition mutually_dependent (P Q : IndPredS Σ) :=
   Prem_star P Q /\ Prem_star Q P.
@@ -505,32 +513,18 @@ Definition mutually_dependent (P Q : IndPredS Σ) :=
 \end{definition}
 
 \begin{lemma}
-  Međusobna zavisnost je relacija ekvivalencije na skupu induktivnih predikatnih simbola. \misao{Ova lema zvuči kao da je bitna, ali čini mi se da nije.}
+  Međusobna zavisnost je relacija ekvivalencije na skupu induktivnih predikatnih simbola.
 \begin{minted}{coq}
-Lemma mutually_dependent_refl : forall P, mutually_dependent P P.
-Lemma mutually_dependent_symm : forall P Q,
-      mutually_dependent P Q ->
-      mutually_dependent Q P.
-Lemma mutually_dependent_trans : forall P Q R,
-      mutually_dependent P Q ->
-      mutually_dependent Q R ->
-      mutually_dependent P R.
+Lemma mutually_dependent_equiv : equiv (IndPredS Σ) mutually_dependent.
 \end{minted}
 \end{lemma}
 
-Sada ćemo definirati sustav \(\mathit{LKID}\) u četiri koraka.
-U prva tri koraka ćemo definirati strukturalna, propozicijska i kvantifikatorska pravila izvoda. U zadnjem koraku ćemo definirati pravila izvoda za indukciju. Sve varijable koje se javljaju u pravilima izvoda su implicitno univerzalno kvantificirana.
+Sustav \(\mathit{LKID}\) sastoji se od četiri vrste pravila izvoda.
+\textit{Strukturalna pravila} služe baratanju strukturom sekventi,
+a prikazana su na slici~\ref{fig:lkid-structural}.
+\textit{Propozicijska pravila} služe propozicijskom logičkom zaključivanju,
+a prikazana su na slici~\ref{fig:lkid-propositional}.
 
-\misao{Rado bih koristio nešto što nije \texttt{figure} za pravila izvoda, ali ne znam što.}
-
-Strukturalna pravila su prikazana u slici~\ref{fig:lkid-structural}, a služe baratanju strukture sekvenata,
-dok ostala pravila služe logičkom zaključivanju.
-Pravilo \(\mathit{Ax}\) kaže da je sekvent dokaziv ako se ista formula nalazi s lijeve i s desne strane znaka \(\vdash\).
-Pravilo \(\mathit{Wk}\), ili pravilo \textit{slabljenja},
-kaže da je uvijek moguće dokazati tvrdnje koje su slabije od već dokazanih.
-Drugim riječima, dodavanje formula u pretpostavke ili zaključak ne mijenja dokazivost.
-Pravilo \(\mathit{Cut}\) je svojevrsni \textit{modus ponens}.
-Konačno, pravilo \(\mathit{Subst}\) kaže da se u već dokazanom sekventu varijable mogu proizvoljno mijenjati.
 \begin{figure}[!htb]
   \centering
 
@@ -564,8 +558,6 @@ Konačno, pravilo \(\mathit{Subst}\) kaže da se u već dokazanom sekventu varij
   \caption{Strukturalna pravila sustava \(\mathit{LKID}\).}\label{fig:lkid-structural}
 \end{figure}
 
-Propozicijska pravila prikazana su na slici~\ref{fig:lkid-propositional},
-a odnose se na propozicijski dio logike \(\mathit{FOL_{ID}}\), odnosno na negaciju i implikaciju. \misao{Treba li tu neka motivacija? Ja bih rekao da ne.}
 \begin{figure}[!htb]
   \centering
   \begin{prooftree}

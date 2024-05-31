@@ -7,7 +7,7 @@ Section lkid.
   Context {Σ : signature} {Φ : @IndDefSet Σ}.
 
   Inductive sequent : Set :=
-  | mkSeq (left : list (formula Σ)) (right : list (formula Σ)).
+  | mkSeq (Γ Δ : list (formula Σ)).
 
   Notation "Γ ⊢ Δ" := (mkSeq Γ Δ) (no associativity, at level 61).
   (* Γ izvodi Δ *)
@@ -33,18 +33,17 @@ Section lkid.
   Definition mutually_dependent (P Q : IndPredS Σ) :=
     Prem_star P Q /\ Prem_star Q P.
 
-  Lemma mutually_dependent_refl : forall P, mutually_dependent P P.
+  Lemma mutually_dependent_refl : reflexive (IndPredS Σ) mutually_dependent.
   Proof.
     intros P; split; apply rt_refl.
   Qed.
 
-  Lemma mutually_dependent_symm : forall P Q, mutually_dependent P Q -> mutually_dependent Q P.
+  Lemma mutually_dependent_symm : symmetric (IndPredS Σ) mutually_dependent. 
   Proof.
     intros P Q [HPQ HQP]; split; intuition.
   Qed.
 
-  Lemma mutually_dependent_trans : forall P Q R,
-      mutually_dependent P Q -> mutually_dependent Q R -> mutually_dependent P R.
+  Lemma mutually_dependent_trans : transitive (IndPredS Σ) mutually_dependent. 
   Proof.
     Hint Constructors clos_refl_trans.
     intros P Q R [HPQ HQP] [HQR HRQ]; unfold Prem_star in *; split.
@@ -52,6 +51,15 @@ Section lkid.
     - induction HQP; eauto 10. apply rt_trans with x; auto.
   Qed.
 
+  Lemma mutually_dependent_equiv : equiv (IndPredS Σ) mutually_dependent.
+  Proof.
+    unfold equiv. split.
+    - apply mutually_dependent_refl.
+    - split.
+      + apply mutually_dependent_trans.
+      + apply mutually_dependent_symm.
+  Qed.
+  
   Fixpoint FPreds_from_preds (ps : list {P : PredS Σ & vec (term Σ) (pred_ar P)}) : list (formula Σ) :=
     match ps with
     | [] => []

@@ -3,12 +3,13 @@ Require Import Base Syntax Semantics.
 Section inductive_definition_set.
   Context {Σ : signature}.
   
-  Record production := mkProd {
-      preds : list ({ P : PredS Σ & vec (term Σ) (pred_ar P) });
-      indpreds : list ({ P : IndPredS Σ & vec (term Σ) (indpred_ar P) });
-      indcons : IndPredS Σ;
-      indargs : vec (term Σ) (indpred_ar indcons);
-    }.
+  Record production :=
+    mkProd {
+        preds : list { P : PredS Σ & vec (term Σ) (pred_ar P) };
+        indpreds : list { P : IndPredS Σ & vec (term Σ) (indpred_ar P) };
+        indcons : IndPredS Σ;
+        indargs : vec (term Σ) (indpred_ar indcons);
+      }.
 
   Definition IndDefSet := production -> Prop.
 End inductive_definition_set.
@@ -34,11 +35,9 @@ Section definition_set_operator.
     : Prop :=
         exists (ρ : env M),
         (forall Q us, List.In (Q; us) (preds pr) ->
-                 interpP Q (V.map (eval ρ) us))
-        /\
-          ( forall P ts, List.In (P; ts) (indpreds pr) ->
-                    args P (V.map (eval ρ) ts))
-        /\
+                 interpP Q (V.map (eval ρ) us)) /\
+          (forall P ts, List.In (P; ts) (indpreds pr) ->
+                    args P (V.map (eval ρ) ts)) /\
           ds = V.map (eval ρ) (indargs pr).
 
   Definition φ_P (* φ_i *)
@@ -47,8 +46,7 @@ Section definition_set_operator.
     : vec D (indpred_ar P) -> Prop.
     refine (fun ds => _).
     refine (@ex production (fun pr => _)).
-    refine (@ex (P = indcons pr /\ Φ pr) (fun H => _)).
-    destruct H as [Heq HΦ].
+    refine (@ex (P = indcons pr /\ Φ pr) (fun '(conj Heq HΦ) => _)).
     rewrite Heq in ds.
     exact (φ_pr pr args ds).
   Defined.
@@ -206,10 +204,8 @@ Section approximants.
 End approximants.
 
 Definition standard_model
-  (Σ : signature) (Φ: @IndDefSet Σ)
-  : structure Σ -> Prop :=
-  fun M =>
-    forall (P : IndPredS Σ) ts, interpIP P ts <-> @φ_Φ_ω Σ M Φ P ts.
+  (Σ : signature) (Φ: @IndDefSet Σ) (M : structure Σ) : Prop :=
+  forall (P : IndPredS Σ) ts, interpIP P ts <-> @φ_Φ_ω Σ M Φ P ts.
 
 Lemma standard_model_inductive_implication :
   forall Σ (Φ : @IndDefSet Σ) (M : structure Σ) (ρ : env M) (pr : @production Σ),
