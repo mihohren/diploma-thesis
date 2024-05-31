@@ -519,12 +519,19 @@ Lemma mutually_dependent_equiv : equiv (IndPredS Σ) mutually_dependent.
 \end{minted}
 \end{lemma}
 
-Sustav \(\mathit{LKID}\) sastoji se od četiri vrste pravila izvoda.
-\textit{Strukturalna pravila} služe baratanju strukturom sekventi,
-a prikazana su na slici~\ref{fig:lkid-structural}.
-\textit{Propozicijska pravila} služe propozicijskom logičkom zaključivanju,
-a prikazana su na slici~\ref{fig:lkid-propositional}.
+Sustav \(\mathit{LKID}\) sastoji se od četiri vrste pravila izvoda:
+strukturalna, propozicijska, pravila za kvantifikatore i pravila za induktivne definicije.
+Navest ćemo ih tim redom, a definirati kroz više blokova Coq koda.
+Napominjemo da se sustav \(\mathit{LKID}\) razlikuje od Gentzenova sustava \(\mathit{LK}\)
+na nekoliko mjesta, a zbog implementacijskih detalja te induktivnih definicija.
+\begin{minted}{coq}
+Inductive LKID : sequent -> Prop := 
+\end{minted}
 
+\textbf{Strukturalna} su \textbf{pravila} prikazana na slici~\ref{fig:lkid-structural}, a služe baratanju strukturom sekvente.
+Iako je sekventa implementirana kao par listi formula, te liste se ponašaju kao skupovi u strukturalnim pravilima
+jer za provjeru pripadnosti koristimo Coqov predikat \texttt{In}.
+Posljedično, pravilo slabljenja \(\mathit{Wk}\) sa sobom povlači pravila permutacije i kontrakcije.
 \begin{figure}[!htb]
   \centering
 
@@ -557,7 +564,26 @@ a prikazana su na slici~\ref{fig:lkid-propositional}.
   
   \caption{Strukturalna pravila sustava \(\mathit{LKID}\).}\label{fig:lkid-structural}
 \end{figure}
+\begin{minted}{coq}
+(* Structural rules. *)
+| Ax : forall Γ Δ φ, In φ Γ -> In φ Δ -> LKID (Γ ⊢ Δ)
+| Wk : forall Γ' Δ' Γ Δ,
+    Γ' ⊆ Γ ->
+    Δ' ⊆ Δ ->
+    LKID (Γ' ⊢ Δ') ->
+    LKID (Γ ⊢ Δ)
+| Cut : forall Γ Δ φ,
+    LKID (Γ ⊢ φ :: Δ) ->
+    LKID (φ :: Γ ⊢ Δ) ->
+    LKID (Γ ⊢ Δ)
+| Subst : forall Γ Δ,
+    LKID (Γ ⊢ Δ) ->
+    forall σ, LKID (map (subst_formula σ) Γ ⊢ map (subst_formula σ) Δ)
+\end{minted}
 
+
+\textbf{Propozicijska} su \textbf{pravila} prikazana na slici~\ref{fig:lkid-propositional}, a služe rasuđivanju s implikacijama i negacijama.
+Ova su pravila identična u sustavima \(\mathit{LK}\) i \(\mathit{LKID}\).
 \begin{figure}[!htb]
   \centering
   \begin{prooftree}
@@ -587,18 +613,25 @@ a prikazana su na slici~\ref{fig:lkid-propositional}.
   
   \caption{Propozicijska pravila sustava \(\mathit{LKID}\).}\label{fig:lkid-propositional}
 \end{figure}
+\begin{minted}{coq}
+(* Propositional rules. *)
+| NegL : forall Γ Δ φ, LKID (Γ ⊢ φ :: Δ) -> LKID (FNeg φ :: Γ ⊢ Δ)
+| NegR : forall Γ Δ φ, LKID (φ :: Γ ⊢ Δ) -> LKID (Γ ⊢ FNeg φ :: Δ)
+| ImpL : forall Γ Δ φ ψ,
+    LKID (Γ ⊢ φ :: Δ) -> LKID (ψ :: Γ ⊢ Δ) ->
+    LKID (FImp φ ψ :: Γ ⊢ Δ)
+| ImpR : forall Γ Δ φ ψ,
+    LKID (φ :: Γ ⊢ ψ :: Δ) -> LKID (Γ ⊢ (FImp φ ψ) :: Δ)
+\end{minted}
 
-Kvantifikacijska pravila prikazana su na slici~\ref{fig:lkid-quantificational}, a odnose se na univerzalnu kvantifikaciju.
-Supstitucija \(\sigma_{\mathit{id}}\) je supstitucija identiteta.
-Lijevo pravilo za kvantifikaciju kaže da dokaz
-koji počinje s instanciranom formulom \(\varphi\) u kojoj se javlja term \(t\) na mjestu varijable \(0\) isto tako smije
-započeti s univerzalno kvantificiranom formulom \(\forall\varphi\).
-Za desno pravilo kvantifikacije primijetimo da se varijabla \(0\) ne javlja u listama \(\Gamma^{\uparrow}\) i \(\Delta^{\uparrow}\) zbog pomicanja.
-Kako naše formule zbog de Bruijnovog indeksiranja implicitno kvantificiraju po varijabli \(0\),
-a varijabla \(0\) se možda javlja u formuli \(\varphi\),
-ustvari je dokaz sekventa \(\Gamma \vdash \forall\varphi, \Delta\) posve analogan
-dokazu sekventa \(\Gamma^{\uparrow} \vdash \varphi, \Delta\).
-\misao{Ovo vjerojatno treba preformulirati.}
+\textbf{Pravila za kvantifikatore} prikazana su na slici~\ref{fig:lkid-quantificational}, a odnose se na univerzalnu kvantifikaciju.
+Ova se pravila razlikuju od analognih u sustavu \(\mathit{LK}\) zbog korištenja de Bruijnovih indeksa kod kvantifikacije.
+U lijevom pravilu koristimo supstituciju \(t \cdot \sigma_{\mathit{id}}\) u formuli \(\varphi\), gdje je \(\sigma_{\mathit{id}}\) supstitucija identiteta,
+kako bismo iskazali da se term \(t\) javlja na mjestu neke varijable \(x\).
+Za desno pravilo, primijetimo da se varijabla \(0\) ne javlja u listama formula \(\Gamma^{\uparrow}\) i \(\Delta^{\uparrow}\) zbog pomicanja.
+Kako implicitno kvantificiramo po varijabli \(0\), a  ona se javlja
+(eventualno) samo u formuli \(\varphi\), smijemo univerzalno kvantificirati formulu \(\varphi\).
+
 \begin{figure}[!htb]
   \centering
   \begin{prooftree}
@@ -614,39 +647,23 @@ dokazu sekventa \(\Gamma^{\uparrow} \vdash \varphi, \Delta\).
   \end{prooftree}
   \caption{Kvantifikacijska pravila sustava \(\mathit{LKID}\).}\label{fig:lkid-quantificational}
 \end{figure}
+\begin{minted}{coq}
+(* Quantifier rules. *)
+| AllL : forall Γ Δ φ t,
+    LKID (subst_formula (t .: ids) φ :: Γ ⊢ Δ) -> 
+    LKID (FAll φ :: Γ ⊢ Δ)
+| AllR : forall Γ Δ φ,
+    LKID (shift_formulas Γ ⊢ φ :: shift_formulas Δ) ->
+    LKID (Γ ⊢ (FAll φ) :: Δ)
+\end{minted}
+
 
 
 \begin{minted}{coq}
-Inductive LKID : sequent -> Prop := 
-  (* Structural rules. *)
-  | Ax : forall Γ Δ φ, In φ Γ -> In φ Δ -> LKID (Γ ⊢ Δ)
-  | Wk : forall Γ' Δ' Γ Δ,
-      Γ' ⊆ Γ ->
-      Δ' ⊆ Δ ->
-      LKID (Γ' ⊢ Δ') ->
-      LKID (Γ ⊢ Δ)
-  | Cut : forall Γ Δ φ,
-      LKID (Γ ⊢ φ :: Δ) ->
-      LKID (φ :: Γ ⊢ Δ) ->
-      LKID (Γ ⊢ Δ)
-  | Subst : forall Γ Δ,
-      LKID (Γ ⊢ Δ) ->
-      forall σ, LKID (map (subst_formula σ) Γ ⊢ map (subst_formula σ) Δ)
-  (* Propositional rules. *)
-  | NegL : forall Γ Δ φ, LKID (Γ ⊢ φ :: Δ) -> LKID (FNeg φ :: Γ ⊢ Δ)
-  | NegR : forall Γ Δ φ, LKID (φ :: Γ ⊢ Δ) -> LKID (Γ ⊢ FNeg φ :: Δ)
-  | ImpL : forall Γ Δ φ ψ,
-      LKID (Γ ⊢ φ :: Δ) -> LKID (ψ :: Γ ⊢ Δ) ->
-      LKID (FImp φ ψ :: Γ ⊢ Δ)
-  | ImpR : forall Γ Δ φ ψ,
-      LKID (φ :: Γ ⊢ ψ :: Δ) -> LKID (Γ ⊢ (FImp φ ψ) :: Δ)
-  (* Quantifier rules. *)
-  | AllL : forall Γ Δ φ t,
-      LKID (subst_formula (t .: ids) φ :: Γ ⊢ Δ) -> 
-      LKID (FAll φ :: Γ ⊢ Δ)
-  | AllR : forall Γ Δ φ,
-      LKID (shift_formulas Γ ⊢ φ :: shift_formulas Δ) ->
-      LKID (Γ ⊢ (FAll φ) :: Δ)
+
+
+
+
   | IndL : forall Γ Δ (Pj : IndPredS Σ) (u : vec (term Σ) (indpred_ar Pj))
              (z_i : forall P, vec var (indpred_ar P)) (* dodati pretpostavku forall P, NoDup (z_i P)? *)
              (G_i : IndPredS Σ -> formula Σ)
