@@ -210,19 +210,8 @@ Proof.
     apply inj_pair2 in H0; subst; cbn. assumption.
     Unshelve.
     intros n; exact n.
-Qed.
+Qed.    
 
-Lemma φ_Φ_ω_EVEN : forall n, @φ_Φ_ω Σ__PA M__PA Φ__PA PA_E (V.cons n V.nil) -> EVEN n.
-Proof.
-  intros n [α Hα].
-  revert Hα. induction α.
-  - inversion 1.
-  - inversion 1. destruct H as [[Heq HΦ] H]. cbn in H.
-    destruct H as (ρ & Hpreds & Hindpreds & Heval); cbn in *. destruct x; cbn in *.
-    subst indcons; cbn in *. apply IHα.
-    destruct α.
-    + cbn. 
-Admitted.
 
 Lemma ODD_φ_Φ_ω : forall n, ODD n -> @φ_Φ_ω Σ__PA M__PA Φ__PA PA_O (V.cons n V.nil).
 Proof.
@@ -243,8 +232,44 @@ Proof.
     unfold φ_pr; cbn; exists (fun x => n); cbn; intuition.
     injection H0; intros Heq; subst.
     apply inj_pair2 in H0; subst; assumption.
-Qed.   
-    
+Qed.
+
+Lemma φ_Φ_n_EVEN : forall m n, @φ_Φ_n Σ__PA M__PA Φ__PA PA_E m (V.cons n V.nil) -> EVEN n
+  with φ_Φ_n_ODD : forall m n, @φ_Φ_n Σ__PA M__PA Φ__PA PA_O m (V.cons n V.nil) -> ODD n.
+Proof.
+  - induction m; intros n.
+    + contradiction.
+    + cbn; intros H. destruct H as [pr [[Heq HΦ] Hpr]].
+    inversion HΦ; subst; try discriminate; unfold eq_rect in *.
+      * destruct Hpr as [ρ [_ [_ Heval]]]; cbn in *; simpl_uip.
+        inversion Heval. constructor.
+      * destruct Hpr as [ρ [_ [Hindpreds Heval]]]; cbn in *; simpl_uip.
+        inversion Heval.
+        specialize (Hindpreds PA_O (V.cons (var_term 0) V.nil)); cbn in Hindpreds.
+        assert (@φ_Φ_n Σ__PA M__PA Φ__PA PA_O m (V.cons (ρ 0) V.nil)) by intuition.
+        constructor. subst. clear Heval Hindpreds.
+        now apply φ_Φ_n_ODD with m.
+  - induction m; intros n.
+    + contradiction.
+    + cbn; intros (pr & [Heq HΦ] & ρ & _ & Hindpreds & Heval).
+      inversion HΦ; subst; try discriminate.
+      cbn in *; unfold eq_rect in *; simpl_uip.
+      inversion Heval. constructor.
+      specialize (Hindpreds PA_E (V.cons (var_term 0) V.nil)).
+      assert (@φ_Φ_n Σ__PA M__PA Φ__PA PA_E m (V.map (eval ρ) (V.cons (var_term 0) V.nil))) by auto.
+      now apply φ_Φ_n_EVEN with m.
+Qed.
+
+Lemma φ_Φ_ω_EVEN : forall n, @φ_Φ_ω Σ__PA M__PA Φ__PA PA_E (V.cons n V.nil) -> EVEN n.
+Proof.
+  intros n [α Hα]; now apply φ_Φ_n_EVEN with α.
+Qed.
+
+Lemma φ_Φ_ω_ODD : forall n, @φ_Φ_ω Σ__PA M__PA Φ__PA PA_O (V.cons n V.nil) -> ODD n.
+Proof.
+  intros n [α Hα]; now apply φ_Φ_n_ODD with α.
+Qed.
+
 Lemma standard_model__PA : @standard_model Σ__PA Φ__PA M__PA.
 Proof.
   unfold standard_model. intros []; cbn; intros ts; split; intros H.
@@ -256,6 +281,7 @@ Proof.
   - apply φ_Φ_ω_EVEN. rewrite (V.eta ts) in H. pose proof (V.nil_spec (V.tl ts)).
     rewrite H0 in H. assumption.
   - rewrite V.eta. remember (V.tl ts) as tail. cbn in *. pose proof (V.nil_spec tail).
-    subst. rewrite H0. apply ODD_φ_Φ_ω. assumption.
-  - admit.
-Admitted.
+    subst. rewrite H0. apply ODD_φ_Φ_ω. assumption. 
+  - apply φ_Φ_ω_ODD. rewrite (V.eta ts) in H. pose proof (V.nil_spec (V.tl ts)).
+    rewrite H0 in H. assumption.
+Qed.
