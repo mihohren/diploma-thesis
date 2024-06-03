@@ -50,16 +50,68 @@ Structure signature := {
 }.
 \end{minted}
 \end{definition}
+\begin{example}
+  Funkcijski simboli Peanove aritmetike su redom simbol nule \(o\) (mjesnosti \(0\)),
+  simbol sljedbenika \(s\) (mjesnosti \(1\))
+  te simboli \(+\) za zbroj i \(\cdot\) za umnožak (mjesnosti \(2\)).
+\begin{minted}{coq}
+Inductive Func__PA :=
+| PA_zero
+| PA_succ
+| PA_add
+| PA_mult.
+Definition fun_ar__PA (s : Func__PA) : nat :=
+  match s with
+  | PA_zero => 0
+  | PA_succ => 1
+  | PA_add  => 2
+  | PA_mult => 2
+  end.
+\end{minted}
+  \noindent Simbol jednakosti \(=\) (mjesnosti \(2\)) je jedini običan predikatni simbol
+  Peanove aritmetike.
+\begin{minted}{coq}
+Inductive Pred__PA := PA_eq.
+Definition pred_ar__PA (s : Pred__PA) : nat :=
+  match s with
+  | PA_eq => 2
+  end.
+\end{minted}
+  \noindent Definiramo induktivne predikatne simbole \(N\), \(E\) i \(O\) koje ćemo
+  interpretirati redom kao predikate \enquote{biti prirodan broj}, \enquote{biti paran broj} te
+  \enquote{biti neparan broj}.
+\begin{minted}{coq}
+Inductive IndPred__PA :=
+| PA_N
+| PA_E
+| PA_O.
+Definition indpred_ar__PA (s : IndPred__PA) : nat :=
+  match s with
+  | PA_N => 1
+  | PA_E => 1
+  | PA_O => 1
+  end.
+\end{minted}
+  \noindent Konačno, \textit{proširena Peanova signatura}, s oznakom \(\Sigma_{\mathit{PA}}\), je signatura za
+  Peanovu aritmetiku prvog reda s prethodno definiranim induktivnim predikatnim simbolima.
+\begin{minted}{coq}
+Definition Σ__PA : signature
+  := {|
+    FuncS := Func__PA;
+    fun_ar := fun_ar__PA;
+    PredS := Pred__PA;
+    pred_ar := pred_ar__PA;
+    IndPredS := IndPred__PA;
+    indpred_ar := indpred_ar__PA;
+  |}.
+\end{minted}
+\end{example}
 \noindent U ostatku poglavlja promatramo jednu proizvoljnu, ali fiksiranu signaturu \(\Sigma\).
 Fiksiranje nekog proizvoljnog objekta je česta pojava u matematici,
 prvenstveno zato što finksirane argumente ne trebamo spominjati eksplicitno.
 Coq omogućuje fiksiranje naredbom \texttt{Context},
 pod uvjetom da se korisnik nalazi u okolini \texttt{Section}.\footnote{\url{https://coq.inria.fr/doc/v8.18/refman/language/core/sections.html}}
 Većina definicija i lema u ovom radu su napisane upravo unutar takvih okolina.
-
-\begin{example}
-  \misao{\(\Sigma_{PA}\)}
-\end{example}
 
 
 \pagebreak
@@ -141,6 +193,22 @@ Definition FExist (φ : formula) : formula := FNeg (FAll (FNeg φ)).
 \end{minted}
 \end{definition}
 
+\begin{example}
+  U proširenoj Peanovoj signaturi, svojstvo \enquote{svaki prirodan broj je paran ili neparan}
+  možemo izraziti formulom \( \forall x, N(x) \rightarrow E(x) \lor O(x) \).
+\begin{minted}{coq}
+Definition every_nat_is_even_or_odd : formula Σ__PA :=
+  FAll
+    (FImp
+       (@FIndPred Σ__PA PA_N ([var_term 0]))
+       (FOr
+          (@FIndPred Σ__PA PA_E ([var_term 0]))
+          (@FIndPred Σ__PA PA_O ([var_term 0])))).
+\end{minted}
+  \noindent Ovdje vidimo učinak de Bruijnovog indeksiranja na formule;
+  umjesto eksplicitnog navođenja varijable \(x\) kod kvantifikacije,
+  implicitno kvantificiramo po varijabli \(0\).
+\end{example}
 
 \begin{definition}
   \textit{Skup slobodnih varijabli formule} \(\varphi\), u oznaci \(\mathit{FV}(\varphi)\), konstruiramo rekurzivno na način:
@@ -231,6 +299,88 @@ Record production :=
 Definition IndDefSet := production -> Prop.
 \end{minted}
 \end{definition}
+\misao{U idućem primjeru se koristi taktika \texttt{refine} zbog problema s tipovima.
+  Treba li posebno naglasiti što je \texttt{refine} i zašto se koristi?
+Ovi problemi se možda mogu izbjeći ako s \texttt{Program Definition}.}
+\begin{example}\label{ex:productions}
+  Definiramo produkcije za induktivne predikatne simbole u proširenoj Peanovoj aritmetici.
+  Za broj kažemo da je prirodan ako je \(0\) ili je sljedbenik nekog parnog broja.
+  \begin{prooftree}
+    \AxiomC{}
+    \RightLabel{}
+    \UnaryInfC{\( N(o) \)}
+  \end{prooftree}
+\begin{minted}{coq}
+Definition PA_prod_N_zero : @production Σ__PA.
+  refine (@mkProd Σ__PA nil nil PA_N _).
+  refine [(@TFunc Σ__PA PA_zero V.nil)].
+Defined.
+\end{minted}
+
+  \begin{prooftree}
+    \AxiomC{\( N(x) \)}
+    \RightLabel{}
+    \UnaryInfC{\( N(s(x)) \)}
+  \end{prooftree}
+\begin{minted}{coq}
+Definition PA_prod_N_succ : @production Σ__PA.
+  refine (@mkProd Σ__PA nil _ PA_N _).
+  - refine (cons _ nil). exists PA_N; refine [(var_term 0)].
+  - refine [(@TFunc Σ__PA PA_succ ([var_term 0]))].
+Defined.
+\end{minted}
+  \noindent Za broj kažemo da je paran ako je \(0\) ili je sljedbenik nekog neparnog broja.
+  \begin{prooftree}
+    \AxiomC{}
+    \RightLabel{}
+    \UnaryInfC{\( E(o) \)}
+  \end{prooftree}
+\begin{minted}{coq}
+Definition PA_prod_E_zero : @production Σ__PA.
+  refine (@mkProd Σ__PA nil nil PA_E _).
+  refine ( [ @TFunc Σ__PA PA_zero ([]) ] ).
+Defined.
+\end{minted}
+  \begin{prooftree}
+    \AxiomC{\( O(x) \)}
+    \RightLabel{}
+    \UnaryInfC{\( E(s(x)) \)}
+  \end{prooftree}
+\begin{minted}{coq}
+Definition PA_prod_E_succ : @production Σ__PA.
+  refine (@mkProd Σ__PA nil _ PA_E _).
+  - refine (cons _ nil). exists PA_O; refine ([var_term 0]).
+  - refine [_].
+    refine (@TFunc Σ__PA PA_succ _).
+    refine [var_term 0].
+Defined.
+\end{minted}
+  \noindent Za broj kažemo da je neparan ako je sljedbenik nekog parnog broja.
+  \begin{prooftree}
+    \AxiomC{\( E(x) \)}
+    \RightLabel{}
+    \UnaryInfC{\( O(s(x)) \)}
+  \end{prooftree}
+\begin{minted}{coq}
+Definition PA_prod_O_succ : @production Σ__PA.
+  refine (@mkProd Σ__PA nil _ PA_O _).
+  - refine (cons _ nil). exists PA_E; refine ([var_term 0]).
+  - refine [_].
+    refine (@TFunc Σ__PA PA_succ _).
+    refine ([var_term 0]).
+Defined.
+\end{minted}
+  \noindent Skup prethodnih pet produkcija nazivamo
+  skupom induktivnih definicija za proširenu Peanovu signaturu, s oznakom \(\Phi_{\mathit{PA}}\).
+\begin{minted}{coq}
+Inductive Φ__PA : @production Σ__PA -> Prop :=
+| ID_N_zero : Φ__PA PA_prod_N_zero
+| ID_N_succ : Φ__PA PA_prod_N_succ
+| ID_E_zero : Φ__PA PA_prod_E_zero
+| ID_E_succ : Φ__PA PA_prod_E_succ
+| ID_O_succ : Φ__PA PA_prod_O_succ.
+\end{minted}
+\end{example}
 
 
 \section{Semantika}\label{sec:semantika}
@@ -249,6 +399,44 @@ Structure structure := {
   }.
 \end{minted}
 \end{definition}
+
+\begin{example}
+  Prije no što možemo definirati strukturu za Peanovu aritmetiku s induktivnim predikatima,
+  odnosno strukturu za signaturu \(\Sigma_{\mathit{PA}}\) i skup induktivnih definicija \(\Phi_{\mathit{PA}}\),
+  potrebno je definirati odgovarajuće interpretacije induktivnih predikatnih simbola u Coqu, u skladu s primjerom~\ref{ex:productions}.
+\begin{minted}{coq}
+Inductive NAT : nat -> Prop :=
+| NO : NAT 0
+| NS : forall n, NAT n -> NAT (S n).
+
+Inductive EVEN : nat -> Prop :=
+| EO : EVEN 0
+| ES : forall n, ODD n -> EVEN (S n)
+with ODD : nat -> Prop :=
+| OS : forall n, EVEN n -> ODD (S n).
+\end{minted}
+  \noindent Ovdje su predikati \texttt{EVEN} i \texttt{ODD} definirani mehanizmom međusobne rekurzije. \misao{Uzajamne rekurzije? Simultane rekurzije?}\\
+  \noindent Konačno možemo definirati strukturu \(M_{\mathit{PA}}\) s nosačem \(\mathbb{N}\) te uobičajenom interpretacijom
+  funkcijskih i običnih predikatnih simbola. Induktivne predikatne simbole \(N\), \(E\) i \(O\)
+  interpretiramo redom Coqovim predikatima \texttt{NAT}, \texttt{EVEN} i \texttt{ODD}.
+\begin{minted}{coq}
+Definition M__PA : @structure Σ__PA.
+  refine (Build_structure nat _ _ _).
+  - intros []; cbn.
+    + intros. exact 0.
+    + intros n. exact (S (V.hd n)).
+    + intros xy. exact (V.hd xy + V.hd (V.tl xy)).
+    + intros xy. exact (V.hd xy * V.hd (V.tl xy)).
+  - intros []. cbn. intros args.
+    exact (V.hd args = V.hd (V.tl args)).
+  - intros []; cbn; intros args.
+    + exact (NAT (V.hd args)).
+    + exact (EVEN (V.hd args)).
+    + exact (ODD (V.hd args)).
+Defined.
+\end{minted}
+\end{example}
+
 
 \begin{definition}
   Neka je \(M\) proizvoljna struktura. \textit{Okolina} \(\rho\) za \(M\) je proizvoljna funkcija iz skupa prirodnih brojeva u nosač strukture.
@@ -271,8 +459,8 @@ Fixpoint eval (ρ : env) (t : term Σ) : M :=
 
 \begin{definition}
   Neka je \(M\) proizvoljna struktura te \(\rho\) okolina za \(M\).
-  \textit{Istinitost formule} \(\varphi\) u okolini \(\rho\) pišemo \(\rho \vDash \varphi\),
-  a definiramo rekurzivno na način:
+  \textit{Istinitost} formule \(\varphi\) u okolini \(\rho\), s oznakom \(\rho \vDash \varphi\),
+  definiramo rekurzivno na način:
   \begin{enumerate}
   \item ako je \(P\) (obični ili induktivni) predikatni simbol mjesnosti \(n\)
     te su \(u_{1}, \ldots, u_{n}\) termi,
@@ -292,6 +480,14 @@ Fixpoint Sat (ρ : env M) (F : formula Σ) : Prop :=
   end.
 \end{minted}
 \end{definition}
+
+\begin{example}
+  Formula \(\forall x, N(x) \rightarrow E(x) \lor O(x)\) je istinita u svakoj okolini strukture \(M_{\mathit{PA}}\).
+\begin{minted}{coq}
+Lemma every_nat_is_even_or_odd_Sat :
+  forall (ρ : env M__PA), ρ ⊨ every_nat_is_even_or_odd.
+\end{minted}
+\end{example}
 
 \begin{lemma}
   Neka su \(\varphi\), \(\sigma\), \(M\) i \(\rho\) redom
@@ -422,7 +618,7 @@ Definition approximant_of (P : IndPredS Σ)
 
 \begin{remark}
   Brotherston je definirao aproksimaciju razine \(\alpha\) za pojedini induktivni predikatni simbol
-  kao uniju aproksimacija svih nižih razina
+  kao uniju aproksimacija svih nižih razina.
   Takva je definicija ekvivalentna našoj.
 \end{remark}
 
@@ -468,6 +664,13 @@ Definition standard_model
 \noindent Prema lemi~\ref{lemma:omega-least-prefixed}, standardni model je
 najmanja struktura koja ima smisla za zadani skup induktivnih definicija.
 
+\begin{proposition}
+  Struktura \(M_{\mathit{PA}}\) je standardni model za skup induktivnih definicija \(\Phi_{\mathit{PA}}\).
+\begin{minted}{coq}
+Lemma standard_model__PA : @standard_model Σ__PA Φ__PA M__PA.
+\end{minted}
+\end{proposition}
+
 
 \section{Sistem sekvenata s induktivnim definicijama}\label{sec:sistem-sekvenata}
 Cilj je ovog odjeljka definirati dokazni sustav \(\mathit{LKID}\) za logiku \(\mathit{FOL_{ID}}\).
@@ -487,7 +690,7 @@ Kažemo da je sekventa \(\Gamma \vdash \Delta\) \textit{dokaziva}, ili da iz \(\
 
 \begin{definition}
   Neka su \(P_{i}\) i \(P_{j}\) proizvoljni induktivni predikatni simboli.
-  Kažemo da je simbol \(P_{i}\) u \textit{relaciji} \(\mathit{Prem}\) sa simbolom \(P_{j}\)
+  Kažemo da je simbol \(P_{i}\) u relaciji \(\mathit{Prem}\) sa simbolom \(P_{j}\)
   ako postoji produkcija u skupu induktivnih definicija \(\Phi\) takva da
   se simbol \(P_{i}\) javlja u njenoj konkluziji te
   se simbol \(P_{j}\) javlja u njenim premisama.
@@ -511,6 +714,14 @@ Definition mutually_dependent (P Q : IndPredS Σ) :=
   Prem_star P Q /\ Prem_star Q P.
 \end{minted}
 \end{definition}
+
+\begin{example}
+  U skupu induktivnih definicija \(\Phi_{\mathit{PA}}\), induktivni predikatni simboli \(E\) i \(O\)
+  su međusobno zavisni.
+\begin{minted}{coq}
+Example mut_dep_E_O : @mutually_dependent Σ__PA Φ__PA PA_E PA_O.
+\end{minted}
+\end{example}
 
 \begin{lemma}
   Međusobna zavisnost je relacija ekvivalencije na skupu induktivnih predikatnih simbola.

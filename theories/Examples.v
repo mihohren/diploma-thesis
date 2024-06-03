@@ -7,7 +7,6 @@ Inductive Func__PA :=
 | PA_succ
 | PA_add
 | PA_mult.
-
 Definition fun_ar__PA (s : Func__PA) : nat :=
   match s with
   | PA_zero => 0
@@ -63,15 +62,11 @@ Definition PA_prod_N_zero : @production Σ__PA.
   refine [(@TFunc Σ__PA PA_zero V.nil)].
 Defined.
 
-Print PA_prod_N_zero.
-
 Definition PA_prod_N_succ : @production Σ__PA.
   refine (@mkProd Σ__PA nil _ PA_N _).
   - refine (cons _ nil). exists PA_N; refine [(var_term 0)].
   - refine [(@TFunc Σ__PA PA_succ ([var_term 0]))].
 Defined.
-
-Print PA_prod_N_succ.
 
 Definition PA_prod_E_zero : @production Σ__PA.
   refine (@mkProd Σ__PA nil nil PA_E _).
@@ -145,6 +140,13 @@ Section Oind.
   Defined.
 End Oind.
 
+Lemma nat_EVEN_or_ODD : forall n : nat, EVEN n \/ ODD n.
+Proof.
+  induction n.
+  - left; constructor.
+  - destruct IHn; [right | left]; now constructor.
+Qed.
+
 Lemma pair_induction (P : nat -> Prop) :
   P 0 -> P 1 -> (forall n, P n -> P (S n) -> P (S (S n))) -> forall n, P n.
 Proof.
@@ -168,7 +170,6 @@ Definition M__PA : @structure Σ__PA.
     + exact (ODD (V.hd args)).
 Defined.
 
-Import VectorNotations.
 
 Lemma NAT_φ_Φ_ω: forall n, @φ_Φ_ω Σ__PA M__PA Φ__PA PA_N (V.cons n V.nil).
   induction n.
@@ -284,4 +285,41 @@ Proof.
     subst. rewrite H0. apply ODD_φ_Φ_ω. assumption. 
   - apply φ_Φ_ω_ODD. rewrite (V.eta ts) in H. pose proof (V.nil_spec (V.tl ts)).
     rewrite H0 in H. assumption.
+Qed.
+Print Assumptions standard_model__PA.
+
+(* proof_irrelevance, Eqdep.Eq_rect_eq.eq_rect_eq *)
+(* We could probably avoid them because all our types are finite,
+   hence have decidable equality. *)
+
+Example mut_dep_E_O : @mutually_dependent Σ__PA Φ__PA PA_E PA_O.
+Proof.
+  split.
+  - constructor. exists PA_prod_E_succ; intuition.
+    + apply ID_E_succ.
+    + eexists; cbn; eauto.
+  - constructor. exists PA_prod_O_succ; intuition.
+    + apply ID_O_succ.
+    + eexists; cbn; eauto.
+Qed.
+
+Definition every_nat_is_even_or_odd : formula Σ__PA :=
+  FAll
+    (FImp
+       (@FIndPred Σ__PA PA_N ([var_term 0]))
+       (FOr
+          (@FIndPred Σ__PA PA_E ([var_term 0]))
+          (@FIndPred Σ__PA PA_O ([var_term 0])))).
+
+Lemma every_nat_is_even_or_odd_Sat :
+  forall (ρ : env M__PA), ρ ⊨ every_nat_is_even_or_odd.
+Proof.
+  intros ρ. cbn.
+  intros d _ notEVEN. induction d.
+  - exfalso; apply notEVEN; constructor.
+  - constructor. assert (ODD d -> False).
+    { intros HODD; apply notEVEN; now constructor. }
+    assert (~~EVEN d) by auto.
+    Require Import Classical.
+    apply NNPP in H0. assumption.
 Qed.
