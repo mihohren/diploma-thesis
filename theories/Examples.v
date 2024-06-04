@@ -22,14 +22,14 @@ Definition pred_ar__PA (s : Pred__PA) : nat :=
   end.
 
 Inductive IndPred__PA :=
-| PA_N
-| PA_E
-| PA_O.
+| PA_Nat
+| PA_Even
+| PA_Odd.
 Definition indpred_ar__PA (s : IndPred__PA) : nat :=
   match s with
-  | PA_N => 1
-  | PA_E => 1
-  | PA_O => 1
+  | PA_Nat => 1
+  | PA_Even => 1
+  | PA_Odd => 1
   end.
 
 Definition Σ__PA : signature
@@ -58,32 +58,36 @@ Example PA_refl (* ∀ x, x = x *): formula Σ__PA.
 Defined.
 
 Definition PA_prod_N_zero : @production Σ__PA.
-  refine (@mkProd Σ__PA nil nil PA_N _).
+  refine (@mkProd Σ__PA nil nil PA_Nat _).
   refine [(@TFunc Σ__PA PA_zero V.nil)].
 Defined.
 
+Print PA_prod_N_zero.
+
 Definition PA_prod_N_succ : @production Σ__PA.
-  refine (@mkProd Σ__PA nil _ PA_N _).
-  - refine (cons _ nil). exists PA_N; refine [(var_term 0)].
+  refine (@mkProd Σ__PA nil _ PA_Nat _).
+  - refine (cons _ nil). exists PA_Nat; refine [(var_term 0)].
   - refine [(@TFunc Σ__PA PA_succ ([var_term 0]))].
 Defined.
 
+Print PA_prod_N_succ.
+
 Definition PA_prod_E_zero : @production Σ__PA.
-  refine (@mkProd Σ__PA nil nil PA_E _).
+  refine (@mkProd Σ__PA nil nil PA_Even _).
   refine ( [ @TFunc Σ__PA PA_zero ([]) ] ).
 Defined.
 
 Definition PA_prod_E_succ : @production Σ__PA.
-  refine (@mkProd Σ__PA nil _ PA_E _).
-  - refine (cons _ nil). exists PA_O; refine ([var_term 0]).
+  refine (@mkProd Σ__PA nil _ PA_Even _).
+  - refine (cons _ nil). exists PA_Odd; refine ([var_term 0]).
   - refine [_].
     refine (@TFunc Σ__PA PA_succ _).
     refine [var_term 0].
 Defined.
 
 Definition PA_prod_O_succ : @production Σ__PA.
-  refine (@mkProd Σ__PA nil _ PA_O _).
-  - refine (cons _ nil). exists PA_E; refine ([var_term 0]).
+  refine (@mkProd Σ__PA nil _ PA_Odd _).
+  - refine (cons _ nil). exists PA_Even; refine ([var_term 0]).
   - refine [_].
     refine (@TFunc Σ__PA PA_succ _).
     refine ([var_term 0]).
@@ -171,7 +175,7 @@ Definition M__PA : @structure Σ__PA.
 Defined.
 
 
-Lemma NAT_φ_Φ_ω: forall n, @φ_Φ_ω Σ__PA M__PA Φ__PA PA_N (V.cons n V.nil).
+Lemma NAT_φ_Φ_ω: forall n, @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Nat ([n]).
   induction n.
   - exists 1. unfold φ_Φ_n, φ_Φ, φ_P. exists PA_prod_N_zero, (conj eq_refl ID_N_zero).
     unfold φ_pr. cbn. eexists; intuition.
@@ -188,7 +192,7 @@ Lemma NAT_φ_Φ_ω: forall n, @φ_Φ_ω Σ__PA M__PA Φ__PA PA_N (V.cons n V.nil
       Unshelve. intros n. exact n.
 Qed.
 
-Lemma EVEN_φ_Φ_ω : forall n, EVEN n -> @φ_Φ_ω Σ__PA M__PA Φ__PA PA_E (V.cons n V.nil).
+Lemma EVEN_φ_Φ_ω : forall n, EVEN n -> @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Even ([n]).
 Proof.
   intros n HE. induction HE using EVEN_ind2.
   - exists 1. unfold φ_Φ_n, φ_Φ, φ_P. exists PA_prod_E_zero, (conj eq_refl ID_E_zero).
@@ -214,7 +218,7 @@ Proof.
 Qed.    
 
 
-Lemma ODD_φ_Φ_ω : forall n, ODD n -> @φ_Φ_ω Σ__PA M__PA Φ__PA PA_O (V.cons n V.nil).
+Lemma ODD_φ_Φ_ω : forall n, ODD n -> @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Odd ([n]).
 Proof.
   intros n HO. induction HO using ODD_ind2.
   - exists 2. unfold φ_Φ_n, φ_Φ, φ_P; cbn. exists PA_prod_O_succ, (conj eq_refl ID_O_succ); cbn.
@@ -235,8 +239,8 @@ Proof.
     apply inj_pair2 in H0; subst; assumption.
 Qed.
 
-Lemma φ_Φ_n_EVEN : forall m n, @φ_Φ_n Σ__PA M__PA Φ__PA PA_E m (V.cons n V.nil) -> EVEN n
-  with φ_Φ_n_ODD : forall m n, @φ_Φ_n Σ__PA M__PA Φ__PA PA_O m (V.cons n V.nil) -> ODD n.
+Lemma φ_Φ_n_EVEN : forall m n, @φ_Φ_n Σ__PA M__PA Φ__PA PA_Even m ([n]) -> EVEN n
+  with φ_Φ_n_ODD : forall m n, @φ_Φ_n Σ__PA M__PA Φ__PA PA_Odd m ([n]) -> ODD n.
 Proof.
   - induction m; intros n.
     + contradiction.
@@ -246,8 +250,8 @@ Proof.
         inversion Heval. constructor.
       * destruct Hpr as [ρ [_ [Hindpreds Heval]]]; cbn in *; simpl_uip.
         inversion Heval.
-        specialize (Hindpreds PA_O (V.cons (var_term 0) V.nil)); cbn in Hindpreds.
-        assert (@φ_Φ_n Σ__PA M__PA Φ__PA PA_O m (V.cons (ρ 0) V.nil)) by intuition.
+        specialize (Hindpreds PA_Odd (V.cons (var_term 0) V.nil)); cbn in Hindpreds.
+        assert (@φ_Φ_n Σ__PA M__PA Φ__PA PA_Odd m (V.cons (ρ 0) V.nil)) by intuition.
         constructor. subst. clear Heval Hindpreds.
         now apply φ_Φ_n_ODD with m.
   - induction m; intros n.
@@ -256,17 +260,17 @@ Proof.
       inversion HΦ; subst; try discriminate.
       cbn in *; unfold eq_rect in *; simpl_uip.
       inversion Heval. constructor.
-      specialize (Hindpreds PA_E (V.cons (var_term 0) V.nil)).
-      assert (@φ_Φ_n Σ__PA M__PA Φ__PA PA_E m (V.map (eval ρ) (V.cons (var_term 0) V.nil))) by auto.
+      specialize (Hindpreds PA_Even (V.cons (var_term 0) V.nil)).
+      assert (@φ_Φ_n Σ__PA M__PA Φ__PA PA_Even m (V.map (eval ρ) (V.cons (var_term 0) V.nil))) by auto.
       now apply φ_Φ_n_EVEN with m.
 Qed.
 
-Lemma φ_Φ_ω_EVEN : forall n, @φ_Φ_ω Σ__PA M__PA Φ__PA PA_E (V.cons n V.nil) -> EVEN n.
+Lemma φ_Φ_ω_EVEN : forall n, @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Even ([n]) -> EVEN n.
 Proof.
   intros n [α Hα]; now apply φ_Φ_n_EVEN with α.
 Qed.
 
-Lemma φ_Φ_ω_ODD : forall n, @φ_Φ_ω Σ__PA M__PA Φ__PA PA_O (V.cons n V.nil) -> ODD n.
+Lemma φ_Φ_ω_ODD : forall n, @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Odd ([n]) -> ODD n.
 Proof.
   intros n [α Hα]; now apply φ_Φ_n_ODD with α.
 Qed.
@@ -292,7 +296,7 @@ Print Assumptions standard_model__PA.
 (* We could probably avoid them because all our types are finite,
    hence have decidable equality. *)
 
-Example mut_dep_E_O : @mutually_dependent Σ__PA Φ__PA PA_E PA_O.
+Example mut_dep_E_O : @mutually_dependent Σ__PA Φ__PA PA_Even PA_Odd.
 Proof.
   split.
   - constructor. exists PA_prod_E_succ; intuition.
@@ -303,13 +307,67 @@ Proof.
     + eexists; cbn; eauto.
 Qed.
 
+Ltac simpl_destruct :=
+  repeat match goal with
+    | [ H : Prem _ _ |- _ ] => unfold Prem in H
+    | [ H : _ /\ _ |- _ ] => destruct H
+    | [ H : ex _ |- _ ] => destruct H
+    | _ => unfold Prem
+    end.
+
+Ltac destruct_productions :=
+  match goal with
+  | [ p : production |- _] => destruct p; subst
+  | [ H : Φ__PA ?p |- _ ] => inversion H; subst; try discriminate
+  | _ => idtac "No production in inductive definition set found."
+  end.
+
+Require Import Relation_Operators.
+
+Lemma Prem_Nat_Nat : @Prem Σ__PA Φ__PA PA_Nat PA_Nat.
+Proof.
+  exists PA_prod_N_succ; intuition.
+  - apply ID_N_succ.
+  - cbn. exists ([var_term 0]). now left.
+Qed.
+
+    
+Lemma Prem_Nat_only_Nat : forall P, @Prem Σ__PA Φ__PA PA_Nat P -> P = PA_Nat.
+Proof.
+  intros [] H.
+  - reflexivity.
+  - simpl_destruct. induction H; subst; try discriminate; cbn in *.
+    + contradiction.
+    + destruct H1 as [H | H]; inversion H.
+  - simpl_destruct. induction H; subst; try discriminate; cbn in *.
+    + contradiction.
+    + destruct H1 as [H | H]; inversion H.
+Qed.
+
+Lemma Prem_star_Nat : forall P, @Prem_star Σ__PA Φ__PA PA_Nat P -> P = PA_Nat.
+Proof.
+  intros P H; remember PA_Nat as x.
+  induction H.
+  - subst. now apply Prem_Nat_only_Nat.
+  - reflexivity.
+  - assert (y = x) by auto; subst; auto.
+Qed.
+  
+Example not_mut_dep_N_E :
+  ~ @mutually_dependent Σ__PA Φ__PA PA_Nat PA_Even.
+Proof.
+  intros [prem _].
+  apply Prem_star_Nat in prem; discriminate.
+Qed.
+    
+                                                
 Definition every_nat_is_even_or_odd : formula Σ__PA :=
   FAll
     (FImp
-       (@FIndPred Σ__PA PA_N ([var_term 0]))
+       (@FIndPred Σ__PA PA_Nat ([var_term 0]))
        (FOr
-          (@FIndPred Σ__PA PA_E ([var_term 0]))
-          (@FIndPred Σ__PA PA_O ([var_term 0])))).
+          (@FIndPred Σ__PA PA_Even ([var_term 0]))
+          (@FIndPred Σ__PA PA_Odd ([var_term 0])))).
 
 Lemma every_nat_is_even_or_odd_Sat :
   forall (ρ : env M__PA), ρ ⊨ every_nat_is_even_or_odd.
@@ -322,4 +380,30 @@ Proof.
     assert (~~EVEN d) by auto.
     Require Import Classical.
     apply NNPP in H0. assumption.
+Qed.
+
+Lemma approximants_of_PA_Nat : forall α n,
+    @approximant_of Σ__PA M__PA Φ__PA PA_Nat α ([n])
+    <-> n < α.
+Proof.
+  intros α n; split; intros H.
+  - generalize dependent n. induction α as [| α IH]; intros n H.
+    + contradiction.
+    + destruct H as (pr & [Heq HΦ] & ρ & _ & Hindpreds & Heval).
+      inversion HΦ; subst; try discriminate; unfold eq_rect in *; cbn in *;
+        simpl_uip; inversion Heval.
+      * auto with arith.
+      * apply le_n_S. apply IH.
+        specialize (Hindpreds PA_Nat ([var_term 0])).
+        cbn in Hindpreds. apply Hindpreds. now left.
+  - generalize dependent n. induction α as [| α IH].
+    + inversion 1.
+    + intros n Hlt. cbn. destruct n.
+      * exists PA_prod_N_zero, (conj eq_refl ID_N_zero); cbn.
+        exists (fun x => x); intuition.
+      * exists PA_prod_N_succ, (conj eq_refl ID_N_succ); cbn.
+        exists (fun x => n); intuition.
+        cbn in H; inversion H; try contradiction.
+        inversion H0; subst. apply inj_pair2 in H0; subst; cbn in *. apply IH.
+        auto with arith.
 Qed.

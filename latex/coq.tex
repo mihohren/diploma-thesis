@@ -1,5 +1,5 @@
 \chapter{Coq}\label{pog:glavni_dio}
-U ovom poglavlju dajemo pregled visoke razine na programski sustav Coq.
+U ovom poglavlju dajemo pregled visoke razine programskog sustava Coqa.
 Prvo ćemo objasniti što je uopće Coq, u kojem je kontekstu nastao, i od kojih komponenti se sastoji.
 Zatim ćemo dati kratak pregled programiranja u Coqu, nakon čega ćemo se baviti naprednijim konceptima i spomenuti neka ograničenja.
 Za širi opseg gradiva, čitatelja upućujemo na knjige \textit{Coq'Art}~\cite{coqart}, \textit{Software Foundations}~\cite{sf-lf, sf-plf, sf-vfa} i \textit{Certified Programming with Dependent Types}~\cite{cpdt} te na službenu dokumentaciju~\cite{coqrefman}.
@@ -7,19 +7,18 @@ Za širi opseg gradiva, čitatelja upućujemo na knjige \textit{Coq'Art}~\cite{c
 \section{Što je Coq?}\label{sec:osnovno-o-coqu}
 Alat za dokazivanje Coq\footnote{\url{https://coq.inria.fr/}}, punog naziva \textit{The Coq Proof Assistant},
 programski je sustav pomoću kojeg korisnici mogu dokazivati matematičke tvrdnje, a može se koristiti i kao funkcijski programski jezik sa zavisnim tipovima.
-Alat se temelji na \(\lambda\)-računu i teoriji tipova, a prva je inačica implementirana godine 1984.~\cite{coqrefman}
-Ovaj rad koristi inačicu \(8.18\) iz rujna godine 2023.
+Alat se temelji na \(\lambda\)-računu i teoriji tipova, a prva je inačica implementirana 1984.~godine~\cite{coqrefman}
+Ovaj rad koristi inačicu \(8.18\) iz rujna 2023.~godine.
 
 Program Coq može se pokrenuti u interaktivnom ili u skupnom načinu rada.
 Interaktivni način rada pokreće se naredbom \texttt{coqtop}, a korisniku omogućuje rad u ljusci sličnoj ljuskama \texttt{bash} i \texttt{python}.
 Interaktivna ljuska (također poznata pod imenom \textit{toplevel}) služi unosu definicija te iskazivanju i dokazivanju tvrdnji.
 Skupni način rada pokreće se naredbom \texttt{coqc}, a korisniku omogućuje semantičku provjeru i prevođenje izvornih datoteka u strojno čitljive formate.
-Kod formaliziranja i dokazivanja, korisnik će najčešće koristiti interaktivni način rada, po mogućnosti kroz neku od dostupnih razvojnih okolina.
-\footnote{Autor rada koristio je paket \textit{Proof General} za uređivač teksta \textit{Emacs}. Druge često korištene okoline su \textit{VsCoq} i \textit{CoqIDE}.}
+Kod formaliziranja i dokazivanja, korisnik će najčešće koristiti interaktivni način rada, po mogućnosti kroz neku od dostupnih razvojnih okolina.\footnote{Autor rada koristio je paket \textit{Proof General} za uređivač teksta \textit{Emacs}. Druge često korištene okoline su \textit{VsCoq} i \textit{CoqIDE}.}
 
 Kao programski jezik, Coq se sastoji od više podjezika različitih namjena, od kojih spominjemo \textit{Vernacular}, \textit{Gallinu} i \textit{Ltac}.
 \begin{description}
-\item[Vernacular] \misao{\textit{vernacular} znači \enquote{govorni jezik}} je jezik naredbi kojima korisnik komunicira sa sustavom (i u interaktivnom i u skupnom načinu rada);
+\item[Vernacular] (\enquote{govorni jezik}) je jezik naredbi kojima korisnik komunicira sa sustavom (i u interaktivnom i u skupnom načinu rada);
   svaka Coq skripta (datoteka s nastavkom \texttt{.v}) je niz naredbi.
   Neke od najčešće korištenih naredbi su \texttt{Check}, \texttt{Definition}, \texttt{Inductive}, \texttt{Fixpoint} i \texttt{Lemma}.
   Pomoću naredbi za iskazivanje tvrdnji, kao što je \texttt{Lemma}, Coq ulazi u način dokazivanja~\engl{proof mode}.
@@ -42,12 +41,12 @@ Kao programski jezik, Coq se sastoji od više podjezika različitih namjena, od 
 izraz \texttt{example\_lemma:1+1=2} dio je Galline,
 a pomoćne naredbe \texttt{cbn} i \texttt{reflexivity} dio su Ltaca.
 
-Jezgra je programskog sustava Coq algoritam za provjeru tipova \engl{type checking} -- svaka tvrdnja koja se dokazuje iskazana je tipovima.
+Jezgra je programskog sustava Coq algoritam za provjeru tipova \engl{type checking} --- svaka tvrdnja koja se dokazuje iskazana je tipovima.
 Ostatak sustava u načelu služi za knjigovodstvo i poboljšanje korisničkog iskustva.\footnote{I jezgra i ostatak sustava implementirani su u OCamlu.}
 Nužno je da jezgra sustava bude relativno mala kako bismo se mogli uvjeriti u njenu točnost.
 U suprotnom, možemo li biti sigurni da su naše dokazane tvrdnje doista istinite?
 
-Prve inačice Coqa implementirale su samo račun konstrukcija~\cite{coc} --
+Prve inačice Coqa implementirale su samo račun konstrukcija~\cite{coc} ---
 proširenje \(\lambda\)-računa polimorfnim i zavisnim tipovima te tipskim konstruktorima.
 Kasnije je dodana podrška za induktivno i koinduktivno definirane tipove~\cite{cic, coinductive},
 a danas se može reći da Coq implementira polimorfni kumulativni račun induktivnih konstrukcija~\cite{coqcoqcorrect}.
@@ -141,10 +140,10 @@ Svaki \texttt{Stream} ima glavu i rep koji je također \texttt{Stream}.
 
 Stanovnici koinduktivnih tipova konstruiraju se korekurzivnim funkcijama naredbom \texttt{CoFixpoint}, koja u pozadini koristi naredbu \texttt{Definition} te izraz \texttt{cofix}.
 \begin{minted}{coq}
-CoFixpoint from (n : nat) : Stream nat := Cons _ n (from (n + 1)).
-(* Definition from := cofix from (n : nat) := Cons _ n (from n + 1) *)
+CoFixpoint from (n : nat) : Stream nat := Cons _ n (from (S n)).
+(* Definition from := cofix from (n : nat) := Cons _ n (from (S n)) *)
 \end{minted}
-Ovime je definirana funkcija \texttt{from} koja za ulazni argument \texttt{n} vraća niz prirodnih brojeva od \(n\) na dalje.
+\noindent Ovime je definirana funkcija \texttt{from} koja za ulazni argument \texttt{n} vraća niz prirodnih brojeva od \(n\) na dalje.
 
 Razlika induktivnih i koinduktivnih tipova može se sumirati epigramom:
 \begin{displayquote}
@@ -163,7 +162,7 @@ Njegovi su stanovnici \(n\)-torke, a on ovisi o stanovniku drugog tipa (u ovom s
 Spomenuli smo da su i tipovi termi te im se može dodijeliti sorta.
 Postoji li najveća sorta, odnosno postoji li tip \texttt{Type} čiji su stanovnici svi tipovi?
 Prisjetimo se, svaki term ima svoj tip.
-Kada bi takav \texttt{Type} postojao, tada bi vrijedilo \verb|Type:Type|, što može dovesti do paradoksa samoreferenciranja.\footnote{ U naivnoj logici to je Epimenidov paradoks (\enquote{Ova je rečenica lažna.}), u naivnoj teoriji skupova to je Russellov paradoks, u naivnoj teoriji tipova to je Girardov paradoks.}
+Kada bi takav \texttt{Type} postojao, tada bi vrijedilo \verb|Type:Type|, što može dovesti do paradoksa samoreferenciranja.\footnote{U naivnoj logici to je Epimenidov paradoks (\enquote{Ova je rečenica lažna.}), u naivnoj teoriji skupova to je Russellov paradoks, u naivnoj teoriji tipova to je Girardov paradoks.}
 Takav dokazivač teorema bio bi inkonzistentan te bismo njime mogli dokazati kontradikciju, čime dokazivač efektivno gubi svoju svrhu.
 Umjesto jedne \enquote{velike} sorte \texttt{Type}, u Coqu postoji rastući niz sorti \coqtype{n} za sve prirodne brojeve \(n\),
 takav da vrijedi \(\coqtype{n} : \coqtype{m}\) kad god vrijedi \(n < m\).
@@ -193,8 +192,7 @@ Dvije najvažnije sorte u Coqu su \texttt{Set} i \texttt{Prop}.
   \caption{Kumulativna hijerarhija tipova}\label{fig:kum-hijer-tip}
 \end{figure}
 
-Naziv \coqset{} sinonim je za sortu \coqtype{0}, a njeni stanovnici su \textbf{mali tipovi}.
-\misao{Ostavio sam naziv \enquote{mali tipovi} jer kasnije kažem da za \texttt{Set} nema kvantifikacije po velikim tipovima, pa da zadržim taj kontrast.} 
+Naziv \coqset{} sinonim je za sortu \coqtype{0}, a njene stanovnike zovemo \textbf{malim tipovima}.
 Primjerice, tipovi \texttt{nat} i \texttt{bool} su mali tipovi.
 Dodatno, tipovi funkcija koje primaju i vraćaju male tipove su također mali tipovi.
 Također su i produkti, sume, liste i stabla malih tipova ponovo mali tipovi.
@@ -206,23 +204,19 @@ Za razliku od programa, s propozicijama ne možemo efektivno računati, ali ih m
 Stanovnici propozicija su njihovi \textbf{dokazi}.
 
 Za dokazivače teorema, poželjna je mogućnost definicije predikata (propozicija) nad proizvoljnim tipovima.
-Zbog toga u Coqu prilikom definicije terma sorte \texttt{Prop} možemo raditi kvantifikaciju po proizvoljno velikim tipovima
-(što uključuje i sortu \texttt{Prop}).
+Zbog toga u Coqu prilikom definicije terma sorte \coqprop možemo
+kvantificirati po proizvoljno velikim tipovima, što uključuje i sortu \coqprop.
+Tako je ovdje \texttt{not} predikat nad sortom \coqprop.
 \begin{minted}{coq}
-Inductive isNat : Set -> Prop :=
-| IsNat : isNat nat.
+Definition not (P : Prop) := forall (Q : Prop), P -> Q.
 \end{minted}
-\noindent Tako je ovdje \texttt{isNat} predikat nad sortom \coqset{}, a u primjeru ispod, \texttt{not} je predikat nad sortom \coqprop{}.
-\begin{minted}{coq}
-Definition not (P : Prop) := P -> False.
-\end{minted}
-\noindent Ovaj stil kvantifikacije omogućuje nam definiciju proizvoljnih propozicija i propozicijskih veznika.
+\noindent Valja primijetiti da kod definicije predikata \texttt{not} kvantificiramo po \coqprop{},
+no za svaku propoziciju \texttt{P} je term \texttt{not P} također tipa \coqprop{}, pa
+domena funkcije \texttt{not P} uključuje sam term \texttt{not P}.
+Ovaj stil kvantifikacije omogućuje nam definiciju proizvoljnih propozicija i propozicijskih veznika.
 Kažemo da je sorta \coqprop{} \textbf{nepredikativna}.
 S druge strane, sorta \coqset{} je \textbf{predikativna}, to jest \textit{ne dopušta} kvantifikaciju po \coqset{} i ostalim proizvoljno velikim tipovima.
-Posljedično, svaki term koji u sebi sadrži \texttt{Set} ili \texttt{Type} nužno nije stanovnik sorte \texttt{Set}.
-Na praktičnoj strani, predikativnost ograničava korisnika da prilikom definicije programa smije kvantificirati samo po malim tipovima, odnosno da smije pozivati samo druge programe.
-\misao{Ja bih rekao da je ovo ipak dobro objašnjeje. Budemo ponovo raspravili na sastanku. }
-
+Kada bi sorta \coqprop{} bila predikativna, uopće ne bismo mogli definirati predikat \texttt{not}.
 
 \section{Propozicije i tipovi, dokazi i termi}\label{sec:propozicije-i-tipovi}
 U decimalnom zapisu broja \(\pi\), barem jedna znamenka pojavljuje se beskonačno mnogo puta.

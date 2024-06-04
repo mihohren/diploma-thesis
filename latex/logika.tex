@@ -82,14 +82,14 @@ Definition pred_ar__PA (s : Pred__PA) : nat :=
   \enquote{biti neparan broj}.
 \begin{minted}{coq}
 Inductive IndPred__PA :=
-| PA_N
-| PA_E
-| PA_O.
+| PA_Nat
+| PA_Even
+| PA_Odd.
 Definition indpred_ar__PA (s : IndPred__PA) : nat :=
   match s with
-  | PA_N => 1
-  | PA_E => 1
-  | PA_O => 1
+  | PA_Nat => 1
+  | PA_Even => 1
+  | PA_Odd => 1
   end.
 \end{minted}
   \noindent Konačno, \textit{proširena Peanova signatura}, s oznakom \(\Sigma_{\mathit{PA}}\), je signatura za
@@ -200,10 +200,10 @@ Definition FExist (φ : formula) : formula := FNeg (FAll (FNeg φ)).
 Definition every_nat_is_even_or_odd : formula Σ__PA :=
   FAll
     (FImp
-       (@FIndPred Σ__PA PA_N ([var_term 0]))
+       (@FIndPred Σ__PA PA_Nat ([var_term 0]))
        (FOr
-          (@FIndPred Σ__PA PA_E ([var_term 0]))
-          (@FIndPred Σ__PA PA_O ([var_term 0])))).
+          (@FIndPred Σ__PA PA_Even ([var_term 0]))
+          (@FIndPred Σ__PA PA_Odd ([var_term 0])))).
 \end{minted}
   \noindent Ovdje vidimo učinak de Bruijnovog indeksiranja na formule;
   umjesto eksplicitnog navođenja varijable \(x\) kod kvantifikacije,
@@ -286,11 +286,11 @@ a podebljani znakovi predstavljaju \(n\)-torke terma, gdje je \(n\) mjesnost odg
 \begin{minted}{coq}
 Record production :=
   mkProd {
-      preds : list { P : PredS Σ & vec (term Σ) (pred_ar P) };
-      indpreds : list { P : IndPredS Σ & vec (term Σ) (indpred_ar P) };
-      indcons : IndPredS Σ;
-      indargs : vec (term Σ) (indpred_ar indcons);
-    }.
+    preds : list {P : PredS Σ & vec (term Σ) (pred_ar P)};
+    indpreds : list {P : IndPredS Σ & vec (term Σ) (indpred_ar P)};
+    indcons : IndPredS Σ;
+    indargs : vec (term Σ) (indpred_ar indcons);
+  }.
 \end{minted}
   Prvi i drugi član četvorke zovemo \textit{premisama}, a treći i četvrti \textit{konkluzijom}.
   U ostatku rada odabiremo neki podskup skupa svih produkcija koji zovemo
@@ -299,57 +299,63 @@ Record production :=
 Definition IndDefSet := production -> Prop.
 \end{minted}
 \end{definition}
-\misao{U idućem primjeru se koristi taktika \texttt{refine} zbog problema s tipovima.
-  Treba li posebno naglasiti što je \texttt{refine} i zašto se koristi?
-Ovi problemi se možda mogu izbjeći ako s \texttt{Program Definition}.}
-\begin{example}\label{ex:productions}
-  Definiramo produkcije za induktivne predikatne simbole u proširenoj Peanovoj aritmetici.
-  Za broj kažemo da je prirodan ako je \(0\) ili je sljedbenik nekog parnog broja.
+
+U idućim primjerima definiramo produkcije za induktivne predikatne simbole u proširenoj Peanovoj signaturi.
+\begin{example}\label{ex:productions-Nat}
+  Za broj kažemo da je prirodan ako je \(0\) ili je sljedbenik nekog prirodnog broja.
   \begin{prooftree}
     \AxiomC{}
-    \RightLabel{}
-    \UnaryInfC{\( N(o) \)}
+    \RightLabel{(\texttt{PA\_prod\_N\_zero})}
+    \UnaryInfC{\( \mathit{Nat}(o) \)}
   \end{prooftree}
 \begin{minted}{coq}
 Definition PA_prod_N_zero : @production Σ__PA.
-  refine (@mkProd Σ__PA nil nil PA_N _).
+  refine (@mkProd Σ__PA nil nil PA_Nat _).
   refine [(@TFunc Σ__PA PA_zero V.nil)].
 Defined.
 \end{minted}
-
   \begin{prooftree}
-    \AxiomC{\( N(x) \)}
-    \RightLabel{}
-    \UnaryInfC{\( N(s(x)) \)}
+    \AxiomC{\( \mathit{Nat}(x) \)}
+    \RightLabel{(\texttt{PA\_prod\_N\_succ})}
+    \UnaryInfC{\( \mathit{Nat}(s(x)) \)}
   \end{prooftree}
 \begin{minted}{coq}
 Definition PA_prod_N_succ : @production Σ__PA.
-  refine (@mkProd Σ__PA nil _ PA_N _).
-  - refine (cons _ nil). exists PA_N; refine [(var_term 0)].
+  refine (@mkProd Σ__PA nil _ PA_Nat _).
+  - refine (cons _ nil). exists PA_Nat; refine [(var_term 0)].
   - refine [(@TFunc Σ__PA PA_succ ([var_term 0]))].
 Defined.
 \end{minted}
-  \noindent Za broj kažemo da je paran ako je \(0\) ili je sljedbenik nekog neparnog broja.
+\end{example}
+
+\begin{remark}
+  U primjeru~\ref{ex:productions-Nat} vidimo alternativni način definiranja u Coqu.
+  Korisnik umjesto definiranja terma u Gallini ulazi u način dokazivanja te
+  naredbom \texttt{refine} postepeno konstruira (\enquote{profinjuje}) rezultantni term.
+\end{remark}
+
+\begin{example}\label{ex:productions-Even-Odd}
+  Za broj kažemo da je paran ako je \(0\) ili je sljedbenik nekog neparnog broja.
   \begin{prooftree}
     \AxiomC{}
-    \RightLabel{}
-    \UnaryInfC{\( E(o) \)}
+    \RightLabel{(\texttt{PA\_prod\_E\_zero})}
+    \UnaryInfC{\( \mathit{Even}(o) \)}
   \end{prooftree}
 \begin{minted}{coq}
 Definition PA_prod_E_zero : @production Σ__PA.
-  refine (@mkProd Σ__PA nil nil PA_E _).
+  refine (@mkProd Σ__PA nil nil PA_Even _).
   refine ( [ @TFunc Σ__PA PA_zero ([]) ] ).
 Defined.
 \end{minted}
   \begin{prooftree}
-    \AxiomC{\( O(x) \)}
-    \RightLabel{}
-    \UnaryInfC{\( E(s(x)) \)}
+    \AxiomC{\( \mathit{Odd}(x) \)}
+    \RightLabel{(\texttt{PA\_prod\_E\_succ})}
+    \UnaryInfC{\( \mathit{Even}(s(x)) \)}
   \end{prooftree}
 \begin{minted}{coq}
 Definition PA_prod_E_succ : @production Σ__PA.
-  refine (@mkProd Σ__PA nil _ PA_E _).
-  - refine (cons _ nil). exists PA_O; refine ([var_term 0]).
+  refine (@mkProd Σ__PA nil _ PA_Even _).
+  - refine (cons _ nil). exists PA_Odd; refine ([var_term 0]).
   - refine [_].
     refine (@TFunc Σ__PA PA_succ _).
     refine [var_term 0].
@@ -357,14 +363,14 @@ Defined.
 \end{minted}
   \noindent Za broj kažemo da je neparan ako je sljedbenik nekog parnog broja.
   \begin{prooftree}
-    \AxiomC{\( E(x) \)}
-    \RightLabel{}
-    \UnaryInfC{\( O(s(x)) \)}
+    \AxiomC{\( \mathit{Even}(x) \)}
+    \RightLabel{(\texttt{PA\_prod\_O\_succ})}
+    \UnaryInfC{\( \mathit{Odd}(s(x)) \)}
   \end{prooftree}
 \begin{minted}{coq}
 Definition PA_prod_O_succ : @production Σ__PA.
-  refine (@mkProd Σ__PA nil _ PA_O _).
-  - refine (cons _ nil). exists PA_E; refine ([var_term 0]).
+  refine (@mkProd Σ__PA nil _ PA_Odd _).
+  - refine (cons _ nil). exists PA_Even; refine ([var_term 0]).
   - refine [_].
     refine (@TFunc Σ__PA PA_succ _).
     refine ([var_term 0]).
@@ -400,10 +406,10 @@ Structure structure := {
 \end{minted}
 \end{definition}
 
-\begin{example}
+\begin{example}\label{ex:structure}
   Prije no što možemo definirati strukturu za Peanovu aritmetiku s induktivnim predikatima,
   odnosno strukturu za signaturu \(\Sigma_{\mathit{PA}}\) i skup induktivnih definicija \(\Phi_{\mathit{PA}}\),
-  potrebno je definirati odgovarajuće interpretacije induktivnih predikatnih simbola u Coqu, u skladu s primjerom~\ref{ex:productions}.
+  potrebno je definirati odgovarajuće interpretacije induktivnih predikatnih simbola u Coqu, u skladu s primjerima~\ref{ex:productions-Nat} i~\ref{ex:productions-Even-Odd}.
 \begin{minted}{coq}
 Inductive NAT : nat -> Prop :=
 | NO : NAT 0
@@ -415,9 +421,10 @@ Inductive EVEN : nat -> Prop :=
 with ODD : nat -> Prop :=
 | OS : forall n, EVEN n -> ODD (S n).
 \end{minted}
-  \noindent Ovdje su predikati \texttt{EVEN} i \texttt{ODD} definirani mehanizmom međusobne rekurzije. \misao{Uzajamne rekurzije? Simultane rekurzije?}\\
+  \noindent Ovdje su predikati \texttt{EVEN} i \texttt{ODD} definirani mehanizmom simultane rekurzije.\\
   \noindent Konačno možemo definirati strukturu \(M_{\mathit{PA}}\) s nosačem \(\mathbb{N}\) te uobičajenom interpretacijom
-  funkcijskih i običnih predikatnih simbola. Induktivne predikatne simbole \(N\), \(E\) i \(O\)
+  funkcijskih i običnih predikatnih simbola. Induktivne predikatne simbole
+  \(\mathit{Nat}\), \(\mathit{Even}\) i \(\mathit{Odd}\)
   interpretiramo redom Coqovim predikatima \texttt{NAT}, \texttt{EVEN} i \texttt{ODD}.
 \begin{minted}{coq}
 Definition M__PA : @structure Σ__PA.
@@ -482,7 +489,8 @@ Fixpoint Sat (ρ : env M) (F : formula Σ) : Prop :=
 \end{definition}
 
 \begin{example}
-  Formula \(\forall x, N(x) \rightarrow E(x) \lor O(x)\) je istinita u svakoj okolini strukture \(M_{\mathit{PA}}\).
+  Formula \(\forall x, N(x) \rightarrow E(x) \lor O(x)\) je istinita u strukturi \(M_{\mathit{PA}}\)
+  bez obzira na njenu okolinu.
 \begin{minted}{coq}
 Lemma every_nat_is_even_or_odd_Sat :
   forall (ρ : env M__PA), ρ ⊨ every_nat_is_even_or_odd.
@@ -505,8 +513,6 @@ Lemma strong_form_subst_sanity2 :
   Tada možemo neformalno reći da sintaktička i semantička supstitucija
   komutiraju pod relacijom istinitosti.
 \end{lemma}
-% \misao{Ne znam zašto, ali meni se simbol \(\mapsto\) (\verb|\mapsto|)
-% prikazuje kao kombinacija \(\vdash \rightarrow\) (\verb|\vdash \rightarrow|) u PDF-u.}
 
 \section{Standardni modeli}\label{sec:standardni-modeli}
 Želimo ograničiti semantička razmatranja na samo one strukture koje \enquote{imaju smisla} za induktivne predikate.
@@ -563,7 +569,7 @@ Definition φ_P
   exact (φ_pr pr args ds).
 Defined.
 \end{minted}
-\noindent Konačno, definiramo operator skupa definicija \(\varphi_{\Phi}\) kao preslikavanje
+\noindent Konačno, definiramo \textit{operator skupa definicija} \(\varphi_{\Phi}\) kao preslikavanje
 koje svakom induktivnom predikatnom simbolu \(P\) pridružuje skup \(\varphi_{P}(f)\).
 \begin{minted}{coq}
 Definition φ_Φ
@@ -574,7 +580,7 @@ Definition φ_Φ
 \noindent Operator \(\varphi_{\Phi}\) omogućuje simultanu primjenu produkcija.
 \end{definition}
 
-\begin{remark}
+\begin{remark}\label{remark:phi-phi-notation}
   Kako je funkcija \(f\) bila uvedena na samom početku prethodne definicije,
   u stvari definicija operatora \(\varphi_{\Phi}\) glasi
   \(
@@ -582,7 +588,24 @@ Definition φ_Φ
   \).
 \end{remark}
 
-\misao{TODO: primjer.}
+\begin{example}\label{ex:operator-phi-phi-PA}
+  Ilustrirajmo operator \(\varphi_{\Phi}\) na strukturi \(M_{\mathit{PA}}\) i
+  skupu induktivnih definicija \(\Phi_{\mathit{PA}}\).
+  Prisjetimo se, u proširenoj Peanovoj signaturi imamo tri induktivna predikatna simbola;
+  \(\mathit{Nat}\), \(\mathit{Even}\) i \(\mathit{Odd}\), svaki od kojih je jednomjesan.
+  Dakle, domena i kodomena operatora \(\varphi_{\Phi}\) u ovom primjeru je skup \(\mathcal{P(\mathbb{N})}^{3}\),
+  gdje prva, druga i treća projekcija odgovaraju redom interpretacijama predikata
+  \(\mathit{Nat}\), \(\mathit{Even}\) i \(\mathit{Odd}\). Nadalje, vrijedi:
+  \[
+    \varphi_{\Phi_{\mathit{PA}}, M_{\mathit{PA}}}(N, E, O) =
+    ( \{ 0 \} \cup \{ n + 1 \mid n \in N \},
+    \{ 0 \} \cup \{ o + 1 \mid o \in O \},
+    \{ e + 1 \mid e \in E \} ).
+  \]
+  \noindent Prema notaciji u prethodnoj napomeni,
+  funkcija \(f\) je ovdje trojka \((N, E, O)\),
+  a indeksiranje induktivnim predikatnim simbolom odgovara navedenim projekcijama.
+\end{example}
 
 \begin{proposition}
   Operator \(\varphi_{\Phi}\) je monoton.
@@ -634,6 +657,20 @@ Lemma approximant_characterization : forall α P v,
 \end{minted}
 \end{lemma}
 
+\begin{example}
+  Za svaki prirodan broj \(\alpha\), a u skladu s primjerom~\ref{ex:operator-phi-phi-PA},
+  aproksimant razine \(\alpha\) induktivnog predikatnog simbola \(\mathit{Nat}\)
+  je skup svih prirodnih brojeva strogo manjih od \(\alpha\), odnosno vrijedi:
+  \[
+    \varphi_{\Phi_{\mathit{PA}}, M_{\mathit{PA}}}^{\alpha}(\mathit{Nat}) = \{ 0, 1, \ldots, \alpha - 1 \}.
+  \]
+\begin{minted}{coq}
+Lemma approximants_of_PA_Nat : forall α n,
+    @approximant_of Σ__PA M__PA Φ__PA PA_Nat α ([n])
+    <-> n < α.
+\end{minted}
+\end{example}
+
 \begin{definition}
   \textit{Aproksimacija razine} \(\omega\), u oznaci \(\varphi_{\Phi}^{\omega}\), je za svaki pojedini predikatni simbol
   unija aproksimacija razina manjih od \(\omega\).
@@ -641,6 +678,14 @@ Lemma approximant_characterization : forall α P v,
 Definition φ_Φ_ω P v := exists α, φ_Φ_n P α v.
 \end{minted}
 \end{definition}
+
+\begin{example}
+  Aproksimant razine \(\omega\) induktivnog predikatnog simbola \(\mathit{Nat}\)
+  je cijeli skup prirodnih brojeva \(\mathbb{N}\).
+\begin{minted}{coq}
+Lemma NAT_φ_Φ_ω: forall (n : nat), @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Nat ([n]).
+\end{minted}
+\end{example}
 
 \begin{lemma}\label{lemma:omega-least-prefixed}
   Aproksimacija razine \(\omega\) je najmanji skup sa svojstvom \(\varphi_{\Phi}(\varphi_{\Phi}^{\omega}) \subseteq \varphi_{\Phi}^{\omega}\).
@@ -710,16 +755,28 @@ Definition Prem_star := clos_refl_trans (IndPredS Σ) Prem.
   \noindent Za induktivne predikatne simbole \(P\) i \(Q\) kažemo da su
   \textit{međusobno zavisni} ako vrijedi \(\mathit{Prem}^{\ast}(P, Q)\) i \(\mathit{Prem}^{\ast}(Q, P)\).
 \begin{minted}{coq}
-Definition mutually_dependent (P Q : IndPredS Σ) :=
+Definition mutually_dependent (P Q : IndredS Σ) :=
   Prem_star P Q /\ Prem_star Q P.
 \end{minted}
+  \noindent Za međusobno zavisne induktivne predikatne simbole kažemo još da su
+  definirani simultanom rekurzijom.
+  Coqovi predikati \texttt{EVEN} i \texttt{ODD} iz primjera~\ref{ex:structure}
+  definirani su simultanom rekurzijom.
 \end{definition}
 
 \begin{example}
-  U skupu induktivnih definicija \(\Phi_{\mathit{PA}}\), induktivni predikatni simboli \(E\) i \(O\)
+  U skupu induktivnih definicija \(\Phi_{\mathit{PA}}\),
+  induktivni predikatni simboli \(\mathit{Even}\) i \(\mathit{Odd}\)
   su međusobno zavisni.
 \begin{minted}{coq}
-Example mut_dep_E_O : @mutually_dependent Σ__PA Φ__PA PA_E PA_O.
+Example mut_dep_E_O :
+  @mutually_dependent Σ__PA Φ__PA PA_Even PA_Odd.
+\end{minted}
+  \noindent S druge strane, induktivni predikatni simboli \(\mathit{Nat}\) i \(\mathit{Even}\)
+  \textit{nisu} međusobno zavisni.
+\begin{minted}{coq}
+Example not_mut_dep_N_E :
+  ~ @mutually_dependent Σ__PA Φ__PA PA_Nat PA_Even.
 \end{minted}
 \end{example}
 
@@ -735,6 +792,8 @@ strukturalna, propozicijska, pravila za kvantifikatore i pravila za induktivne d
 Navest ćemo ih tim redom, a definirati kroz više blokova Coq koda.
 Napominjemo da se sustav \(\mathit{LKID}\) razlikuje od Gentzenova sustava \(\mathit{LK}\)
 na nekoliko mjesta, a zbog implementacijskih detalja te induktivnih definicija.
+Za neko pravilo izvoda kažemo da je \textit{dopustivo} ako nije u definiciji sustava \(\mathit{LKID}\),
+ali je iz originalnih pravila izvedivo.
 \begin{minted}{coq}
 Inductive LKID : sequent -> Prop := 
 \end{minted}
@@ -792,6 +851,34 @@ Posljedično, pravilo slabljenja \(\mathit{Wk}\) sa sobom povlači pravila permu
     forall σ, LKID (map (subst_formula σ) Γ ⊢ map (subst_formula σ) Δ)
 \end{minted}
 
+\begin{example}
+  Prošireno pravilo aksioma je dopustivo.
+  \begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\( \mathit{ (AxExtended) } \)}
+    \UnaryInfC{\( \varphi, \Gamma \vdash \varphi, \Delta \)}
+  \end{prooftree}
+\begin{minted}[linenos=false]{coq}
+Lemma AxExtended : forall Γ Δ φ, LKID (φ :: Γ ⊢ φ :: Δ).
+\end{minted}
+  \noindent Pravilo permutacije je dopustivo.
+  \begin{prooftree}
+    \AxiomC{\( \Gamma^{\prime} \vdash \Delta^{\prime} \)}
+    \AxiomC{\( \Gamma^{\prime} \sim \Gamma \)}
+    \AxiomC{\( \Delta^{\prime} \sim \Delta \)}
+    \RightLabel{\(\mathit{ (Perm) }\)}
+    \TrinaryInfC{\( \Gamma \vdash \Delta \)}
+  \end{prooftree}
+  \noindent Ovdje znakom \(\sim\) označujemo relaciju permutacije na listama.
+\begin{minted}[linenos=false]{coq}
+Lemma Perm : forall Γ' Δ' Γ Δ,
+    Permutation Γ' Γ ->
+    Permutation Δ' Δ ->
+    LKID (Γ' ⊢ Δ') ->
+    LKID (Γ ⊢ Δ).
+\end{minted}
+\end{example}
+
 
 \textbf{Propozicijska} su \textbf{pravila} prikazana na slici~\ref{fig:lkid-propositional}, a služe rasuđivanju s implikacijama i negacijama.
 Ova su pravila identična u sustavima \(\mathit{LK}\) i \(\mathit{LKID}\).
@@ -824,7 +911,7 @@ Ova su pravila identična u sustavima \(\mathit{LK}\) i \(\mathit{LKID}\).
   
   \caption{Propozicijska pravila sustava \(\mathit{LKID}\).}\label{fig:lkid-propositional}
 \end{figure}
-\begin{minted}[firstnumber=last]{coq}
+\begin{minted}[firstnumber=16]{coq}
 (* Propositional rules. *)
 | NegL : forall Γ Δ φ, LKID (Γ ⊢ φ :: Δ) -> LKID (FNeg φ :: Γ ⊢ Δ)
 | NegR : forall Γ Δ φ, LKID (φ :: Γ ⊢ Δ) -> LKID (Γ ⊢ FNeg φ :: Δ)
@@ -834,6 +921,33 @@ Ova su pravila identična u sustavima \(\mathit{LK}\) i \(\mathit{LKID}\).
 | ImpR : forall Γ Δ φ ψ,
     LKID (φ :: Γ ⊢ ψ :: Δ) -> LKID (Γ ⊢ (FImp φ ψ) :: Δ)
 \end{minted}
+
+\begin{example}
+  Desno pravilo za konjunkciju je dopustivo.
+  \begin{prooftree}
+    \AxiomC{\( \Gamma \vdash \varphi, \Delta \)}
+    \AxiomC{\( \Gamma \vdash \psi, \Delta \)}
+    \RightLabel{\( \mathit{ (AndR) } \)}
+    \BinaryInfC{\( \Gamma \vdash \varphi \land \psi, \Delta \)}
+  \end{prooftree}
+\begin{minted}[linenos=false]{coq}
+Lemma AndR : forall Γ Δ φ ψ,
+    LKID (Γ ⊢ φ :: Δ) -> LKID (Γ ⊢ ψ :: Δ) ->
+    LKID (Γ ⊢ FAnd φ ψ :: Δ).
+\end{minted}
+  \noindent Lijevo pravilo za disjunkciju je dopustivo.
+  \begin{prooftree}
+    \AxiomC{\( \varphi, \Gamma \vdash \Delta \)}
+    \AxiomC{\( \psi, \Gamma \vdash \Delta \)}
+    \RightLabel{\( \mathit{ (OrL) } \)}
+    \BinaryInfC{\( \varphi \lor \psi, \Gamma \vdash \Delta \)}
+  \end{prooftree}
+\begin{minted}[linenos=false]{coq}
+Lemma OrL : forall Γ Δ φ ψ,
+    LKID (φ :: Γ ⊢ Δ) -> LKID (ψ :: Γ ⊢ Δ) ->
+    LKID (FOr φ ψ :: Γ ⊢ Δ).
+\end{minted}
+\end{example}
 
 \textbf{Pravila za kvantifikatore} prikazana su na slici~\ref{fig:lkid-quantificational}, a odnose se na univerzalnu kvantifikaciju.
 Ova se pravila razlikuju od analognih u sustavu \(\mathit{LK}\) zbog korištenja de Bruijnovih indeksa kod kvantifikacije.
@@ -856,9 +970,9 @@ Kako implicitno kvantificiramo po varijabli \(0\), a  ona se javlja
     \RightLabel{\( \mathit{ (AllR) } \)}
     \UnaryInfC{\( \Gamma \vdash \forall\varphi, \Delta \)}
   \end{prooftree}
-  \caption{Kvantifikacijska pravila sustava \(\mathit{LKID}\).}\label{fig:lkid-quantificational}
+  \caption{Pravila za kvantifikatore sustava \(\mathit{LKID}\).}\label{fig:lkid-quantificational}
 \end{figure}
-\begin{minted}[firstnumber=last]{coq}
+\begin{minted}[firstnumber=24]{coq}
 (* Quantifier rules. *)
 | AllL : forall Γ Δ φ t,
     LKID (subst_formula (t .: ids) φ :: Γ ⊢ Δ) -> 
@@ -868,13 +982,21 @@ Kako implicitno kvantificiramo po varijabli \(0\), a  ona se javlja
     LKID (Γ ⊢ (FAll φ) :: Δ)
 \end{minted}
 
+\begin{example}
+  Lijevo pravilo za egzistencijalnu kvantifikaciju je dopustivo.
+  \begin{prooftree}
+    \AxiomC{\( \varphi, \Gamma^{\uparrow} \vdash \Delta^{\uparrow} \)}
+    \RightLabel{\( \mathit{ (ExistL) } \)}
+    \UnaryInfC{\( \exists\varphi, \Gamma \vdash \Delta\)}
+  \end{prooftree}
+\begin{minted}[linenos=false]{coq}
+Lemma ExistL : forall Γ Δ φ,
+    LKID (φ :: shift_formulas Γ ⊢ shift_formulas Δ) ->
+    LKID (FExist φ :: Γ ⊢ Δ).
+\end{minted}
+\end{example}
 
-
-\begin{minted}{coq}
-
-
-
-
+\begin{minted}[firstnumber=31]{coq}
   | IndL : forall Γ Δ (Pj : IndPredS Σ) (u : vec (term Σ) (indpred_ar Pj))
              (z_i : forall P, vec var (indpred_ar P)) (* dodati pretpostavku forall P, NoDup (z_i P)? *)
              (G_i : IndPredS Σ -> formula Σ)
@@ -910,12 +1032,7 @@ Kako implicitno kvantificiramo po varijabli \(0\), a  ona se javlja
       LKID ( Γ ⊢ FIndPred (indcons pr) (V.map (subst_term σ) (indargs pr)) :: Δ).
 \end{minted}
 
-Za neko pravilo izvoda kažemo da je \textit{dopustivo} ako nije u definiciji sustava \(\mathit{LKID}\),
-ali je iz originalnih pravila izvedivo.
-\begin{example}
-  Obično se kod definicije sistema sekvenata za varijacije logike prvog reda dodaju i pravila za egzistencijalnu kvantifikaciju.
-  Lijevo i desno pravilo za egzistencijalnu kvantifikaciju je dopustivo u sustavu \(\mathit{LKID}\).
-\end{example}
+
 
 \section{Adekvatnost}\label{sec:adekvatnost}
 Lokalne adekvatnosti za pravila izvoda. Glavni teorem.
