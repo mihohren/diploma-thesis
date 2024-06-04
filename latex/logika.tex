@@ -195,7 +195,7 @@ Definition FExist (φ : formula) : formula := FNeg (FAll (FNeg φ)).
 
 \begin{example}
   U proširenoj Peanovoj signaturi, svojstvo \enquote{svaki prirodan broj je paran ili neparan}
-  možemo izraziti formulom \( \forall x, N(x) \rightarrow E(x) \lor O(x) \).
+  možemo izraziti formulom \( \forall x, \mathit{Nat}(x) \rightarrow \mathit{Even}(x) \lor \mathit{Odd}(x) \).
 \begin{minted}{coq}
 Definition every_nat_is_even_or_odd : formula Σ__PA :=
   FAll
@@ -489,7 +489,7 @@ Fixpoint Sat (ρ : env M) (F : formula Σ) : Prop :=
 \end{definition}
 
 \begin{example}
-  Formula \(\forall x, N(x) \rightarrow E(x) \lor O(x)\) je istinita u strukturi \(M_{\mathit{PA}}\)
+  Formula \(\forall x, \mathit{Nat}(x) \rightarrow \mathit{Even}(x) \lor \mathit{Odd}(x)\) je istinita u strukturi \(M_{\mathit{PA}}\)
   bez obzira na njenu okolinu.
 \begin{minted}{coq}
 Lemma every_nat_is_even_or_odd_Sat :
