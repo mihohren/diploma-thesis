@@ -64,6 +64,27 @@ Proof.
     rewrite <- V.to_list_In in H; auto.
 Qed.
 
+Inductive VecNoDup {A : Type} : forall {n : nat}, vec A n -> Prop :=
+| VecNoDup_nil : VecNoDup (V.nil)
+| VecNoDup_cons : forall (a : A) {n : nat} (v : vec A n),
+    ~Vector.In a v -> VecNoDup v ->VecNoDup (V.cons a v).
+
+Lemma VecNoDup_iff_ListNoDup :
+  forall (A : Type) (n : nat) (v : vec A n),
+    VecNoDup v <-> NoDup (V.to_list v).
+Proof.
+  intros A n v; split; intros H.
+  - induction H.
+    + constructor.
+    + rewrite V.to_list_cons; constructor.
+      * now rewrite <- V.to_list_In.
+      * assumption.
+  - induction v.
+    + constructor.
+    + rewrite V.to_list_cons in H; inversion H; subst.
+      constructor; auto. now rewrite V.to_list_In.
+Qed.
+
 Definition max_fold (l : list nat) := fold_right Nat.max 0 l.
                                           
 Definition vec_max_fold {n} (v : vec nat n) := V.fold_right Nat.max v 0.

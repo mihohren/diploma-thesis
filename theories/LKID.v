@@ -96,27 +96,47 @@ Section lkid.
   | AllR : forall Γ Δ φ,
       LKID (shift_formulas Γ ⊢ φ :: shift_formulas Δ) ->
       LKID (Γ ⊢ (FAll φ) :: Δ)
-  | IndL : forall Γ Δ (Pj : IndPredS Σ) (u : vec (term Σ) (indpred_ar Pj))
-             (z_i : forall P, vec var (indpred_ar P)) (* dodati pretpostavku forall P, NoDup (z_i P)? *)
+  (* Induction rules. *)
+  | IndL : forall Γ Δ
+             (Pj : IndPredS Σ) (u : vec _ (indpred_ar Pj))
+             (z_i : forall P, vec var (indpred_ar P))
+             (z_i_nodup : forall P, VecNoDup (z_i P))
              (G_i : IndPredS Σ -> formula Σ)
-             (HG2 : forall Pi, ~mutually_dependent Pi Pj -> G_i Pi = FIndPred Pi (V.map var_term (z_i Pi))),
+             (HG2 : forall Pi, ~mutually_dependent Pi Pj ->
+                          G_i Pi = FIndPred
+                                     Pi
+                                     (V.map var_term (z_i Pi))),
       let maxΓ := max_fold (map some_var_not_in_formula Γ) in
       let maxΔ := max_fold (map some_var_not_in_formula Δ) in
       let maxP := some_var_not_in_formula (FIndPred Pj u) in
       let shift_factor := max maxP (max maxΓ maxΔ) in
-      let Fj := subst_formula (finite_subst (z_i Pj) u) (G_i Pj) in
+      let Fj := subst_formula
+                  (finite_subst (z_i Pj) u)
+                  (G_i Pj) in
       let minor_premises :=
-        (forall pr (Hdep : mutually_dependent (indcons pr) Pj),
-            let Qs := shift_formulas_by shift_factor (FPreds_from_preds (preds pr)) in
+        (forall pr (HΦ : Φ pr) (Hdep : mutually_dependent (indcons pr) Pj),
+            let Qs := shift_formulas_by
+                        shift_factor
+                        (FPreds_from_preds (preds pr)) in
             let Gs := map (fun '(P; args) =>
-                             let shifted_args := V.map (shift_term_by shift_factor) args in
-                             let σ := finite_subst (z_i P) (shifted_args) in
+                             let shifted_args :=
+                               V.map
+                                 (shift_term_by shift_factor)
+                                 args in
+                             let σ :=
+                               finite_subst
+                                 (z_i P)
+                                 (shifted_args) in
                              let G := G_i P in
                              subst_formula σ G)
                         (indpreds pr) in
             let Pi := indcons pr in
-            let ty := V.map (shift_term_by shift_factor) (indargs pr) in
-            let Fi := subst_formula (finite_subst (z_i Pi) ty) (G_i Pi) in
+            let ty := V.map
+                        (shift_term_by shift_factor)
+                        (indargs pr) in
+            let Fi := subst_formula
+                        (finite_subst (z_i Pi) ty)
+                        (G_i Pi) in
             LKID (Qs ++ Gs ++ Γ ⊢ Fi :: Δ))
       in
       minor_premises ->
@@ -124,11 +144,16 @@ Section lkid.
       LKID (FIndPred Pj u :: Γ ⊢ Δ)
   | IndR : forall Γ Δ pr σ,
       Φ pr ->
-      (forall Q us, In (Q; us) (preds pr) ->
-               LKID (Γ ⊢ (FPred Q (V.map (subst_term σ) us) :: Δ))) ->
-      (forall P ts, In (P; ts) (indpreds pr) ->
-               LKID (Γ ⊢ (FIndPred P (V.map (subst_term σ) ts) :: Δ))) ->
-      LKID ( Γ ⊢ FIndPred (indcons pr) (V.map (subst_term σ) (indargs pr)) :: Δ).
+      (forall Q us,
+          In (Q; us) (preds pr) ->
+          LKID (Γ ⊢ (FPred Q (V.map (subst_term σ) us) :: Δ))) ->
+      (forall P ts,
+          In (P; ts) (indpreds pr) ->
+          LKID (Γ ⊢ (FIndPred P (V.map (subst_term σ) ts) :: Δ))) ->
+      LKID ( Γ ⊢ FIndPred
+               (indcons pr)
+               (V.map (subst_term σ) (indargs pr))
+               :: Δ).
 
   Ltac lkid_intros :=
     repeat match goal with

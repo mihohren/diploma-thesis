@@ -186,7 +186,7 @@ Section soundness.
   Qed.
   Import SigTNotations. 
 
-  Lemma LS_IndL : forall Γ Δ pr σ,   (* NOTE: uses excluded middle *)
+  Lemma LS_IndR : forall Γ Δ pr σ,   (* NOTE: uses excluded middle *)
       Φ pr ->
       (forall Q us, In (Q; us) (preds pr) ->
                Γ ⊫S (FPred Q (V.map (subst_term σ) us) :: Δ)) ->
@@ -217,7 +217,79 @@ Section soundness.
       + intros P ts Hin. rewrite Heq. apply Hstandard. rewrite <- V.map_map. apply Hindpreds'. assumption.
       + rewrite V.map_map. f_equal. rewrite Heq. reflexivity.
   Qed.
-  
+
+
+  Lemma LS_IndL : forall Γ Δ
+                    (Pj : IndPredS Σ) (u : vec _ (indpred_ar Pj))
+                    (z_i : forall P, vec var (indpred_ar P))
+                    (z_i_nodup : forall P, VecNoDup (z_i P))
+                    (G_i : IndPredS Σ -> formula Σ)
+                    (HG : forall Pi, ~@mutually_dependent Σ Φ Pi Pj ->
+                                G_i Pi = FIndPred Pi (V.map var_term (z_i Pi))),
+      let maxΓ := max_fold (map some_var_not_in_formula Γ) in
+      let maxΔ := max_fold (map some_var_not_in_formula Δ) in
+      let maxP := some_var_not_in_formula (FIndPred Pj u) in
+      let shift_factor := max maxP (max maxΓ maxΔ) in
+      let Fj := subst_formula (finite_subst (z_i Pj) u) (G_i Pj) in
+      let minor_premises :=
+        (forall pr (HΦ : Φ pr) (Hdep : @mutually_dependent Σ Φ (indcons pr) Pj),
+            let Qs := shift_formulas_by shift_factor (FPreds_from_preds (preds pr)) in
+            let Gs := map (fun '(P; args) =>
+                             let shifted_args := V.map (shift_term_by shift_factor) args in
+                             let σ := finite_subst (z_i P) (shifted_args) in
+                             let G := G_i P in
+                             subst_formula σ G)
+                        (indpreds pr) in
+            let Pi := indcons pr in
+            let ty := V.map (shift_term_by shift_factor) (indargs pr) in
+            let Fi := subst_formula (finite_subst (z_i Pi) ty) (G_i Pi) in
+            (Qs ++ Gs ++ Γ) ⊫S (Fi :: Δ))
+      in
+      minor_premises ->
+      (Fj :: Γ) ⊫S Δ ->
+      (FIndPred Pj u :: Γ) ⊫S Δ.
+  Proof.
+    intros Γ Δ Pj u z_i z_i_nodup G_i HmutdepG.
+    intros maxΓ maxΔ maxP shift_factor Fj minor_premises.
+    intros Hminor Hindhyp M Hstandard ρ Hpremises.
+    assert (Hsat1 : forall ψ, In ψ Γ -> ρ ⊨ ψ) by intuition.
+    assert (Hsat2: ρ ⊨ (FIndPred Pj u)) by intuition.
+    apply Hstandard in Hsat2.
+    destruct (classic (ρ ⊨ Fj)) as [satFj | unsatFj].
+    + assert (forall ψ, In ψ (Fj :: Γ) -> ρ ⊨ ψ).
+      { intros ψ Hin. inversion Hin; subst; auto. }
+      apply Hindhyp; auto.
+    + assert (satNegFj : ρ ⊨ (FNeg Fj)) by trivial; clear unsatFj.
+      destruct Hsat2 as [α Hsatα]; subst minor_premises.
+      (* TODO *)
+      
+      induction α as [| α IHα]; cbn in Hsatα.
+      * contradiction.
+      * unfold φ_Φ, φ_P in Hsatα.
+        destruct Hsatα as (pr & (Heq & HΦ) & Hφpr).
+        unfold eq_rect in Hφpr. specialize (Hminor pr) as Hminorpr.
+        assert (Hmutdep: @mutually_dependent Σ Φ (indcons pr) Pj).
+        { rewrite Heq. apply mutually_dependent_refl. }
+        specialize (Hminorpr HΦ Hmutdep).
+        remember (shift_formulas_by
+                    shift_factor
+                    (FPreds_from_preds (preds pr))) as Qs.
+        remember (list_map
+                    (λ '(P; args),
+                      let shifted_args :=
+                        V.map (shift_term_by shift_factor) args in
+                      let σ := finite_subst (z_i P) shifted_args in
+                      let G := G_i P in subst_formula σ G) 
+                    (indpreds pr)) as Gs.
+        remember ( V.map (shift_term_by shift_factor) (indargs pr)) as ty.
+        remember (subst_formula (finite_subst (z_i (indcons pr)) ty) (G_i (indcons pr))) as Fi.
+        specialize (Hminorpr M Hstandard ρ).
+        unfold φ_pr in Hφpr.
+        destruct Hφpr as (ρ' & Hpreds & Hindpreds & Heqeval).
+        subst Pj. apply IHα. rewrite Heqeval. 
+  Admitted.
+    
+    
   Theorem soundness : forall Γ Δ, @LKID Σ Φ (Γ ⊢ Δ) -> Γ ⊫S Δ.
   Proof.
     intros Γ Δ Hlkid.
@@ -232,7 +304,7 @@ Section soundness.
     - eapply LS_ImpR; eauto.
     - eapply LS_AllL; eauto.
     - eapply LS_AllR; eauto.
-    - admit.
     - eapply LS_IndL; eauto.
+    - eapply LS_IndR; eauto.
   Admitted.
 End soundness.

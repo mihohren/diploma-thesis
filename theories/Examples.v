@@ -359,29 +359,22 @@ Proof.
   intros [prem _].
   apply Prem_star_Nat in prem; discriminate.
 Qed.
-    
-                                                
-Definition every_nat_is_even_or_odd : formula Σ__PA :=
-  FAll
-    (FImp
-       (@FIndPred Σ__PA PA_Nat ([var_term 0]))
-       (FOr
-          (@FIndPred Σ__PA PA_Even ([var_term 0]))
-          (@FIndPred Σ__PA PA_Odd ([var_term 0])))).
 
-Lemma every_nat_is_even_or_odd_Sat :
-  forall (ρ : env M__PA), ρ ⊨ every_nat_is_even_or_odd.
+Example not_mut_dep_N_O :
+  ~ @mutually_dependent Σ__PA Φ__PA PA_Nat PA_Odd.
 Proof.
-  intros ρ. cbn.
-  intros d _ notEVEN. induction d.
-  - exfalso; apply notEVEN; constructor.
-  - constructor. assert (ODD d -> False).
-    { intros HODD; apply notEVEN; now constructor. }
-    assert (~~EVEN d) by auto.
-    Require Import Classical.
-    apply NNPP in H0. assumption.
+  intros [prem _].
+  apply Prem_star_Nat in prem; discriminate.
 Qed.
 
+Lemma mut_dep_Nat_only_Nat :
+  forall (P : IndPredS Σ__PA), @mutually_dependent Σ__PA Φ__PA P PA_Nat -> P = PA_Nat.
+Proof.
+  intros []; auto; intros [H1 H2];
+  now apply Prem_star_Nat in H2.
+Qed.
+                              
+  
 Lemma approximants_of_PA_Nat : forall α n,
     @approximant_of Σ__PA M__PA Φ__PA PA_Nat α ([n])
     <-> n < α.
@@ -407,3 +400,129 @@ Proof.
         inversion H0; subst. apply inj_pair2 in H0; subst; cbn in *. apply IH.
         auto with arith.
 Qed.
+
+Import ListNotations.
+Infix "⊢" := mkSeq (at level 10).
+
+
+Definition Even_zero : formula Σ__PA.
+  apply FIndPred with PA_Even; cbn.
+  refine (V.cons _ V.nil).
+  apply TFunc with PA_zero; cbn.
+  exact V.nil.
+Defined.
+
+Lemma provable_Even_zero :
+  @LKID Σ__PA Φ__PA ([] ⊢ [Even_zero]).
+Proof.
+  pose proof (@IndR Σ__PA Φ__PA ([]) ([])) as H.
+  specialize (H PA_prod_E_zero); cbn in H.
+  apply H with (fun t => var_term t); try contradiction.
+  apply ID_E_zero.
+Qed.
+
+Definition every_nat_is_even_or_odd : formula Σ__PA :=
+  FAll
+    (FImp
+       (@FIndPred Σ__PA PA_Nat ([var_term 0]))
+       (FOr
+          (@FIndPred Σ__PA PA_Even ([var_term 0]))
+          (@FIndPred Σ__PA PA_Odd ([var_term 0])))).
+
+Lemma every_nat_is_even_or_odd_Sat :
+  forall (ρ : env M__PA), ρ ⊨ every_nat_is_even_or_odd.
+Proof.
+  intros ρ. cbn.
+  intros d _ notEVEN. induction d.
+  - exfalso; apply notEVEN; constructor.
+  - constructor. assert (ODD d -> False).
+    { intros HODD; apply notEVEN; now constructor. }
+    assert (~~EVEN d) by auto.
+    Require Import Classical.
+    apply NNPP in H0. assumption.
+Qed.
+
+Definition z : forall (P : IndPredS Σ__PA), vec var (indpred_ar P).
+  intros []; cbn; exact ([0]).
+Defined.
+
+Definition G (P : IndPredS Σ__PA) : formula Σ__PA :=
+  match P with
+  | PA_Nat => (FOr
+          (@FIndPred Σ__PA PA_Even ([var_term 0]))
+          (@FIndPred Σ__PA PA_Odd ([var_term 0])))
+  | PA_Even => @FIndPred Σ__PA PA_Even ([var_term 0])
+  | PA_Odd => @FIndPred Σ__PA PA_Odd ([var_term 0])
+  end.
+
+
+Lemma provable_every_nat_is_even_or_odd :
+  @LKID Σ__PA Φ__PA ([] ⊢ [every_nat_is_even_or_odd]).
+Proof.
+  apply AllR; cbn.
+  apply ImpR.
+  apply IndL with z G.
+  - intros []; cbn; repeat constructor; inversion 1.
+  - intros [] H; try reflexivity.
+    now assert (@mutually_dependent Σ__PA Φ__PA PA_Nat PA_Nat) by (apply mutually_dependent_refl).
+  - intros pr HΦ Hmutdep Qs Gs Pi ty Fi; cbn in *.
+    apply mut_dep_Nat_only_Nat in Hmutdep.
+    inversion HΦ; subst; try discriminate; cbn in *.
+    + apply ImpR. apply NegL. apply Wk with nil (cons Even_zero nil).
+      * intros φ H; apply H.
+      * intros φ H. inversion H; try contradiction; now left.
+      * apply provable_Even_zero.
+    + unfold shift, funcomp in *.
+      apply ImpR. apply NegL. apply ImpL.
+      * apply NegR. apply Wk with
+          (cons (@FIndPred Σ__PA PA_Even ([var_term 4])) nil)
+          (cons (@FIndPred Σ__PA PA_Odd ([(@TFunc Σ__PA PA_succ ([var_term 4]))])) nil).
+        -- apply incl_refl.
+        -- intros φ Hin; inversion Hin; try contradiction.
+           right; now left.
+        -- pose proof (@IndR Σ__PA Φ__PA
+                         (cons (@FIndPred Σ__PA PA_Even ([var_term 4])) nil)
+                         nil PA_prod_O_succ (fun t => var_term 4) ID_O_succ) as H.
+           cbn in H. apply H; intuition.
+           inversion H1; subst. apply inj_pair2 in H1; subst; cbn.
+           apply AxExtended.
+      * apply Wk with
+          (cons (@FIndPred Σ__PA PA_Odd ([var_term 4])) nil)
+          (cons (@FIndPred Σ__PA PA_Even ([(@TFunc Σ__PA PA_succ ([var_term 4]))])) nil).
+        -- apply incl_refl.
+        -- intros φ Hin; left; now inversion Hin.
+        -- pose proof (@IndR Σ__PA Φ__PA
+                         (cons (@FIndPred Σ__PA PA_Odd ([var_term 4])) nil)
+                         nil PA_prod_E_succ (fun t => var_term 4) ID_E_succ) as H.
+           cbn in H. apply H; intuition.
+           inversion H1; subst; apply inj_pair2 in H1; subst; cbn.
+           apply AxExtended.
+  - cbn. apply AxExtended.
+Qed.
+
+
+
+
+Definition every_succ_of_Even_is_Odd : formula Σ__PA.
+  apply FAll.
+  apply FImp.
+  - apply FIndPred with PA_Even; cbn.
+    exact ([var_term 0]).
+  - apply FIndPred with PA_Odd; cbn.
+    refine (V.cons _ V.nil).
+    apply TFunc with PA_succ; cbn.
+    exact ([var_term 0]).
+Defined.
+
+Lemma provable_every_succ_of_Even_is_Odd :
+  @LKID Σ__PA Φ__PA ([] ⊢ [every_succ_of_Even_is_Odd]).
+Proof.
+  pose proof (@IndR Σ__PA Φ__PA (cons (@FIndPred Σ__PA PA_Even ([var_term 0])) nil) nil PA_prod_O_succ).
+  specialize (H (fun t => var_term t) ID_O_succ); cbn in H.
+  apply AllR; cbn. apply ImpR.
+  apply H; intuition.
+  inversion H1; subst.
+  apply inj_pair2 in H1; subst; cbn. apply AxExtended.
+Qed.
+
+Print PA_prod_E_succ.

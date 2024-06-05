@@ -77,7 +77,8 @@ Definition pred_ar__PA (s : Pred__PA) : nat :=
   | PA_eq => 2
   end.
 \end{minted}
-  \noindent Definiramo induktivne predikatne simbole \(N\), \(E\) i \(O\) koje ćemo
+  \noindent Definiramo induktivne predikatne simbole
+  \(\mathit{Nat}\), \(\mathit{Even}\) i \(\mathit{Odd}\) koje ćemo
   interpretirati redom kao predikate \enquote{biti prirodan broj}, \enquote{biti paran broj} te
   \enquote{biti neparan broj}.
 \begin{minted}{coq}
@@ -330,8 +331,22 @@ Defined.
 
 \begin{remark}
   U primjeru~\ref{ex:productions-Nat} vidimo alternativni način definiranja u Coqu.
-  Korisnik umjesto definiranja terma u Gallini ulazi u način dokazivanja te
+  Korisnik umjesto definiranja Gallininih terma ulazi u način dokazivanja te
   naredbom \texttt{refine} postepeno konstruira (\enquote{profinjuje}) rezultantni term.
+  Konačni rezultat možemo vidjeti naredbom \texttt{Print}.
+\begin{verbatim}
+Print PA_prod_N_succ.
+\end{verbatim}
+\begin{minted}[linenos=false]{coq}
+PA_prod_N_succ =
+{|
+  preds := Datatypes.nil;
+  indpreds := (PA_Nat; [var_term 0]) :: Datatypes.nil;
+  indcons := PA_Nat;
+  indargs := [TFunc PA_succ [var_term 0]]
+|}
+     : production
+\end{minted}
 \end{remark}
 
 \begin{example}\label{ex:productions-Even-Odd}
@@ -731,7 +746,10 @@ Inductive sequent : Set :=
 \end{definition}
 \noindent Sekventom \(\Gamma \vdash \Delta\) konceptualno tvrdimo da istinitost \textit{svake}
 tvrdnje u \(\Gamma\) povlači istinitost \textit{neke} tvrdnje u \(\Delta\).
-Kažemo da je sekventa \(\Gamma \vdash \Delta\) \textit{dokaziva}, ili da iz \(\Gamma\) postoji izvod za \(\Delta\), ako u sustavu \(\mathit{LKID}\) postoji \textit{dokaz} za \(\Gamma \vdash \Delta\). Pojam dokaza ćemo precizirati kasnije.
+Kažemo da je sekventa \(\Gamma \vdash \Delta\) \textit{dokaziva}, ili da iz \(\Gamma\) postoji izvod za \(\Delta\), ako u sustavu \(\mathit{LKID}\) postoji \textit{dokaz} za \(\Gamma \vdash \Delta\).
+Neformalno možemo reći da je dokaz sekvente \(\Gamma \vdash \Delta\) konačno stablo u kojem je sekventa \(\Gamma \vdash \Delta\) korijen
+te svaki čvor stabla slijedi iz svoje djece u skladu s pravilima izvoda sustava \(\mathit{LKID}\).
+Kasnije ćemo precizirati pojam dokaza.
 
 \begin{definition}
   Neka su \(P_{i}\) i \(P_{j}\) proizvoljni induktivni predikatni simboli.
@@ -996,43 +1014,165 @@ Lemma ExistL : forall Γ Δ φ,
 \end{minted}
 \end{example}
 
+Preostaje definicija \textbf{pravila za indukciju}, odnosno pravila za induktivne predikatne simbole.
+Prvo ćemo definirati lijevo pravilo koje odgovara indukciji,
+a zatim ćemo definirati desno pravilo koje odgovara rastavu po slučajevima.
+
+Neka je \(P_{j}\) proizvoljni induktivan predikatni simbol za koji definiramo lijevo pravilo indukcije.
+Svakom induktivnom predikatnom simbolu \(P_{i}\) dodjeljujemo
+proizvoljnu \(|P_{i}|\)-torku \textit{induktivnih varijabli} \(\mathbf{z}_{i}\) te
+proizvoljnu \textit{induktivnu hipotezu} \(G_{i}\) takvu da
+vrijedi \(G_{i} = P_{i}(\mathbf{z}_{i})\) ako \(P_{i}\) i \(P_{j}\) nisu međusobno zavisni.
+Sada lijevo pravilo indukcije za induktivan predikatni simbol \(P_{j}\) glasi:
+\begin{prooftree}
+  \AxiomC{\textit{male premise}}
+  \AxiomC{\( G_{j} [\mathbf{u} / \mathbf{z}_{i}], \Gamma  \vdash \Delta\)}
+  \RightLabel{\( \mathit{ (Ind P_{j}) } \)}
+  \BinaryInfC{\( P_{j} \mathbf{u}, \Gamma  \vdash \Delta \)}
+\end{prooftree}
+\noindent gdje sekventu \( G_{j} [\mathbf{u} / \mathbf{z}_{i}] , \Gamma  \vdash \Delta\) zovemo \textit{velikom premisom},
+a za svaku produkciju u skupu induktivnih definicija \(\Phi\) u čijoj se konkluziji javlja
+induktivni predikatni simbol \(P_{i}\) koji je međusobno zavisan sa simbolom \(P_{j}\), primjerice:
+\begin{prooftree}
+  \AxiomC{\(  Q_{1}\mathbf{u}_{1}  \ldots   Q_{n}\mathbf{u}_{n}  \)}
+  \AxiomC{\(  P_{i_{1}}\mathbf{v}_{i_{1}}  \ldots   P_{i_{m}}\mathbf{v}_{i_{m}}  \)}
+  \BinaryInfC{\(P_{i}\mathbf{t}\)}
+\end{prooftree}
+\noindent postoji \textit{mala premisa} oblika:
+\[
+  Q_{1} \mathbf{u}_{1}^{\uparrow k}, \ldots, Q_{n} \mathbf{u}_{n}^{\uparrow k},
+  G_{i_{1}}[ \mathbf{v}_{i_{1}}^{\uparrow k} / \mathbf{z}_{i_{1}} ], \ldots, G_{i_{m}}[ \mathbf{v}_{i_{m}}^{\uparrow k} / \mathbf{z}_{i_{m}} ],
+  \Gamma \vdash G_{i}[\mathbf{t}^{\uparrow k} / \mathbf{z}_{i}], \Delta
+\]
+\noindent gdje je \(k\) neki prirodan broj koji se ne javlja u listama formula \(\Gamma\) i \(\Delta\) te formuli \(P_{j}\mathbf{u}\),
+a s \(^{\uparrow k}\) označavamo supstituciju koja svaku varijablu \(n\) mijenja varijablom \(n + k\).
+
 \begin{minted}[firstnumber=31]{coq}
-  | IndL : forall Γ Δ (Pj : IndPredS Σ) (u : vec (term Σ) (indpred_ar Pj))
-             (z_i : forall P, vec var (indpred_ar P)) (* dodati pretpostavku forall P, NoDup (z_i P)? *)
-             (G_i : IndPredS Σ -> formula Σ)
-             (HG2 : forall Pi, ~mutually_dependent Pi Pj -> G_i Pi = FIndPred Pi (V.map var_term (z_i Pi))),
-      let maxΓ := max_fold (map some_var_not_in_formula Γ) in
-      let maxΔ := max_fold (map some_var_not_in_formula Δ) in
-      let maxP := some_var_not_in_formula (FIndPred Pj u) in
-      let shift_factor := max maxP (max maxΓ maxΔ) in
-      let Fj := subst_formula (finite_subst (z_i Pj) u) (G_i Pj) in
-      let minor_premises :=
-        (forall pr (Hdep : mutually_dependent (indcons pr) Pj),
-            let Qs := shift_formulas_by shift_factor (FPreds_from_preds (preds pr)) in
-            let Gs := map (fun '(P; args) =>
-                             let shifted_args := V.map (shift_term_by shift_factor) args in
-                             let σ := finite_subst (z_i P) (shifted_args) in
-                             let G := G_i P in
-                             subst_formula σ G)
-                        (indpreds pr) in
-            let Pi := indcons pr in
-            let ty := V.map (shift_term_by shift_factor) (indargs pr) in
-            let Fi := subst_formula (finite_subst (z_i Pi) ty) (G_i Pi) in
-            LKID (Qs ++ Gs ++ Γ ⊢ Fi :: Δ))
-      in
-      minor_premises ->
-      LKID (Fj :: Γ ⊢ Δ) ->
-      LKID (FIndPred Pj u :: Γ ⊢ Δ)
-  | IndR : forall Γ Δ pr σ,
-      Φ pr ->
-      (forall Q us, In (Q; us) (preds pr) ->
-               LKID (Γ ⊢ (FPred Q (V.map (subst_term σ) us) :: Δ))) ->
-      (forall P ts, In (P; ts) (indpreds pr) ->
-               LKID (Γ ⊢ (FIndPred P (V.map (subst_term σ) ts) :: Δ))) ->
-      LKID ( Γ ⊢ FIndPred (indcons pr) (V.map (subst_term σ) (indargs pr)) :: Δ).
+(* Induction rules. *)
+| IndL : forall Γ Δ
+           (Pj : IndPredS Σ) (u : vec _ (indpred_ar Pj))
+           (z_i : forall P, vec var (indpred_ar P))
+           (z_i_nodup : forall P, VecNoDup (z_i P))
+           (G_i : IndPredS Σ -> formula Σ)
+           (HG2 : forall Pi, ~mutually_dependent Pi Pj ->
+                        G_i Pi = FIndPred
+                                   Pi
+                                   (V.map var_term (z_i Pi))),
+    let maxΓ := max_fold (map some_var_not_in_formula Γ) in
+    let maxΔ := max_fold (map some_var_not_in_formula Δ) in
+    let maxP := some_var_not_in_formula (FIndPred Pj u) in
+    let shift_factor := max maxP (max maxΓ maxΔ) in
+    let Fj := subst_formula
+                (finite_subst (z_i Pj) u)
+                (G_i Pj) in
+    let minor_premises :=
+      (forall pr (HΦ : Φ pr) (Hdep : mutually_dependent (indcons pr) Pj),
+          let Qs := shift_formulas_by
+                      shift_factor
+                      (FPreds_from_preds (preds pr)) in
+          let Gs := map (fun '(P; args) =>
+                           let shifted_args :=
+                             V.map
+                               (shift_term_by shift_factor)
+                               args in
+                           let σ :=
+                             finite_subst
+                               (z_i P)
+                               (shifted_args) in
+                           let G := G_i P in
+                           subst_formula σ G)
+                      (indpreds pr) in
+          let Pi := indcons pr in
+          let ty := V.map
+                      (shift_term_by shift_factor)
+                      (indargs pr) in
+          let Fi := subst_formula
+                      (finite_subst (z_i Pi) ty)
+                      (G_i Pi) in
+          LKID (Qs ++ Gs ++ Γ ⊢ Fi :: Δ))
+    in
+    minor_premises ->
+    LKID (Fj :: Γ ⊢ Δ) ->
+    LKID (FIndPred Pj u :: Γ ⊢ Δ)
 \end{minted}
 
+Ilustrirajmo lijevo pravilo za induktivne predikatne simbole primjerima u Peanovoj aritmetici.
+Kako se induktivna pravila sustava \(\mathit{LKID}\) odnose na proizvoljan skup induktivnih definicija \(\Phi\),
+označimo s \(\mathit{LKID}_{\mathit{PA}}\)  sustav koji se odnosi na skup induktivnih defincija \(\Phi_{\mathit{PA}}\).
+\begin{example}
+  Za induktivni predikatni simbol \(\mathit{Nat}\)
+  lijevo pravilo za indukciju u sustavu \(\mathit{LKID}_{\mathit{PA}}\) glasi:
+  \begin{prooftree}
+    \AxiomC{\( \Gamma \vdash G(o), \Delta \)}
+    \AxiomC{\( G(x), \Gamma \vdash G(s(x)), \Delta \)}
+    \AxiomC{\( G(t), \Gamma \vdash \Delta \)}
+    \RightLabel{\( \mathit{(NatIndL)} \)}
+    \TrinaryInfC{\( \mathit{Nat}(t), \Gamma \vdash \Delta \)}
+  \end{prooftree}
+  \noindent gdje je G induktivna hipoteza vezana uz predikatni simbol \(\mathit{Nat}\),
+  a \(x\) je varijabla koja se ne javlja u \(\Gamma\), \(\Delta\) ili \(\mathit{Nat}(t)\).
+\end{example}
 
+\begin{example}
+  Tvrdnja \enquote{svaki prirodan broj je paran ili neparan} je dokaziva u sustavu \(\mathit{LKID}_{\mathit{PA}}\).
+  \misao{TODO: napraviti prooftree ovog dokaza.}
+\begin{minted}{coq}
+Lemma provable_every_nat_is_even_or_odd :
+  @LKID Σ__PA Φ__PA ([] ⊢ [every_nat_is_even_or_odd]).
+\end{minted}
+\end{example}
+
+\begin{example}
+  TODO Induktivno pravilo za Even.
+\end{example}
+
+Konačno, neka je \(pr\) proizvoljna produkcija za koju definiramo desno pravilo indukcije.
+Možemo pretpostaviti da je \(pr\) idućeg oblika:
+\begin{prooftree}
+  \AxiomC{\(  Q_{1}\mathbf{u}_{1}  \ldots   Q_{n}\mathbf{u}_{n}  \)}
+  \AxiomC{\(  P_{1}\mathbf{v}_{1}  \ldots   P_{m}\mathbf{v}_{m}  \)}
+  \BinaryInfC{\(P\mathbf{t}\)}
+\end{prooftree}
+\noindent Kao što smo spomenuli, desno pravilo indukcije odgovara rastavu po slučajevima (premisama produkcije),
+a za produkciju \(pr\) glasi:
+\begin{prooftree}
+  \AxiomC{\( \Gamma \vdash Q_{1} \mathbf{u}_{1}[\sigma], \Delta \quad \ldots \quad \Gamma \vdash Q_{n}\mathbf{u}_{n}[\sigma]\)}
+  \AxiomC{\( \Gamma \vdash P_{1} \mathbf{v}_{1}[\sigma], \Delta \quad \ldots \quad \Gamma \vdash P_{m} \mathbf{v}_{m}[\sigma] \)}
+  \RightLabel{\( \mathit{ (prIndR) }\)}
+  \BinaryInfC{\( \Gamma \vdash P \mathbf{t}[\sigma] \)}
+\end{prooftree}
+\begin{minted}[firstnumber=58]{coq}
+| IndR : forall Γ Δ pr σ,
+    Φ pr ->
+    (forall Q us,
+        In (Q; us) (preds pr) ->
+        LKID (Γ ⊢ (FPred Q (V.map (subst_term σ) us) :: Δ))) ->
+    (forall P ts,
+        In (P; ts) (indpreds pr) ->
+        LKID (Γ ⊢ (FIndPred P (V.map (subst_term σ) ts) :: Δ))) ->
+    LKID ( Γ ⊢ FIndPred
+             (indcons pr)
+             (V.map (subst_term σ) (indargs pr))
+             :: Δ).
+\end{minted}
+
+Valja primijetiti suptilnu razliku između pravila za indukciju;
+lijevo pravilo se definira za pojedini \textit{induktivni predikatni simbol},
+dok se desno pravilo definira za pojedinu \textit{produkciju}.
+
+\begin{example}
+  Desno pravilo za produkciju \texttt{PA\_prod\_E\_succ} glasi:
+  \begin{prooftree}
+    \AxiomC{\( \Gamma \vdash \mathit{Odd}(x)[\sigma], \Delta \)}
+    \UnaryInfC{\( \Gamma \vdash \mathit{Even}(s(x))[\sigma], \Delta \)}
+  \end{prooftree}
+  \noindent gdje je \(x\) proizvoljna varijabla, a \(\sigma\) proizvoljna supstitucija.
+\end{example}
+
+Prikazali smo sva pravila izvoda sustava \(\mathit{LKID}\) te konačno možemo definirati dokaz.
+Za proizvoljnu sekventu \(\Gamma \vdash \Delta\), njen \textbf{dokaz} je stanovnik tipa \texttt{LKID(\(\Gamma \vdash \Delta\))}.
+Neformalni pojam konačnog stabla formaliziran je induktivnim tipom \texttt{LKID},
+dok njegovi konstruktori formaliziraju odgovarajuća pravila izvoda.
 
 \section{Adekvatnost}\label{sec:adekvatnost}
 Lokalne adekvatnosti za pravila izvoda. Glavni teorem.
