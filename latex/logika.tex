@@ -738,7 +738,8 @@ Ovaj dokazni sustav temelji se na Gentzenovu računu sekvenata, a proširen je l
 Prije no što definiramo \(\mathit{LKID}\), potrebno je definirati pojam sekvente i međusobne zavisnosti induktivnih predikata.
 
 \begin{definition}
-  Neka su \(\Gamma\) i \(\Delta\) proizvoljne liste formula. Tada je \textit{sekventa} uređeni par \((\Gamma,\Delta)\), a označavamo ju s \(\Gamma \vdash \Delta\).
+  Neka su \(\Gamma\) i \(\Delta\) proizvoljne liste formula.
+  Tada je \textit{sekventa} uređeni par \((\Gamma,\Delta)\), a označavamo ju s \(\Gamma \vdash \Delta\).
 \begin{minted}{coq}
 Inductive sequent : Set :=
 | mkSeq (Γ Δ : list (formula Σ)).
@@ -815,8 +816,8 @@ ali je iz originalnih pravila izvedivo.
 \begin{minted}{coq}
 Inductive LKID : sequent -> Prop := 
 \end{minted}
-
-\textbf{Strukturalna} su \textbf{pravila} prikazana na slici~\ref{fig:lkid-structural}, a služe baratanju strukturom sekvente.
+\subsection{Strukturalna pravila}
+Strukturalna su pravila prikazana na slici~\ref{fig:lkid-structural}, a služe baratanju strukturom sekvente.
 Iako je sekventa implementirana kao par listi formula, te liste se ponašaju kao skupovi u strukturalnim pravilima
 jer za provjeru pripadnosti koristimo Coqov predikat \texttt{In}.
 Posljedično, pravilo slabljenja \(\mathit{Wk}\) sa sobom povlači pravila permutacije i kontrakcije.
@@ -897,8 +898,8 @@ Lemma Perm : forall Γ' Δ' Γ Δ,
 \end{minted}
 \end{example}
 
-
-\textbf{Propozicijska} su \textbf{pravila} prikazana na slici~\ref{fig:lkid-propositional}, a služe rasuđivanju s implikacijama i negacijama.
+\subsection{Propozicijska pravila}
+Propozicijska su pravila prikazana na slici~\ref{fig:lkid-propositional}, a služe rasuđivanju s implikacijama i negacijama.
 Ova su pravila identična u sustavima \(\mathit{LK}\) i \(\mathit{LKID}\).
 \begin{figure}[!htb]
   \centering
@@ -967,7 +968,8 @@ Lemma OrL : forall Γ Δ φ ψ,
 \end{minted}
 \end{example}
 
-\textbf{Pravila za kvantifikatore} prikazana su na slici~\ref{fig:lkid-quantificational}, a odnose se na univerzalnu kvantifikaciju.
+\subsection{Pravila za kvantifikatore}
+Pravila za kvantifikatore prikazana su na slici~\ref{fig:lkid-quantificational}, a odnose se na univerzalnu kvantifikaciju.
 Ova se pravila razlikuju od analognih u sustavu \(\mathit{LK}\) zbog korištenja de Bruijnovih indeksa kod kvantifikacije.
 U lijevom pravilu koristimo supstituciju \(t \cdot \sigma_{\mathit{id}}\) u formuli \(\varphi\), gdje je \(\sigma_{\mathit{id}}\) supstitucija identiteta,
 kako bismo iskazali da se term \(t\) javlja na mjestu neke varijable \(x\).
@@ -1014,11 +1016,12 @@ Lemma ExistL : forall Γ Δ φ,
 \end{minted}
 \end{example}
 
-Preostaje definicija \textbf{pravila za indukciju}, odnosno pravila za induktivne predikatne simbole.
+\subsection{Pravila za indukciju}
+Preostaje definicija pravila za indukciju, odnosno pravila za induktivne predikatne simbole.
 Prvo ćemo definirati lijevo pravilo koje odgovara indukciji,
 a zatim ćemo definirati desno pravilo koje odgovara rastavu po slučajevima.
 
-Neka je \(P_{j}\) proizvoljni induktivan predikatni simbol za koji definiramo lijevo pravilo indukcije.
+Neka je \(P_{j}\) proizvoljni induktivan predikatni simbol za koji definiramo \textbf{lijevo pravilo} indukcije.
 Svakom induktivnom predikatnom simbolu \(P_{i}\) dodjeljujemo
 proizvoljnu \(|P_{i}|\)-torku \textit{induktivnih varijabli} \(\mathbf{z}_{i}\) te
 proizvoljnu \textit{induktivnu hipotezu} \(G_{i}\) takvu da
@@ -1109,24 +1112,27 @@ označimo s \(\mathit{LKID}_{\mathit{PA}}\)  sustav koji se odnosi na skup induk
     \RightLabel{\( \mathit{(NatIndL)} \)}
     \TrinaryInfC{\( \mathit{Nat}(t), \Gamma \vdash \Delta \)}
   \end{prooftree}
-  \noindent gdje je G induktivna hipoteza vezana uz predikatni simbol \(\mathit{Nat}\),
+  \noindent gdje je G induktivna hipoteza vezana uz induktivni predikatni simbol \(\mathit{Nat}\),
   a \(x\) je varijabla koja se ne javlja u \(\Gamma\), \(\Delta\) ili \(\mathit{Nat}(t)\).
 \end{example}
 
 \begin{example}
-  Tvrdnja \enquote{svaki prirodan broj je paran ili neparan} je dokaziva u sustavu \(\mathit{LKID}_{\mathit{PA}}\).
-  \misao{TODO: napraviti prooftree ovog dokaza.}
-\begin{minted}{coq}
-Lemma provable_every_nat_is_even_or_odd :
-  @LKID Σ__PA Φ__PA ([] ⊢ [every_nat_is_even_or_odd]).
-\end{minted}
+  Za induktivni predikatni simbol \(\mathit{Even}\)
+  lijevo pravilo za indukciju u sustavu \(\mathit{LKID}_{\mathit{PA}}\) glasi:
+  \begin{small}
+    \begin{prooftree}
+      \AxiomC{\( \Gamma \vdash G_{E}(o), \Delta \quad \Gamma, G_{E}(x) \vdash G_{O}(s(x)), \Delta \quad \Gamma, G_{O}(x) \vdash G_{E}(s(x)), \Delta \)}
+      \AxiomC{\( \Gamma, G_{E}(t) \vdash \Delta \)}
+      \RightLabel{\(\mathit{EvenIndL}\)}
+      \BinaryInfC{\( \Gamma, \mathit{Even}(t) \vdash \Delta \)}
+    \end{prooftree}
+  \end{small}
+  \noindent gdje su \(G_{E}\) i \(G_{O}\) induktivne hipoteze vezane uz
+  induktivne predikatne simbole \(\mathit{Even}\) i \(\mathit{Odd}\),
+  a \(x\) je varijabla koja se ne javlja u \(\Gamma\), \(\Delta\) ili \(\mathit{Even}(t)\).
 \end{example}
 
-\begin{example}
-  TODO Induktivno pravilo za Even.
-\end{example}
-
-Konačno, neka je \(pr\) proizvoljna produkcija za koju definiramo desno pravilo indukcije.
+Konačno, neka je \(pr\) proizvoljna produkcija za koju definiramo \textbf{desno pravilo} indukcije.
 Možemo pretpostaviti da je \(pr\) idućeg oblika:
 \begin{prooftree}
   \AxiomC{\(  Q_{1}\mathbf{u}_{1}  \ldots   Q_{n}\mathbf{u}_{n}  \)}
@@ -1156,10 +1162,6 @@ a za produkciju \(pr\) glasi:
              :: Δ).
 \end{minted}
 
-Valja primijetiti suptilnu razliku između pravila za indukciju;
-lijevo pravilo se definira za pojedini \textit{induktivni predikatni simbol},
-dok se desno pravilo definira za pojedinu \textit{produkciju}.
-
 \begin{example}
   Desno pravilo za produkciju \texttt{PA\_prod\_E\_succ} glasi:
   \begin{prooftree}
@@ -1167,12 +1169,120 @@ dok se desno pravilo definira za pojedinu \textit{produkciju}.
     \UnaryInfC{\( \Gamma \vdash \mathit{Even}(s(x))[\sigma], \Delta \)}
   \end{prooftree}
   \noindent gdje je \(x\) proizvoljna varijabla, a \(\sigma\) proizvoljna supstitucija.
+  Supstitucijom \(\sigma\) kažemo da u produkcijama imena varijabli nisu bitna,
+  već samo njihov redoslijed.
 \end{example}
 
+Ističemo suptilnu razliku između pravila za indukciju;
+lijevo pravilo se definira za pojedini \textit{induktivni predikatni simbol},
+dok se desno pravilo definira za pojedinu \textit{produkciju}.
+
+\subsection{Dokaz i teorem}
 Prikazali smo sva pravila izvoda sustava \(\mathit{LKID}\) te konačno možemo definirati dokaz.
 Za proizvoljnu sekventu \(\Gamma \vdash \Delta\), njen \textbf{dokaz} je stanovnik tipa \texttt{LKID(\(\Gamma \vdash \Delta\))}.
+Za formulu \(\varphi\) kažemo da je \textbf{teorem} sustava \(\mathit{LKID}\) te
+pišemo \(\vdash \varphi\) ako postoji dokaz sekvente \( () \vdash (\varphi)\).
 Neformalni pojam konačnog stabla formaliziran je induktivnim tipom \texttt{LKID},
 dok njegovi konstruktori formaliziraju odgovarajuća pravila izvoda.
+
+\begin{example}
+  Formula \(\forall x, \mathit{Even}(x) \rightarrow \mathit{Even}(ssx)\) je dokaziva u sustavu \(\mathit{LKID}_{\mathit{PA}}\).
+  Neformalni dokaz prikazujemo idućim stablom, a radi preglednosti
+  pišemo \(Et\) umjesto \(\mathit{Even}(t)\) te \(Ot\) umjesto \(\mathit{Odd}(t)\).
+  \begin{prooftree}
+    % \AxiomC{}
+    % \RightLabel{\( \mathit{(Ax)} \)}
+    % \UnaryInfC{\( E(x) \vdash E(x), E(ssx) \)}
+    % \RightLabel{\( \mathit{(} \mathtt{PA\_prod\_O\_succ} \mathit{IndR)} \)}
+    % \UnaryInfC{\( E(x) \vdash O(sx), E(ssx) \)}
+    % \AxiomC{}
+    % \RightLabel{\( \mathit{(Ax)} \)}
+    % \UnaryInfC{\( E(x), O(sx) \vdash O(sx) \)}
+    % \RightLabel{\( \mathit{(} \mathtt{PA\_prod\_E\_succ}\mathit{IndR)} \)}
+    % \UnaryInfC{\( E(x), O(sx) \vdash E(ssx) \)}
+    % \RightLabel{\( \mathit{(Cut)}\)}
+    % \BinaryInfC{\( E(x) \vdash E(ssx) \)}
+    % \RightLabel{\( \mathit{(ImpR)} \)}
+    % \UnaryInfC{\(  \vdash E(x) \rightarrow E(ssx)\)}
+    % \RightLabel{\( \mathit{(AllR)} \)}
+    % \UnaryInfC{\( \vdash \forall x, E(x) \rightarrow E(ssx) \)}
+    \AxiomC{}
+    \RightLabel{\( \mathit{(Ax)} \)}
+    \UnaryInfC{\( Ex \vdash Ex, Essx \)}
+    \RightLabel{\( \mathit{(} \mathtt{PA\_prod\_O\_succ} \mathit{IndR)} \)}
+    \UnaryInfC{\( Ex \vdash Osx, Essx \)}
+    \AxiomC{}
+    \RightLabel{\( \mathit{(Ax)} \)}
+    \UnaryInfC{\( Ex, Osx \vdash Osx \)}
+    \RightLabel{\( \mathit{(} \mathtt{PA\_prod\_E\_succ}\mathit{IndR)} \)}
+    \UnaryInfC{\( Ex, Osx \vdash Essx \)}
+    \RightLabel{\( \mathit{(Cut)} \)}
+    \BinaryInfC{\( Ex \vdash Essx \)}
+    \RightLabel{\( \mathit{(ImpR)} \)}
+    \UnaryInfC{\(  \vdash Ex \rightarrow Essx \)}
+    \RightLabel{\( \mathit{(AllR)} \)}
+    \UnaryInfC{\( \vdash \forall x, Ex \rightarrow Essx \)}
+  \end{prooftree}
+\begin{minted}{coq}
+Lemma provable_Even_succ_succ_Even :
+    @LKID _ Φ__PA ([] ⊢ [Even_succ_succ_Even]).
+\end{minted}
+\end{example}
+
+\begin{example}
+  Formula \(\forall x, \mathit{Nat}(x) \rightarrow \mathit{Even}(x) \lor \mathit{Odd}(x)\) je dokaziva u sustavu \(\mathit{LKID}_{\mathit{PA}}\).
+  Neformalni dokaz prikazujemo idućim stablom, a radi preglednosti
+  pišemo \(Nt\), \(Et\) i \(Ot\) redom umjesto \(\mathit{Nat}(t)\), \(\mathit{Even}(t)\) i \(\mathit{Odd}(t)\).
+  \begin{scriptsize}
+    \begin{prooftree}
+      \AxiomC{}
+      \RightLabel{\(\mathit{(1)}\)}
+      \UnaryInfC{\( \vdash Eo \)}
+      \RightLabel{\(\mathit{(Wk)}\)}
+      \UnaryInfC{\( \vdash Eo, Ex \lor Ox\)}
+      \RightLabel{\(\mathit{(OrR_{1})}\)}
+      \UnaryInfC{\(\vdash Eo \lor Oo, Ex \lor Ox\)}
+      \AxiomC{}
+      \RightLabel{\(\mathit{(Ax)}\)}
+      \UnaryInfC{\( Ey \vdash Ey\)}
+      \RightLabel{\(\mathit{(2)}\)}
+      \UnaryInfC{\(Ey \vdash Osy\)}
+      \RightLabel{\(\mathit{(OrR_{2})}\)}
+      \UnaryInfC{\( Ey \vdash Esy \lor Osy \)}
+      \AxiomC{}
+      \RightLabel{\(\mathit{(Ax)}\)}
+      \UnaryInfC{\(Oy \vdash Oy\)}
+      \RightLabel{\(\mathit{(3)}\)}
+      \UnaryInfC{\(Oy \vdash Esy\)}
+      \RightLabel{\(\mathit{(OrR_{1})}\)}
+      \UnaryInfC{\(Oy \vdash Esy \lor Osy\)}
+      \RightLabel{\(\mathit{(OrL)}\)}
+      \BinaryInfC{\( Ey \lor Oy \vdash Esy \lor Osy \)}
+      \RightLabel{\(\mathit{(Wk)}\)}
+      \UnaryInfC{\( Ey \lor Oy \vdash Esy \lor Osy, Ex \lor Ox \)}
+      \AxiomC{}
+      \RightLabel{\(\mathit{(Ax)}\)}
+      \UnaryInfC{\( Ex \lor Ox \vdash Ex \lor Ox\)}
+      \RightLabel{\(\mathit{(NatIndL)}\)}
+      \TrinaryInfC{\( Nx \vdash Ex \lor Ox \)}
+      \RightLabel{\( \mathit{(ImpR)}\)}
+      \UnaryInfC{\( Nx \rightarrow Ex \lor Ox \)}
+      \RightLabel{\(\mathit{(AllR)}\)}
+      \UnaryInfC{\( \vdash \forall x, Nx \rightarrow Ex \lor Ox \)}
+    \end{prooftree}
+  \end{scriptsize}
+  \noindent Ovdje je induktivna hipoteza formula \(Ex \lor Ox\).
+  Valja primijetiti da smo u dokazu koristili i desna pravila za indukciju za produkcije:
+  \begin{enumerate}[label={(\arabic*)}]
+  \item \texttt{PA\_prod\_E\_zero},
+  \item \texttt{PA\_prod\_O\_succ} i
+  \item \texttt{PA\_prod\_E\_succ}.
+  \end{enumerate}
+\begin{minted}{coq}
+Lemma provable_every_nat_is_even_or_odd :
+  @LKID Σ__PA Φ__PA ([] ⊢ [every_nat_is_even_or_odd]).
+\end{minted}
+\end{example}
 
 \section{Adekvatnost}\label{sec:adekvatnost}
 Lokalne adekvatnosti za pravila izvoda. Glavni teorem.

@@ -468,38 +468,33 @@ Proof.
   - intros pr HΦ Hmutdep Qs Gs Pi ty Fi; cbn in *.
     apply mut_dep_Nat_only_Nat in Hmutdep.
     inversion HΦ; subst; try discriminate; cbn in *.
-    + apply ImpR. apply NegL. apply Wk with nil (cons Even_zero nil).
-      * intros φ H; apply H.
-      * intros φ H. inversion H; try contradiction; now left.
-      * apply provable_Even_zero.
+    + apply OrR1. apply Wk with nil (cons Even_zero nil); intuition.
+      apply provable_Even_zero.
     + unfold shift, funcomp in *.
-      apply ImpR. apply NegL. apply ImpL.
-      * apply NegR. apply Wk with
-          (cons (@FIndPred Σ__PA PA_Even ([var_term 4])) nil)
-          (cons (@FIndPred Σ__PA PA_Odd ([(@TFunc Σ__PA PA_succ ([var_term 4]))])) nil).
-        -- apply incl_refl.
-        -- intros φ Hin; inversion Hin; try contradiction.
-           right; now left.
-        -- pose proof (@IndR Σ__PA Φ__PA
-                         (cons (@FIndPred Σ__PA PA_Even ([var_term 4])) nil)
-                         nil PA_prod_O_succ (fun t => var_term 4) ID_O_succ) as H.
-           cbn in H. apply H; intuition.
-           inversion H1; subst. apply inj_pair2 in H1; subst; cbn.
-           apply AxExtended.
-      * apply Wk with
-          (cons (@FIndPred Σ__PA PA_Odd ([var_term 4])) nil)
-          (cons (@FIndPred Σ__PA PA_Even ([(@TFunc Σ__PA PA_succ ([var_term 4]))])) nil).
-        -- apply incl_refl.
-        -- intros φ Hin; left; now inversion Hin.
-        -- pose proof (@IndR Σ__PA Φ__PA
-                         (cons (@FIndPred Σ__PA PA_Odd ([var_term 4])) nil)
-                         nil PA_prod_E_succ (fun t => var_term 4) ID_E_succ) as H.
-           cbn in H. apply H; intuition.
-           inversion H1; subst; apply inj_pair2 in H1; subst; cbn.
-           apply AxExtended.
-  - cbn. apply AxExtended.
+      apply Wk with
+        (cons (@FOr Σ__PA
+            (@FIndPred Σ__PA PA_Even ([var_term 4]))
+            (@FIndPred Σ__PA PA_Odd ([var_term 4]))) nil)
+        (cons (@FOr Σ__PA
+            (@FIndPred Σ__PA PA_Even ([(@TFunc Σ__PA PA_succ ([var_term 4]))]))
+            (@FIndPred Σ__PA PA_Odd ([(@TFunc Σ__PA PA_succ ([var_term 4]))]))) nil); intuition.
+      apply OrL.
+      * apply OrR2.
+        pose proof (@IndR Σ__PA Φ__PA
+                      (cons (@FIndPred Σ__PA PA_Even ([var_term 4])) nil)
+                      nil PA_prod_O_succ (fun t => var_term 4) ID_O_succ) as H.
+        cbn in H; apply H; intuition.
+        inversion H1; subst; apply inj_pair2 in H1; subst; cbn.
+        apply AxExtended.
+      * apply OrR1.
+        pose proof (@IndR Σ__PA Φ__PA
+                      (cons (@FIndPred Σ__PA PA_Odd ([var_term 4])) nil)
+                      nil PA_prod_E_succ (fun t => var_term 4) ID_E_succ) as H.
+        cbn in H. apply H; intuition.
+        inversion H1; subst; apply inj_pair2 in H1; subst; cbn.
+        apply AxExtended.
+  - cbn; apply AxExtended.
 Qed.
-
 
 
 
@@ -514,10 +509,11 @@ Definition every_succ_of_Even_is_Odd : formula Σ__PA.
     exact ([var_term 0]).
 Defined.
 
-Lemma provable_every_succ_of_Even_is_Odd :
-  @LKID Σ__PA Φ__PA ([] ⊢ [every_succ_of_Even_is_Odd]).
+Lemma provable_every_succ_of_Even_is_Odd : forall Γ Δ,
+  @LKID Σ__PA Φ__PA (Γ ⊢ (every_succ_of_Even_is_Odd :: Δ)).
 Proof.
-  pose proof (@IndR Σ__PA Φ__PA (cons (@FIndPred Σ__PA PA_Even ([var_term 0])) nil) nil PA_prod_O_succ).
+  intros Γ Δ.
+  pose proof (@IndR Σ__PA Φ__PA (cons (@FIndPred Σ__PA PA_Even ([var_term 0])) (shift_formulas Γ)) (shift_formulas Δ) PA_prod_O_succ).
   specialize (H (fun t => var_term t) ID_O_succ); cbn in H.
   apply AllR; cbn. apply ImpR.
   apply H; intuition.
@@ -525,4 +521,35 @@ Proof.
   apply inj_pair2 in H1; subst; cbn. apply AxExtended.
 Qed.
 
-Print PA_prod_E_succ.
+Definition Even_succ_succ_Even : formula Σ__PA.
+  apply FAll; apply FImp.
+  - apply FIndPred with PA_Even; cbn.
+    exact ([var_term 0]).
+  - apply FIndPred with PA_Even; cbn.
+    refine ([_]).
+    apply TFunc with PA_succ; cbn.
+    refine ([_]).
+    apply TFunc with PA_succ; cbn.
+    exact ([var_term 0]).
+Defined.
+
+Lemma provable_Even_succ_succ_Even :
+    @LKID _ Φ__PA ([] ⊢ [Even_succ_succ_Even]).
+Proof.
+  apply AllR. apply ImpR.
+  apply Cut with (@FIndPred Σ__PA PA_Odd ([(@TFunc Σ__PA PA_succ ([var_term 0]))])).
+  - pose proof (@IndR Σ__PA Φ__PA
+                  ([(@FIndPred Σ__PA PA_Even ([var_term 0]))])
+                  ([(@FIndPred Σ__PA PA_Even
+                      ([(@TFunc Σ__PA PA_succ ([(@TFunc Σ__PA PA_succ ([var_term 0]))]))]))])
+                  PA_prod_O_succ (fun x => var_term x) ID_O_succ) as H1; cbn in *.
+    apply H1; intuition. inversion H0; subst; apply inj_pair2 in H0; subst; cbn in *.
+    apply AxExtended.
+  - pose proof (@IndR _ Φ__PA
+                  ([(@FIndPred Σ__PA PA_Odd ([(@TFunc Σ__PA PA_succ ([var_term 0]))]));
+                  (@FIndPred Σ__PA PA_Even ([var_term 0]))])
+                  nil
+                  PA_prod_E_succ (fun x => (@TFunc Σ__PA PA_succ ([var_term 0]))) ID_E_succ); cbn in *.
+    apply H; intuition. inversion H1; subst; apply inj_pair2 in H1; subst; cbn.
+    apply AxExtended.
+Qed.
