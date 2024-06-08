@@ -1272,7 +1272,7 @@ Lemma provable_Even_succ_succ_Even :
     \end{prooftree}
   \end{scriptsize}
   \noindent Ovdje je induktivna hipoteza formula \(Ex \lor Ox\).
-  Valja primijetiti da smo u dokazu koristili i desna pravila za indukciju za produkcije:
+  Valja primijetiti da smo u dokazu koristili i desna pravila indukcije za produkcije:
   \begin{enumerate}[label={(\arabic*)}]
   \item \texttt{PA\_prod\_E\_zero},
   \item \texttt{PA\_prod\_O\_succ} i
@@ -1285,7 +1285,53 @@ Lemma provable_every_nat_is_even_or_odd :
 \end{example}
 
 \section{Adekvatnost}\label{sec:adekvatnost}
-Lokalne adekvatnosti za pravila izvoda. Glavni teorem.
+Za dokazivače teorema nužno je da dokazivost formule povlači njenu istinitost ---
+u~\ref{chap:coq} poglavlju objasnili smo zašto.
+Ovo svojstvo dokaznosg sustava naziva se \textit{adekvatnost},
+a ovdje ćemo ju prikazati na primjeru sustava \(\mathit{LKID}\).
+Za istinitost ćemo promatrati samo strukture koje su standardni modeli
+jer u takvima interpretacije induktivnih predikatnih simbola imaju smisla.
+
+\begin{definition}
+  Kažemo da je sekventa \(\Gamma \vdash \Delta\) \textit{istinita} i pišemo \(\Gamma \VDash \Delta\) ako i samo ako
+  za svaki standardni model \(M\) i njegovu okolinu \(\rho\) vrijedi:
+  \[
+    (\forall \varphi, \varphi \in \Gamma \rightarrow \rho \vDash \varphi) \rightarrow \exists \psi, \psi \in \Delta \land \rho \vDash \psi,
+  \]
+  \noindent odnosno istinitost svake formule u \(\Gamma\) povlači istinitost neke formule u \(\Delta\),
+  u skladu s intuitivnim shvaćanjem sekventi.
+\begin{minted}{coq}
+Definition Sat_sequent (s : sequent) : Prop :=
+  let '(Γ ⊢ Δ) := s in            
+  forall (M : structure Σ), standard_model Σ Φ M -> forall (ρ : env M),
+      (forall φ, In φ Γ -> ρ ⊨ φ) -> exists ψ, In ψ Δ /\ ρ ⊨ ψ.
+\end{minted}
+\end{definition}
+
+Kažemo da vrijedi \textit{lokalna adekvatnost} za pravilo izvoda
+ako istinitost premisa (a posebno i sekvenata u premisama) povlači istinitost konkluzije (odnosno sekvente u konkluziji).
+Lokalna adekvatnost kaže da se istinitost čuva kod primjena pravila zaključivanja.
+
+\begin{example}
+  Za pravilo \(\mathit{Ax}\) vrijedi lokalna adekvatnost,
+  to jest ako u listama formula \(\Gamma\) i \(\Delta\) postoji neka zajednička formula \(\varphi\),
+  onda vrijedi \(\Gamma \VDash \Delta\). Tada je \textit{svjedok istinitosti} u \(\Delta\) upravo formula \(\varphi\).
+\begin{minted}{coq}
+Lemma LS_Ax : forall Γ Δ φ, In φ Γ -> In φ Δ -> Γ ⊫ Δ.
+\end{minted}
+\end{example}
+
+Ako za sva pravila izvoda vrijedi lokalna adekvatnost,
+indukcijom po strukturi dokaza slijedi i (globalna) adekvatnost.
+Glavni cilj ovog poglavlja bio je dokazati lokalne adekvatnosti svih pravila sustava \(\mathit{LKID}\).
+Cilj nije postignut samo za lijevo pravilo indukcije.
+
+\begin{theorem}
+  Za pravila izvoda sustava \(\mathit{LKID}\) osim \(\mathit{IndL}\) vrijedi lokalna adekvatnost.
+  Nadalje, ako je sekventa \(\Gamma \vdash \Delta\) dokaziva bez primjene pravila \(\mathit{IndL}\), onda je ona istinita.
+\end{theorem}
+
+\misao{Ako ne uspijem dokazati lokalnu adekvatnost za IndL, onda ću ostaviti ovaj tekst.}
 
 %%% Local Variables:
 %%% mode: LaTeX

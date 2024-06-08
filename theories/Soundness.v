@@ -3,37 +3,26 @@ From Coq Require Import Logic.Classical.
 
 Notation "Γ ⊢ Δ" := (mkSeq Γ Δ) (at level 61).
 
-Definition Sat_sequent 
-  {Σ} (M : structure Σ) (ρ : env M)
-  (s : sequent)
-  : Prop :=
-  match s with
-  | mkSeq Γ Δ => (forall φ, In φ Γ -> Sat ρ φ) -> exists ψ, In ψ Δ /\ Sat ρ ψ
-  end.
-  
 Section soundness.
   Variable Σ : signature.
   Variable Φ : @IndDefSet Σ.
 
-  Notation "Γ '⊫' Δ" := (forall (M : structure Σ) (ρ : env M), @Sat_sequent _ M ρ (mkSeq Γ Δ))
-                          (no associativity, at level 10).
+  Definition Sat_sequent (s : sequent) : Prop :=
+    let '(Γ ⊢ Δ) := s in            
+    forall (M : structure Σ), standard_model Σ Φ M -> forall (ρ : env M),
+        (forall φ, In φ Γ -> ρ ⊨ φ) -> exists ψ, In ψ Δ /\ ρ ⊨ ψ.
 
-  Notation "Γ '⊫S' Δ" := (forall (M : structure Σ), standard_model Σ Φ M -> forall (ρ : env M), @Sat_sequent _ M ρ (mkSeq Γ Δ))
+  Notation "Γ '⊫' Δ" := (Sat_sequent (mkSeq Γ Δ))
                            (no associativity, at level 10).
 
-  Lemma Tarski_implies_Standard : forall Γ Δ, Γ ⊫ Δ -> Γ ⊫S Δ.
-  Proof.
-    intuition.
-  Qed.
-
-  Lemma LS_Ax : forall Γ Δ φ, In φ Γ -> In φ Δ -> Γ ⊫S Δ.
+  Lemma LS_Ax : forall Γ Δ φ, In φ Γ -> In φ Δ -> Γ ⊫ Δ.
   Proof.
     intros Γ Δ φ Hin1 Hin2 M Hstandard ρ Hsat.
     exists φ; intuition.
   Qed.
 
   Lemma LS_Wk : forall Γ' Δ' Γ Δ, Γ' ⊆ Γ -> Δ' ⊆ Δ ->
-                             Γ' ⊫S Δ' -> Γ ⊫S Δ.
+                             Γ' ⊫ Δ' -> Γ ⊫ Δ.
   Proof.
     intros Γ' Δ' Γ Δ HsubsΓ HsubsΔ Hsat M Hstandard ρ HsatΓ.
     assert (HsatΓ' : forall φ, In φ Γ' -> Sat ρ φ) by intuition.
@@ -41,7 +30,7 @@ Section soundness.
     exists ψ; auto. auto.
   Qed.
 
-  Lemma LS_Cut : forall Γ Δ φ, Γ ⊫S (φ :: Δ) -> (φ :: Γ) ⊫S Δ -> Γ ⊫S Δ.
+  Lemma LS_Cut : forall Γ Δ φ, Γ ⊫ (φ :: Δ) -> (φ :: Γ) ⊫ Δ -> Γ ⊫ Δ.
   Proof.
     intros Γ Δ φ Hsat1 Hsat2 M Hstandard ρ HsatΓ.
     pose proof (Hsat1 M Hstandard ρ HsatΓ) as [ψ [Hin Hsatψ]].
@@ -50,7 +39,7 @@ Section soundness.
     - exists ψ; intuition.
   Qed.
 
-  Lemma LS_Subst : forall Γ Δ, Γ ⊫S Δ -> forall σ, map (subst_formula σ) Γ ⊫S (map (subst_formula σ) Δ).
+  Lemma LS_Subst : forall Γ Δ, Γ ⊫ Δ -> forall σ, map (subst_formula σ) Γ ⊫ (map (subst_formula σ) Δ).
   Proof.
     intros Γ Δ Hsat σ M Hstandard ρ HsatΓ.
     unfold Sat_sequent in Hsat.
@@ -63,7 +52,7 @@ Section soundness.
   Qed.
 
   Lemma LS_NegL : forall Γ Δ φ,
-      Γ ⊫S (φ :: Δ) -> (FNeg φ :: Γ) ⊫S Δ.
+      Γ ⊫ (φ :: Δ) -> (FNeg φ :: Γ) ⊫ Δ.
   Proof.
     intros Γ Δ φ Hsat M Hstandard ρ HsatΓ.
     assert (HΓ : forall φ, In φ Γ -> ρ ⊨ φ) by intuition.
@@ -75,7 +64,7 @@ Section soundness.
   Qed.
 
   Lemma LS_NegR : forall Γ Δ φ,      (* NOTE: uses excluded middle *)
-      (φ :: Γ) ⊫S Δ -> Γ ⊫S (FNeg φ :: Δ).
+      (φ :: Γ) ⊫ Δ -> Γ ⊫ (FNeg φ :: Δ).
   Proof.
     intros Γ Δ φ Hsatseq M Hstandard ρ HsatΓ.
     pose proof (classic (ρ ⊨ φ)) as [Hsatφ | Hnsatφ].
@@ -87,7 +76,7 @@ Section soundness.
   Qed.
 
   Lemma LS_ImpL : forall Γ Δ φ ψ,
-      Γ ⊫S (φ :: Δ) -> (ψ :: Γ) ⊫S Δ -> (FImp φ ψ :: Γ) ⊫S Δ.
+      Γ ⊫ (φ :: Δ) -> (ψ :: Γ) ⊫ Δ -> (FImp φ ψ :: Γ) ⊫ Δ.
   Proof.
     intros Γ Δ φ ψ Hsatseq1 Hsatseq2 M Hstandard ρ HsatΓ.
     assert (Himpsat : ρ ⊨ (FImp φ ψ)) by intuition.
@@ -104,7 +93,7 @@ Section soundness.
   Qed.
 
   Lemma LS_ImpR : forall Γ Δ φ ψ,    (* NOTE: uses excluded middle *)
-      (φ :: Γ) ⊫S (ψ :: Δ) -> Γ ⊫S (FImp φ ψ :: Δ).
+      (φ :: Γ) ⊫ (ψ :: Δ) -> Γ ⊫ (FImp φ ψ :: Δ).
   Proof.
     intros Γ Δ φ ψ Hsatseq M Hstandard ρ HsatΓ.
     pose proof (classic (ρ ⊨ φ)) as [Hsatφ | Hnsatφ].
@@ -118,8 +107,8 @@ Section soundness.
   Qed.
     
   Lemma LS_AllL : forall Γ Δ φ t,    (* NOTE: uses excluded middle *)
-      (subst_formula (t .: ids) φ :: Γ) ⊫S Δ ->
-      (FAll φ :: Γ) ⊫S Δ.
+      (subst_formula (t .: ids) φ :: Γ) ⊫ Δ ->
+      (FAll φ :: Γ) ⊫ Δ.
   Proof.
     intros Γ Δ φ t Hsatprem M Hstandard ρ HsatΓ.
     assert (Hφ : ρ ⊨ (FAll φ)) by intuition. cbn in Hφ.
@@ -131,8 +120,8 @@ Section soundness.
   Qed.
 
   Lemma LS_ExL : forall Γ Δ φ,       (* NOTE: uses excluded middle *)
-      (φ :: shift_formulas Γ) ⊫S (shift_formulas Δ) ->
-      (FExist φ :: Γ) ⊫S Δ.
+      (φ :: shift_formulas Γ) ⊫ (shift_formulas Δ) ->
+      (FExist φ :: Γ) ⊫ Δ.
   Proof.
     intros Γ Δ φ Hsat M Hstandard ρ Hsat1.
     assert (Hexφ : ρ ⊨ (FExist φ)) by intuition.
@@ -150,8 +139,8 @@ Section soundness.
   Qed.
 
   Lemma LS_ExR : forall Γ Δ φ t,
-      Γ ⊫S (subst_formula (t .: ids) φ :: Δ) ->
-      Γ ⊫S (FExist φ :: Δ).
+      Γ ⊫ (subst_formula (t .: ids) φ :: Δ) ->
+      Γ ⊫ (FExist φ :: Δ).
   Proof.
     intros Γ Δ φ t Hsatseq M Hstandard ρ HsatΓ.
     apply Hsatseq in HsatΓ as [ψ [Hinψ Hsatψ]]; auto.
@@ -164,8 +153,8 @@ Section soundness.
   Qed.
 
   Lemma Semantic_NegExistNegAll : forall Γ Δ φ, (* NOTE: uses XM *)
-      Γ ⊫S (FNeg (FExist (FNeg φ)) :: Δ) ->
-      Γ ⊫S (FAll φ :: Δ).
+      Γ ⊫ (FNeg (FExist (FNeg φ)) :: Δ) ->
+      Γ ⊫ (FAll φ :: Δ).
   Proof.
     unfold FExist. intros Γ Δ φ Hsatseq M Hstandard ρ HsatΓ.
     apply Hsatseq in HsatΓ; auto.
@@ -177,8 +166,8 @@ Section soundness.
   Qed.
   
   Lemma LS_AllR : forall Γ Δ φ,
-      (shift_formulas Γ) ⊫S (φ :: shift_formulas Δ) ->
-      Γ ⊫S (FAll φ :: Δ).
+      (shift_formulas Γ) ⊫ (φ :: shift_formulas Δ) ->
+      Γ ⊫ (FAll φ :: Δ).
   Proof.
     intros Γ Δ φ Hsatseq.
     apply Semantic_NegExistNegAll. apply LS_NegR. apply LS_ExL. apply LS_NegL.
@@ -189,10 +178,10 @@ Section soundness.
   Lemma LS_IndR : forall Γ Δ pr σ,   (* NOTE: uses excluded middle *)
       Φ pr ->
       (forall Q us, In (Q; us) (preds pr) ->
-               Γ ⊫S (FPred Q (V.map (subst_term σ) us) :: Δ)) ->
+               Γ ⊫ (FPred Q (V.map (subst_term σ) us) :: Δ)) ->
       (forall P ts, In (P; ts) (indpreds pr) ->
-               Γ ⊫S (FIndPred P (V.map (subst_term σ) ts) :: Δ)) ->
-      Γ ⊫S (FIndPred (indcons pr) (V.map (subst_term σ) (indargs pr)) :: Δ).
+               Γ ⊫ (FIndPred P (V.map (subst_term σ) ts) :: Δ)) ->
+      Γ ⊫ (FIndPred (indcons pr) (V.map (subst_term σ) (indargs pr)) :: Δ).
   Proof.
     intros Γ Δ pr σ HΦ Hpreds Hindpreds M Hstandard ρ HsatΓ.
     cbn beta in Hpreds, Hindpreds.
@@ -243,11 +232,11 @@ Section soundness.
             let Pi := indcons pr in
             let ty := V.map (shift_term_by shift_factor) (indargs pr) in
             let Fi := subst_formula (finite_subst (z_i Pi) ty) (G_i Pi) in
-            (Qs ++ Gs ++ Γ) ⊫S (Fi :: Δ))
+            (Qs ++ Gs ++ Γ) ⊫ (Fi :: Δ))
       in
       minor_premises ->
-      (Fj :: Γ) ⊫S Δ ->
-      (FIndPred Pj u :: Γ) ⊫S Δ.
+      (Fj :: Γ) ⊫ Δ ->
+      (FIndPred Pj u :: Γ) ⊫ Δ.
   Proof.
     intros Γ Δ Pj u z_i z_i_nodup G_i HmutdepG.
     intros maxΓ maxΔ maxP shift_factor Fj minor_premises.
@@ -290,7 +279,7 @@ Section soundness.
   Admitted.
     
     
-  Theorem soundness : forall Γ Δ, @LKID Σ Φ (Γ ⊢ Δ) -> Γ ⊫S Δ.
+  Theorem soundness : forall Γ Δ, @LKID Σ Φ (Γ ⊢ Δ) -> Γ ⊫ Δ.
   Proof.
     intros Γ Δ Hlkid.
     induction Hlkid; intros M Hstandard ρ Hsat.
