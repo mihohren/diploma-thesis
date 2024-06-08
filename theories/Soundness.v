@@ -244,38 +244,10 @@ Section soundness.
     assert (Hsat1 : forall ψ, In ψ Γ -> ρ ⊨ ψ) by intuition.
     assert (Hsat2: ρ ⊨ (FIndPred Pj u)) by intuition.
     apply Hstandard in Hsat2.
-    destruct (classic (ρ ⊨ Fj)) as [satFj | unsatFj].
-    + assert (forall ψ, In ψ (Fj :: Γ) -> ρ ⊨ ψ).
-      { intros ψ Hin. inversion Hin; subst; auto. }
-      apply Hindhyp; auto.
-    + assert (satNegFj : ρ ⊨ (FNeg Fj)) by trivial; clear unsatFj.
-      destruct Hsat2 as [α Hsatα]; subst minor_premises.
-      (* TODO *)
+    destruct (classic (exists ψ, In ψ Δ /\ ρ ⊨ ψ)) as [H | H].
+    - apply H.
+    - assert (forall ψ, In ψ Δ -> ~ ρ ⊨ ψ) as HΔunsat by (intros ψ HψInΔ Hsatψ; apply H; exists ψ; auto); clear H.
       
-      induction α as [| α IHα]; cbn in Hsatα.
-      * contradiction.
-      * unfold φ_Φ, φ_P in Hsatα.
-        destruct Hsatα as (pr & (Heq & HΦ) & Hφpr).
-        unfold eq_rect in Hφpr. specialize (Hminor pr) as Hminorpr.
-        assert (Hmutdep: @mutually_dependent Σ Φ (indcons pr) Pj).
-        { rewrite Heq. apply mutually_dependent_refl. }
-        specialize (Hminorpr HΦ Hmutdep).
-        remember (shift_formulas_by
-                    shift_factor
-                    (FPreds_from_preds (preds pr))) as Qs.
-        remember (list_map
-                    (λ '(P; args),
-                      let shifted_args :=
-                        V.map (shift_term_by shift_factor) args in
-                      let σ := finite_subst (z_i P) shifted_args in
-                      let G := G_i P in subst_formula σ G) 
-                    (indpreds pr)) as Gs.
-        remember ( V.map (shift_term_by shift_factor) (indargs pr)) as ty.
-        remember (subst_formula (finite_subst (z_i (indcons pr)) ty) (G_i (indcons pr))) as Fi.
-        specialize (Hminorpr M Hstandard ρ).
-        unfold φ_pr in Hφpr.
-        destruct Hφpr as (ρ' & Hpreds & Hindpreds & Heqeval).
-        subst Pj. apply IHα. rewrite Heqeval. 
   Admitted.
     
     

@@ -1,7 +1,50 @@
 \chapter{Ciklički dokazi}\label{cha:cikliki-dokazi}
-Koinduktivni tip podatka i koinduktivna propozicija. Jedan primjer su \texttt{Stream}ovi i predikat \texttt{Infinite}. Jednostavniji primjer bi možda bio koinduktivni \texttt{nat} i koinduktivni \texttt{le}.
+Svaki Coqov dokaz koji smo do sada prikazali je konačan term.
+Svi formalni dokazi u sustavu \(\mathit{LKID}\) (uključujući primjere~\ref{ex:lkid-indr-proof} i~\ref{ex:lkid-indl-proof}) su konačni.
+Ovakve dokaze jednim imenom nazivamo \textit{dobro utemeljenim dokazima} jer su sve \enquote{grane} njihovih dokaznih stabala konačne.
+Međutim, možemo promatrati i \textit{neutemeljene dokaze} kod kojih postoje beskonačne grane.
+\misao{\enquote{neutemeljen dokaz} zvuči kao \enquote{dokaz koji to nije}, treba neki bolji prijevod.}
+Već smo u odjeljku~\ref{sec:programiranje-u-gallini} spomenuli neutemeljene, odnosno koinduktivne tipove.
+Neutemeljeni dokaz je tada \enquote{beskonačan} dokaz neke koinduktivno definirane tvrdnje.
+U ovom poglavlju ćemo u Coqu ilustrirati neutemeljene dokaze.
 
-Kako bi izgledali ciklički dokazi u LKID? Ono što je tamo ``repeat funkcija'' je u Coqu \texttt{cofix}.
+\section{Primjer: lijene liste}
+Definirajmo za početak \textit{lijene liste}, to jest liste koje mogu biti konačne, a mogu biti i beskonačne.
+Zbog potencijalne beskonačnosti koristimo koinduktivnu definiciju tipa.
+\begin{minted}{coq}
+CoInductive LList (A : Type) :=
+| LNil : LList A
+| LCons : A -> LList A -> LList A.
+\end{minted}
+\noindent Kažemo da je lijena lista \textit{beskonačna} ako je njen rep opet beskonačna lijena lista.
+\begin{minted}{coq}
+CoInductive Infinite {A} : LList A -> Prop :=
+| Infinite_LCons : forall a l, Infinite l -> Infinite (LCons a l).
+\end{minted}
+\noindent Ovdje konstruktor \texttt{Infinite\_LCons} možemo shvatiti kao pravilo izvoda.
+Pokušajmo dokazati da je intuitivno beskonačna lista nula formalno beskonačna.
+Definiramo konstantu \texttt{zeros}.
+\begin{minted}{coq}
+CoFixpoint zeros : LList nat := LCons 0 zeros.
+\end{minted}
+\noindent Potrebno je dokazati tvrdnju \textit{Infinite zeros}.
+Po definiciji konstante \texttt{zeros}, dovoljno je dokazati
+tvrdnju \texttt{Inductive (LCons 0 zeros)}, no primjenom pravila \texttt{Infinite\_LCons}
+opet dolazimo do tvrdnje \texttt{Infinite zeros}.
+Međutim, uspjeli smo \enquote{skinuti} jednu nulu s početka niza.
+Sada je dovoljno ponavljati ovaj postupak beskonačno mnogo puta i tvrdnja je dokazana.
+Ilustrirajmo ovaj dokaz neformalnim stablom.
+\begin{prooftree}
+  \AxiomC{\texttt{Infinite zeros}}
+  \RightLabel{(\texttt{Infinite\_LCons})}
+  \UnaryInfC{\texttt{Infinite (LCons 0 zeros)}}
+  \RightLabel{(Definicija konstante \texttt{zeros})}
+  \UnaryInfC{\texttt{Infinite zeros}}
+\end{prooftree}
+\misao{Bilo bi super kada bih mogao kao Brotherston nacrtati strelicu od dna do vrha dokaza.}
+
+
+% bilo bi zanimljivo vidjeti vezu s LTL ili CTL, mislim da takva postoji
 
 %%% Local Variables:
 %%% mode: LaTeX

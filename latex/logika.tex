@@ -1185,7 +1185,7 @@ pišemo \(\vdash \varphi\) ako postoji dokaz sekvente \( () \vdash (\varphi)\).
 Neformalni pojam konačnog stabla formaliziran je induktivnim tipom \texttt{LKID},
 dok njegovi konstruktori formaliziraju odgovarajuća pravila izvoda.
 
-\begin{example}
+\begin{example}\label{ex:lkid-indr-proof}
   Formula \(\forall x, \mathit{Even}(x) \rightarrow \mathit{Even}(ssx)\) je dokaziva u sustavu \(\mathit{LKID}_{\mathit{PA}}\).
   Neformalni dokaz prikazujemo idućim stablom, a radi preglednosti
   pišemo \(Et\) umjesto \(\mathit{Even}(t)\) te \(Ot\) umjesto \(\mathit{Odd}(t)\).
@@ -1229,7 +1229,7 @@ Lemma provable_Even_succ_succ_Even :
 \end{minted}
 \end{example}
 
-\begin{example}
+\begin{example}\label{ex:lkid-indl-proof}
   Formula \(\forall x, \mathit{Nat}(x) \rightarrow \mathit{Even}(x) \lor \mathit{Odd}(x)\) je dokaziva u sustavu \(\mathit{LKID}_{\mathit{PA}}\).
   Neformalni dokaz prikazujemo idućim stablom, a radi preglednosti
   pišemo \(Nt\), \(Et\) i \(Ot\) redom umjesto \(\mathit{Nat}(t)\), \(\mathit{Even}(t)\) i \(\mathit{Odd}(t)\).

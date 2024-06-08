@@ -553,3 +553,70 @@ Proof.
     apply H; intuition. inversion H1; subst; apply inj_pair2 in H1; subst; cbn.
     apply AxExtended.
 Qed.
+
+(* I believe LList can not be defined in the "negative" style. *)
+CoInductive LList (A : Type) :=
+| LNil : LList A
+| LCons : A -> LList A -> LList A.
+Arguments LNil {_}.
+Arguments LCons {_} _ _.
+
+Definition LList_destruct {A} (l : LList A) :=
+  match l with
+  | LNil => LNil
+  | LCons h t => LCons h t
+  end.
+
+Lemma LList_destruct_id : forall {A} (l : LList A),
+    LList_destruct l = l.
+Proof.
+  intros A [| h t]; reflexivity.
+Qed.
+
+Inductive Finite {A} : LList A -> Prop :=
+| Finite_LNil : Finite LNil
+| Finite_LCons : forall a l, Finite l -> Finite (LCons a l).
+
+CoInductive Infinite {A} : LList A -> Prop :=
+| Infinite_LCons : forall a l, Infinite l -> Infinite (LCons a l).
+
+(* well-founded proof, by induction *)
+Lemma Finite_Infinite_contradiciton : forall A (l : LList A), Finite l -> Infinite l -> False.
+Proof.
+  intros A l Hfin. induction Hfin; inversion 1; subst; auto.
+Qed.
+
+(* non-well-founded proof, cyclic proof *)
+Lemma not_Finite_is_Infinite : forall A (l : LList A), ~Finite l -> Infinite l.
+Proof.
+  cofix H.
+  intros A l Hnotfin. destruct l as [| h t].
+  - exfalso; apply Hnotfin; constructor.
+  - constructor. apply H (* cyclic call *). intros Hfin. apply Hnotfin. now constructor.
+Qed.
+
+Lemma not_Infinite_is_Finite : forall A (l : LList A), ~Infinite l -> Finite l.
+Proof.
+  intros A l Hnotinf; destruct l; constructor.
+  assert (H : ~ Infinite l).
+  { intros Hinf. apply Hnotinf; now constructor. }
+  destruct (classic (Finite l)) as [Hfin | Hfin]; auto.
+  exfalso; now apply not_Finite_is_Infinite in Hfin.
+Qed.
+
+CoFixpoint zeros : LList nat := LCons 0 zeros.
+
+Lemma zeros_eta : zeros = LCons 0 zeros.
+Proof.
+  rewrite <- (LList_destruct_id zeros) at 1; cbn.
+  reflexivity.
+Qed.
+
+Lemma Infinite_zeros : Infinite zeros.
+Proof.
+  cofix H.
+  rewrite zeros_eta; constructor.
+  apply H.
+Qed.
+
+Print Assumptions Infinite_zeros.
