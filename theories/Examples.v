@@ -573,6 +573,9 @@ Proof.
   intros A [| h t]; reflexivity.
 Qed.
 
+Ltac llist_unfold t :=
+  rewrite <- (LList_destruct_id t); cbn.
+
 Inductive Finite {A} : LList A -> Prop :=
 | Finite_LNil : Finite LNil
 | Finite_LCons : forall a l, Finite l -> Finite (LCons a l).
@@ -606,17 +609,60 @@ Qed.
 
 CoFixpoint zeros : LList nat := LCons 0 zeros.
 
-Lemma zeros_eta : zeros = LCons 0 zeros.
+Lemma zeros_unfold : zeros = LCons 0 zeros.
 Proof.
-  rewrite <- (LList_destruct_id zeros) at 1; cbn.
-  reflexivity.
+  now (rewrite <- LList_destruct_id at 1).
 Qed.
 
 Lemma Infinite_zeros : Infinite zeros.
 Proof.
   cofix H.
-  rewrite zeros_eta; constructor.
+  rewrite zeros_unfold; constructor.
   apply H.
 Qed.
-
 Print Assumptions Infinite_zeros.
+
+CoFixpoint from (n : nat) : LList nat := LCons n (from (S n)).
+
+Lemma Infinite_from : forall n, Infinite (from n).
+Proof.
+  cofix H.
+  intros n.
+  now llist_unfold (from n).
+Qed.
+Print Infinite_from.
+Print Assumptions Infinite_from. (* Closed under the global context. *)
+
+Definition nats : LList nat := from 0.
+Lemma Infinite_nats : Infinite nats.
+Proof.
+  apply Infinite_from.
+Qed.
+
+Ltac prove_finite :=
+  repeat match goal with
+    | [ |- Finite LNil ] => constructor
+    | [ |- Finite ?l ] => rewrite <- (LList_destruct_id l); cbn; constructor
+    end.
+
+Definition zero_to_four := LCons 0 (LCons 1 (LCons 2 (LCons 3 (LCons 4 LNil)))).
+
+Lemma Finite_zero_to_four : Finite zero_to_four.
+Proof.
+  prove_finite.
+Qed.
+
+Lemma Finite_nats : Finite nats.
+Proof.
+  Fail Timeout 2 prove_finite.  (* ad infinitum *)
+Abort.
+
+CoInductive COINDFinite {A} : LList A -> Prop :=
+| COINDFinite_LNil : COINDFinite LNil
+| COINDFinite_LCons : forall a l, COINDFinite l -> COINDFinite (LCons a l).
+
+Lemma all_COINDFinite : forall A (l : LList A), COINDFinite l.
+Proof.
+  intros A; cofix H.
+  intros []; constructor; apply H.
+Qed.

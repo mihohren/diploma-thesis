@@ -22,29 +22,89 @@ CoInductive Infinite {A} : LList A -> Prop :=
 | Infinite_LCons : forall a l, Infinite l -> Infinite (LCons a l).
 \end{minted}
 \noindent Ovdje konstruktor \texttt{Infinite\_LCons} možemo shvatiti kao pravilo izvoda.
-Pokušajmo dokazati da je intuitivno beskonačna lista nula formalno beskonačna.
-Definiramo konstantu \texttt{zeros}.
+Pokušajmo dokazati da je intuitivno beskonačna lista i formalno beskonačna.
+Definiramo funkciju \texttt{from} analogno istoimenoj funkciji iz odjeljka~\ref{sec:programiranje-u-gallini}.
 \begin{minted}{coq}
-CoFixpoint zeros : LList nat := LCons 0 zeros.
+CoFixpoint from (n : nat) : LList nat := LCons n (from (S n)).
 \end{minted}
-\noindent Potrebno je dokazati tvrdnju \textit{Infinite zeros}.
-Po definiciji konstante \texttt{zeros}, dovoljno je dokazati
-tvrdnju \texttt{Inductive (LCons 0 zeros)}, no primjenom pravila \texttt{Infinite\_LCons}
-opet dolazimo do tvrdnje \texttt{Infinite zeros}.
-Međutim, uspjeli smo \enquote{skinuti} jednu nulu s početka niza.
-Sada je dovoljno ponavljati ovaj postupak beskonačno mnogo puta i tvrdnja je dokazana.
-Ilustrirajmo ovaj dokaz neformalnim stablom.
+\noindent Intuitivno je jasno da je za svaki \texttt{n} lijena lista \texttt{from n}
+beskonačna pa želimo dokazati tvrdnju \texttt{forall n, Infinite (from n)}.
+
+Prije glavnog dokaza, pogledajmo konkretan primjer na tvrdnji \texttt{Infinite (from 0)}.
+Po definiciji funkcije \texttt{from}, dovoljno je dokazati
+tvrdnju \texttt{Infinite (LCons 0 (from 1))}, a primjenom pravila \texttt{Infinite\_LCons}
+dolazimo do tvrdnje \texttt{Infinite (from 1)}.
+Opet je po definiciji funkcije \texttt{from} dovoljno dokazati tvrdnju
+\texttt{Infinite (LCons 1 (from 2))}, a ponovnom primjenom pravila \texttt{Infinite\_LCons}
+dolazimo do tvrdnje \texttt{Infinite (from 2)}.
+Ilustrirajmo ovaj postupak dokaznim stablom.
 \begin{prooftree}
-  \AxiomC{\texttt{Infinite zeros}}
+  \AxiomC{\vdots}
+  \UnaryInfC{\texttt{Infinite (from 2)}}
   \RightLabel{(\texttt{Infinite\_LCons})}
-  \UnaryInfC{\texttt{Infinite (LCons 0 zeros)}}
-  \RightLabel{(Definicija konstante \texttt{zeros})}
-  \UnaryInfC{\texttt{Infinite zeros}}
+  \UnaryInfC{\texttt{Infinite (LCons 1 (from 2))}}
+  \UnaryInfC{\texttt{Infinite (from 1)}}
+  \RightLabel{(\texttt{Infinite\_LCons})}
+  \UnaryInfC{\texttt{Infinite (LCons 0 (from 1))}}
+  \UnaryInfC{\texttt{Infinite (from 0)}}
 \end{prooftree}
-\misao{Bilo bi super kada bih mogao kao Brotherston nacrtati strelicu od dna do vrha dokaza.}
+\noindent Sada je jasno da ćemo dokazati originalnu tvrdnju tek nakon beskonačno
+mnogo primjena pravila \texttt{Infinite\_LCons}. Ipak, lakše je dokazati
+tvrdnju \texttt{forall n, Infinite (from n)}.
+Nakon introdukcije varijable \texttt{n}, odmatanja konstante \texttt{from n} i
+primjene pravila \texttt{Infinite\_LCons}
+dolazimo do tvrdnje \texttt{Infinite (from (S n))}.
+
+\begin{prooftree}
+  \AxiomC{\texttt{*}}
+  \UnaryInfC{\texttt{Infinite (from (S n))}}
+  \RightLabel{(\texttt{Infinite\_LCons})}
+  \UnaryInfC{\texttt{Infinite (LCons n (from (S n)))}}
+  \UnaryInfC{\texttt{Infinite (from n)}}
+  \UnaryInfC{\texttt{forall n, Infinite (from n)}}
+\end{prooftree}
+
+\noindent Između tvrdnji \texttt{Infinite (from n)} i \texttt{Infinite (from (S n))}
+\enquote{skinut} je prvi član beskonačne liste te je napravljen \textit{napredak}
+u dokazu.
+Bez napretka nema smisla ponavljati prethodni postupak beskonačno mnogo puta
+jer se tvrdnja ne mijenja.
+Uz napredak u dokazivanju ima smisla pozivati se na \textit{tvrdnju koja se dokazuje} te
+takve dokaze nazivamo \textit{cikličkima}. Dokaz tvrdnje \texttt{forall n, Infinite (from n)}
+jedan je primjer cikličkog dokaza, gdje je simbolom \(\mathtt{*}\) označeno cikličko \enquote{pozivanje} dokaza.
+U Coqu, napredak je osiguran uvjetom produktivnosti kojeg smo spomenuli
+u odjeljku~\ref{sec:ogranicenja}.
+
+Pažljiv čitatelj će primijetiti da ista argumentacija vrijedi
+i za predikat \texttt{Finite}, definiran na idući način.
+\begin{minted}{coq}
+Inductive Finite {A} : LList A -> Prop :=
+| Finite_LNil : Finite LNil
+| Finite_LCons : forall a l, Finite l -> Finite (LCons a l).
+\end{minted}
+\noindent Međutim, beskonačne liste po definiciji nisu konačne.
+Zašto ipak gornji dokazi \textit{ne} prolaze za predikat \texttt{Finite}?
+Riječ je o načinu definicije; predikat \texttt{Infinite} definiran je koinduktivno
+te njegovi stanovnici \textit{nisu} dobro utemeljeni,
+dok je predikat \texttt{Finite} definiran induktivno, a njegovi stanovnici \textit{jesu}
+dobro utemeljeni. Štoviše, kada bismo predikat \texttt{Finite} definirali koinduktivno,
+on bi postao trivijalan, to jest vrijedio bi za proizvoljnu lijenu listu.
 
 
-% bilo bi zanimljivo vidjeti vezu s LTL ili CTL, mislim da takva postoji
+Brotherston je formalizirao ideju cikličkih dokaza u dokaznom sustavu
+\(\mathit{CLKID}^{\omega}\), podsustavu dokaznog sustava \(\mathit{LKID}^{\omega}\),
+koji pak je proširenje sustava \(\mathit{LKID}\) potencijalno beskonačnim dokaznim stablima.
+Dokazni sustav \(\mathit{CLKID}^{\omega}\) ograničen je u odnosu na sustav \(\mathit{LKID}^{\omega}\)
+tako što svako (potencijalno beskonačno) dokazno stablo
+smije imati \textit{najviše konačno mnogo} različitih podstabala te
+svaka beskonačna grana tog stabla mora imati beskonačno mnogo \enquote{napredaka}.
+% drugim riječima, beskonačno mnogo primjena induktivnih pravila
+
+
+
+
+% bilo bi zanimljivo vidjeti vezu s LTL, prikazanu u Coq'Art
+% možda dokazati neke teže "Exercises" od tamo
 
 %%% Local Variables:
 %%% mode: LaTeX
