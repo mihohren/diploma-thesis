@@ -1,6 +1,7 @@
 \documentclass[diplomskirad, upload]{fer}
 % Dodaj opciju upload za generiranje konačne verzije koja se učitava na FERWeb
 
+\usepackage[T1]{fontenc}
 \usepackage{amsmath}
 \usepackage{amsthm}
 \usepackage{amssymb}
@@ -18,6 +19,9 @@
 \usepackage{pdflscape}
 \usepackage{float}
 \usepackage[autostyle,croatian=quotes]{csquotes}
+
+% https://github.com/stipub/stix_type1/issues/3
+\renewcommand{\mapsto}{\DOTSB\mathchar"39AD}
 
 % smanjenje proreda u itemize i enumerate okolinama
 \setlist{nosep,topsep=-20pt}
