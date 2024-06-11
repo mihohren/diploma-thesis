@@ -1,5 +1,5 @@
 Require Import Base Syntax InductiveDefinitions.
-Require Import Relations.
+Require Import Relations RelationClasses.
 Require Import Sorting.Permutation.
 Import ListNotations.
 
@@ -17,12 +17,12 @@ Section lkid.
 
   Definition Prem_star := clos_refl_trans (IndPredS Σ) Prem.
 
-  Lemma Prem_star_refl : forall P, Prem_star P P.
+  Lemma Prem_star_refl : Reflexive Prem_star.
   Proof.
     intros P; apply rt_refl.
   Qed.
 
-  Lemma Prem_star_trans : forall P Q R, Prem_star P Q -> Prem_star Q R -> Prem_star P R.
+  Lemma Prem_star_trans : Transitive Prem_star.
   Proof.
     intros P Q R HPQ HQR; induction HQR.
     - apply rt_trans with x; auto using rt_step.
@@ -33,17 +33,17 @@ Section lkid.
   Definition mutually_dependent (P Q : IndPredS Σ) :=
     Prem_star P Q /\ Prem_star Q P.
 
-  Lemma mutually_dependent_refl : reflexive (IndPredS Σ) mutually_dependent.
+  Lemma mutually_dependent_refl : Reflexive mutually_dependent.
   Proof.
     intros P; split; apply rt_refl.
   Qed.
 
-  Lemma mutually_dependent_symm : symmetric (IndPredS Σ) mutually_dependent. 
+  Lemma mutually_dependent_symm : Symmetric mutually_dependent. 
   Proof.
     intros P Q [HPQ HQP]; split; intuition.
   Qed.
 
-  Lemma mutually_dependent_trans : transitive (IndPredS Σ) mutually_dependent. 
+  Lemma mutually_dependent_trans : Transitive mutually_dependent. 
   Proof.
     Hint Constructors clos_refl_trans.
     intros P Q R [HPQ HQP] [HQR HRQ]; unfold Prem_star in *; split.
@@ -51,13 +51,12 @@ Section lkid.
     - induction HQP; eauto 10. apply rt_trans with x; auto.
   Qed.
 
-  Lemma mutually_dependent_equiv : equiv (IndPredS Σ) mutually_dependent.
+  Lemma mutually_dependent_equiv : Equivalence mutually_dependent.
   Proof.
-    unfold equiv. split.
-    - apply mutually_dependent_refl.
-    - split.
-      + apply mutually_dependent_trans.
-      + apply mutually_dependent_symm.
+    constructor.
+    - exact mutually_dependent_refl.
+    - exact mutually_dependent_symm.
+    - exact mutually_dependent_trans.              
   Qed.
   
   Fixpoint FPreds_from_preds (ps : list {P : PredS Σ & vec (term Σ) (pred_ar P)}) : list (formula Σ) :=

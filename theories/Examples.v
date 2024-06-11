@@ -42,55 +42,46 @@ Definition Σ__PA : signature
     indpred_ar := indpred_ar__PA;
   |}.
 
-Example PA_one (* s(o) *): term Σ__PA.
-  refine (@TFunc Σ__PA PA_succ _).
-  refine ([_]).
-  apply TFunc with PA_zero.
-  apply V.nil.
-Defined.
+Coercion coerce_func (f : Func__PA) : FuncS Σ__PA := f.
+Coercion coerce_pred (P : Pred__PA) : PredS Σ__PA := P.
+Coercion coerce_indpred (P : IndPred__PA) : IndPredS Σ__PA := P.
+Set Printing Coercions.
+
+Example PA_one (* s(o) *): term Σ__PA :=
+  TFunc PA_succ [TFunc PA_zero []].
 
 Example PA_refl (* ∀ x, x = x *): formula Σ__PA.
   refine (FAll _).
-  refine (@FPred Σ__PA PA_eq _).
-  apply V.cons.
-  - exact (var_term 0).
-  - exact ([var_term 0]).
+  refine (FPred PA_eq _).
+  refine [_; _]; exact (var_term 0).
 Defined.
 
 Definition PA_prod_N_zero : @production Σ__PA.
-  refine (@mkProd Σ__PA nil nil PA_Nat _).
-  refine [(@TFunc Σ__PA PA_zero V.nil)].
+  refine (mkProd nil nil PA_Nat _).
+  refine [TFunc PA_zero []].
 Defined.
-
-Print PA_prod_N_zero.
 
 Definition PA_prod_N_succ : @production Σ__PA.
-  refine (@mkProd Σ__PA nil _ PA_Nat _).
-  - refine (cons _ nil). exists PA_Nat; refine [(var_term 0)].
-  - refine [(@TFunc Σ__PA PA_succ ([var_term 0]))].
+  refine (mkProd nil _ PA_Nat _).
+  - refine (cons _ nil). exists PA_Nat; refine [var_term 0].
+  - refine [TFunc PA_succ [var_term 0]].
 Defined.
 
-Print PA_prod_N_succ.
-
 Definition PA_prod_E_zero : @production Σ__PA.
-  refine (@mkProd Σ__PA nil nil PA_Even _).
-  refine ( [ @TFunc Σ__PA PA_zero ([]) ] ).
+  refine (mkProd nil nil PA_Even _).
+  refine [ TFunc PA_zero []].
 Defined.
 
 Definition PA_prod_E_succ : @production Σ__PA.
-  refine (@mkProd Σ__PA nil _ PA_Even _).
-  - refine (cons _ nil). exists PA_Odd; refine ([var_term 0]).
-  - refine [_].
-    refine (@TFunc Σ__PA PA_succ _).
-    refine [var_term 0].
+  refine (mkProd nil _ PA_Even _).
+  - refine (cons _ nil). exists PA_Odd; refine [var_term 0].
+  - refine [TFunc PA_succ [var_term 0]].
 Defined.
 
 Definition PA_prod_O_succ : @production Σ__PA.
-  refine (@mkProd Σ__PA nil _ PA_Odd _).
-  - refine (cons _ nil). exists PA_Even; refine ([var_term 0]).
-  - refine [_].
-    refine (@TFunc Σ__PA PA_succ _).
-    refine ([var_term 0]).
+  refine (mkProd nil _ PA_Odd _).
+  - refine (cons _ nil). exists PA_Even; refine [var_term 0].
+  - refine [TFunc PA_succ [var_term 0]].
 Defined.
 
 Inductive Φ__PA : @production Σ__PA -> Prop :=
@@ -151,40 +142,29 @@ Proof.
   - destruct IHn; [right | left]; now constructor.
 Qed.
 
-Lemma pair_induction (P : nat -> Prop) :
-  P 0 -> P 1 -> (forall n, P n -> P (S n) -> P (S (S n))) -> forall n, P n.
-Proof.
-  intros H0 H1 HS n.
-  enough (P n /\ P (S n)) by tauto.
-  induction n; intuition.
-Qed.
-
-Definition M__PA : @structure Σ__PA.
+Definition M__PA : structure Σ__PA.
   refine (Build_structure nat _ _ _).
-  - intros []; cbn.
+  - intros f; destruct f.
     + intros. exact 0.
     + intros n. exact (S (V.hd n)).
     + intros xy. exact (V.hd xy + V.hd (V.tl xy)).
     + intros xy. exact (V.hd xy * V.hd (V.tl xy)).
-  - intros []. cbn. intros args.
+  - intros P args; destruct P.
     exact (V.hd args = V.hd (V.tl args)).
-  - intros []; cbn; intros args.
+  - intros P args; destruct P. 
     + exact (NAT (V.hd args)).
     + exact (EVEN (V.hd args)).
     + exact (ODD (V.hd args)).
 Defined.
 
 
-Lemma NAT_φ_Φ_ω: forall n, @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Nat ([n]).
+Lemma NAT_φ_Φ_ω: forall n, @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Nat [n].
   induction n.
   - exists 1. unfold φ_Φ_n, φ_Φ, φ_P. exists PA_prod_N_zero, (conj eq_refl ID_N_zero).
     unfold φ_pr. cbn. eexists; intuition.
   - destruct IHn as [α IH]. exists (S α).
     cbn. unfold φ_Φ, φ_P. exists PA_prod_N_succ, (conj eq_refl ID_N_succ).
-    unfold φ_pr. cbn. intuition. exists (fun x => match x with
-                                          | 0 => n
-                                          | S y => x
-                                          end).
+    unfold φ_pr. cbn. intuition. exists (fun x => n).
     intuition. destruct P; cbn.
     + apply inj_pair2 in H0. subst. cbn. assumption.
     + inversion H0.
@@ -192,7 +172,7 @@ Lemma NAT_φ_Φ_ω: forall n, @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Nat ([n]).
       Unshelve. intros n. exact n.
 Qed.
 
-Lemma EVEN_φ_Φ_ω : forall n, EVEN n -> @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Even ([n]).
+Lemma EVEN_φ_Φ_ω : forall n, EVEN n -> @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Even [n].
 Proof.
   intros n HE. induction HE using EVEN_ind2.
   - exists 1. unfold φ_Φ_n, φ_Φ, φ_P. exists PA_prod_E_zero, (conj eq_refl ID_E_zero).
@@ -200,25 +180,18 @@ Proof.
   - destruct IHHE as [a Ha]. exists (S (S a)); cbn.
     unfold φ_Φ at 1. unfold φ_P at 1.
     exists PA_prod_E_succ, (conj eq_refl ID_E_succ); cbn.
-    unfold φ_pr. cbn. exists (fun x => match x with
-                               | O => S n
-                               | S y => x
-                               end); intuition.
+    unfold φ_pr. cbn. exists (fun x => S n); intuition.
     destruct P; try discriminate.
     apply inj_pair2 in H0; subst; cbn.
     unfold φ_Φ, φ_P. exists PA_prod_O_succ, (conj eq_refl ID_O_succ); cbn.
-    unfold φ_pr; cbn. exists (fun x => match x with
-                               | O => n
-                               | S y => x
-                               end); intuition.
+    unfold φ_pr; cbn. exists (fun x => n); intuition.
     destruct P; try discriminate.
     apply inj_pair2 in H0; subst; cbn. assumption.
     Unshelve.
     intros n; exact n.
-Qed.    
+Qed.
 
-
-Lemma ODD_φ_Φ_ω : forall n, ODD n -> @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Odd ([n]).
+Lemma ODD_φ_Φ_ω : forall n, ODD n -> @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Odd [n].
 Proof.
   intros n HO. induction HO using ODD_ind2.
   - exists 2. unfold φ_Φ_n, φ_Φ, φ_P; cbn. exists PA_prod_O_succ, (conj eq_refl ID_O_succ); cbn.
@@ -239,33 +212,34 @@ Proof.
     apply inj_pair2 in H0; subst; assumption.
 Qed.
 
-Lemma φ_Φ_n_EVEN : forall m n, @φ_Φ_n Σ__PA M__PA Φ__PA PA_Even m ([n]) -> EVEN n
-  with φ_Φ_n_ODD : forall m n, @φ_Φ_n Σ__PA M__PA Φ__PA PA_Odd m ([n]) -> ODD n.
+Lemma φ_Φ_n_EVEN : forall m n, @φ_Φ_n Σ__PA M__PA Φ__PA PA_Even m [n] -> EVEN n
+  with φ_Φ_n_ODD : forall m n, @φ_Φ_n Σ__PA M__PA Φ__PA PA_Odd m [n] -> ODD n.
 Proof.
   - induction m; intros n.
     + contradiction.
     + cbn; intros H. destruct H as [pr [[Heq HΦ] Hpr]].
     inversion HΦ; subst; try discriminate; unfold eq_rect in *.
-      * destruct Hpr as [ρ [_ [_ Heval]]]; cbn in *; simpl_uip.
-        inversion Heval. constructor.
-      * destruct Hpr as [ρ [_ [Hindpreds Heval]]]; cbn in *; simpl_uip.
+      * destruct Hpr as [ρ [_ [_ Heval]]]; cbn in *.
+        unfold coerce_indpred in *; simpl_uip. inversion Heval. constructor.
+      * destruct Hpr as [ρ [_ [Hindpreds Heval]]]; cbn in *.
+        unfold coerce_indpred in *; simpl_uip.
         inversion Heval.
-        specialize (Hindpreds PA_Odd (V.cons (var_term 0) V.nil)); cbn in Hindpreds.
-        assert (@φ_Φ_n Σ__PA M__PA Φ__PA PA_Odd m (V.cons (ρ 0) V.nil)) by intuition.
+        specialize (Hindpreds PA_Odd [var_term 0]); cbn in Hindpreds.
+        assert (@φ_Φ_n Σ__PA M__PA Φ__PA PA_Odd m [ρ 0]) by intuition.
         constructor. subst. clear Heval Hindpreds.
         now apply φ_Φ_n_ODD with m.
   - induction m; intros n.
     + contradiction.
     + cbn; intros (pr & [Heq HΦ] & ρ & _ & Hindpreds & Heval).
       inversion HΦ; subst; try discriminate.
-      cbn in *; unfold eq_rect in *; simpl_uip.
+      cbn in *; unfold eq_rect in *; unfold coerce_indpred in *; simpl_uip.
       inversion Heval. constructor.
-      specialize (Hindpreds PA_Even (V.cons (var_term 0) V.nil)).
-      assert (@φ_Φ_n Σ__PA M__PA Φ__PA PA_Even m (V.map (eval ρ) (V.cons (var_term 0) V.nil))) by auto.
+      specialize (Hindpreds PA_Even [var_term 0]).
+      assert (@φ_Φ_n Σ__PA M__PA Φ__PA PA_Even m (V.map (eval ρ) [var_term 0])) by auto.
       now apply φ_Φ_n_EVEN with m.
 Qed.
 
-Lemma φ_Φ_ω_EVEN : forall n, @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Even ([n]) -> EVEN n.
+Lemma φ_Φ_ω_EVEN : forall n, @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Even [n] -> EVEN n.
 Proof.
   intros n [α Hα]; now apply φ_Φ_n_EVEN with α.
 Qed.
@@ -290,11 +264,7 @@ Proof.
   - apply φ_Φ_ω_ODD. rewrite (V.eta ts) in H. pose proof (V.nil_spec (V.tl ts)).
     rewrite H0 in H. assumption.
 Qed.
-Print Assumptions standard_model__PA.
-
 (* proof_irrelevance, Eqdep.Eq_rect_eq.eq_rect_eq *)
-(* We could probably avoid them because all our types are finite,
-   hence have decidable equality. *)
 
 Example mut_dep_E_O : @mutually_dependent Σ__PA Φ__PA PA_Even PA_Odd.
 Proof.
@@ -322,15 +292,12 @@ Ltac destruct_productions :=
   | _ => idtac "No production in inductive definition set found."
   end.
 
-Require Import Relation_Operators.
-
 Lemma Prem_Nat_Nat : @Prem Σ__PA Φ__PA PA_Nat PA_Nat.
 Proof.
   exists PA_prod_N_succ; intuition.
   - apply ID_N_succ.
   - cbn. exists ([var_term 0]). now left.
 Qed.
-
     
 Lemma Prem_Nat_only_Nat : forall P, @Prem Σ__PA Φ__PA PA_Nat P -> P = PA_Nat.
 Proof.
@@ -372,11 +339,10 @@ Lemma mut_dep_Nat_only_Nat :
 Proof.
   intros []; auto; intros [H1 H2];
   now apply Prem_star_Nat in H2.
-Qed.
-                              
+Qed.                              
   
 Lemma approximants_of_PA_Nat : forall α n,
-    @approximant_of Σ__PA M__PA Φ__PA PA_Nat α ([n])
+    @approximant_of Σ__PA M__PA Φ__PA PA_Nat α [n]
     <-> n < α.
 Proof.
   intros α n; split; intros H.
@@ -384,10 +350,10 @@ Proof.
     + contradiction.
     + destruct H as (pr & [Heq HΦ] & ρ & _ & Hindpreds & Heval).
       inversion HΦ; subst; try discriminate; unfold eq_rect in *; cbn in *;
-        simpl_uip; inversion Heval.
+        unfold coerce_indpred in *; simpl_uip; inversion Heval.
       * auto with arith.
       * apply le_n_S. apply IH.
-        specialize (Hindpreds PA_Nat ([var_term 0])).
+        specialize (Hindpreds PA_Nat [var_term 0]).
         cbn in Hindpreds. apply Hindpreds. now left.
   - generalize dependent n. induction α as [| α IH].
     + inversion 1.
@@ -404,13 +370,8 @@ Qed.
 Import ListNotations.
 Infix "⊢" := mkSeq (at level 10).
 
-
-Definition Even_zero : formula Σ__PA.
-  apply FIndPred with PA_Even; cbn.
-  refine (V.cons _ V.nil).
-  apply TFunc with PA_zero; cbn.
-  exact V.nil.
-Defined.
+Definition Even_zero : formula Σ__PA :=
+  FIndPred PA_Even [TFunc PA_zero []].
 
 Lemma provable_Even_zero :
   @LKID Σ__PA Φ__PA ([] ⊢ [Even_zero]).
@@ -424,10 +385,10 @@ Qed.
 Definition every_nat_is_even_or_odd : formula Σ__PA :=
   FAll
     (FImp
-       (@FIndPred Σ__PA PA_Nat ([var_term 0]))
+       (FIndPred PA_Nat [var_term 0])
        (FOr
-          (@FIndPred Σ__PA PA_Even ([var_term 0]))
-          (@FIndPred Σ__PA PA_Odd ([var_term 0])))).
+          (FIndPred PA_Even [var_term 0])
+          (FIndPred PA_Odd  [var_term 0]))).
 
 Lemma every_nat_is_even_or_odd_Sat :
   forall (ρ : env M__PA), ρ ⊨ every_nat_is_even_or_odd.
@@ -443,16 +404,16 @@ Proof.
 Qed.
 
 Definition z : forall (P : IndPredS Σ__PA), vec var (indpred_ar P).
-  intros []; cbn; exact ([0]).
+  intros []; cbn; exact [0].
 Defined.
 
 Definition G (P : IndPredS Σ__PA) : formula Σ__PA :=
   match P with
   | PA_Nat => (FOr
-          (@FIndPred Σ__PA PA_Even ([var_term 0]))
-          (@FIndPred Σ__PA PA_Odd ([var_term 0])))
-  | PA_Even => @FIndPred Σ__PA PA_Even ([var_term 0])
-  | PA_Odd => @FIndPred Σ__PA PA_Odd ([var_term 0])
+          (FIndPred PA_Even ([var_term 0]))
+          (FIndPred PA_Odd ([var_term 0])))
+  | PA_Even => FIndPred PA_Even ([var_term 0])
+  | PA_Odd => FIndPred PA_Odd ([var_term 0])
   end.
 
 
@@ -472,23 +433,23 @@ Proof.
       apply provable_Even_zero.
     + unfold shift, funcomp in *.
       apply Wk with
-        (cons (@FOr Σ__PA
-            (@FIndPred Σ__PA PA_Even ([var_term 4]))
-            (@FIndPred Σ__PA PA_Odd ([var_term 4]))) nil)
-        (cons (@FOr Σ__PA
-            (@FIndPred Σ__PA PA_Even ([(@TFunc Σ__PA PA_succ ([var_term 4]))]))
-            (@FIndPred Σ__PA PA_Odd ([(@TFunc Σ__PA PA_succ ([var_term 4]))]))) nil); intuition.
+        (cons (FOr
+            (FIndPred PA_Even [var_term 4])
+            (FIndPred PA_Odd [var_term 4])) nil)
+        (cons (FOr 
+            (FIndPred PA_Even [TFunc PA_succ [var_term 4]])
+            (FIndPred PA_Odd [TFunc PA_succ [var_term 4]])) nil); intuition.
       apply OrL.
       * apply OrR2.
         pose proof (@IndR Σ__PA Φ__PA
-                      (cons (@FIndPred Σ__PA PA_Even ([var_term 4])) nil)
+                      (cons (FIndPred PA_Even [var_term 4]) nil)
                       nil PA_prod_O_succ (fun t => var_term 4) ID_O_succ) as H.
         cbn in H; apply H; intuition.
         inversion H1; subst; apply inj_pair2 in H1; subst; cbn.
         apply AxExtended.
       * apply OrR1.
         pose proof (@IndR Σ__PA Φ__PA
-                      (cons (@FIndPred Σ__PA PA_Odd ([var_term 4])) nil)
+                      (cons (FIndPred PA_Odd [var_term 4]) nil)
                       nil PA_prod_E_succ (fun t => var_term 4) ID_E_succ) as H.
         cbn in H. apply H; intuition.
         inversion H1; subst; apply inj_pair2 in H1; subst; cbn.
@@ -498,22 +459,21 @@ Qed.
 
 
 
-Definition every_succ_of_Even_is_Odd : formula Σ__PA.
-  apply FAll.
-  apply FImp.
-  - apply FIndPred with PA_Even; cbn.
-    exact ([var_term 0]).
-  - apply FIndPred with PA_Odd; cbn.
-    refine (V.cons _ V.nil).
-    apply TFunc with PA_succ; cbn.
-    exact ([var_term 0]).
-Defined.
+Definition every_succ_of_Even_is_Odd : formula Σ__PA :=
+  FAll
+    (FImp
+       (FIndPred PA_Even [var_term 0])
+       (FIndPred PA_Odd [TFunc PA_succ [var_term 0]])).
+
 
 Lemma provable_every_succ_of_Even_is_Odd : forall Γ Δ,
   @LKID Σ__PA Φ__PA (Γ ⊢ (every_succ_of_Even_is_Odd :: Δ)).
 Proof.
   intros Γ Δ.
-  pose proof (@IndR Σ__PA Φ__PA (cons (@FIndPred Σ__PA PA_Even ([var_term 0])) (shift_formulas Γ)) (shift_formulas Δ) PA_prod_O_succ).
+  pose proof (@IndR Σ__PA Φ__PA
+                (cons (FIndPred PA_Even [var_term 0]) (shift_formulas Γ))
+                (shift_formulas Δ)
+                PA_prod_O_succ).
   specialize (H (fun t => var_term t) ID_O_succ); cbn in H.
   apply AllR; cbn. apply ImpR.
   apply H; intuition.
@@ -521,35 +481,31 @@ Proof.
   apply inj_pair2 in H1; subst; cbn. apply AxExtended.
 Qed.
 
-Definition Even_succ_succ_Even : formula Σ__PA.
-  apply FAll; apply FImp.
-  - apply FIndPred with PA_Even; cbn.
-    exact ([var_term 0]).
-  - apply FIndPred with PA_Even; cbn.
-    refine ([_]).
-    apply TFunc with PA_succ; cbn.
-    refine ([_]).
-    apply TFunc with PA_succ; cbn.
-    exact ([var_term 0]).
-Defined.
+Definition Even_succ_succ_Even : formula Σ__PA :=
+  FAll
+    (FImp
+       (FIndPred PA_Even [var_term 0])
+       (FIndPred PA_Even [TFunc PA_succ
+                            [TFunc PA_succ
+                               [var_term 0]]])).
 
 Lemma provable_Even_succ_succ_Even :
     @LKID _ Φ__PA ([] ⊢ [Even_succ_succ_Even]).
 Proof.
   apply AllR. apply ImpR.
-  apply Cut with (@FIndPred Σ__PA PA_Odd ([(@TFunc Σ__PA PA_succ ([var_term 0]))])).
+  apply Cut with (FIndPred PA_Odd [TFunc PA_succ [var_term 0]]).
   - pose proof (@IndR Σ__PA Φ__PA
-                  ([(@FIndPred Σ__PA PA_Even ([var_term 0]))])
-                  ([(@FIndPred Σ__PA PA_Even
-                      ([(@TFunc Σ__PA PA_succ ([(@TFunc Σ__PA PA_succ ([var_term 0]))]))]))])
+                  [FIndPred PA_Even [var_term 0]]
+                  [FIndPred PA_Even
+                      [TFunc PA_succ [TFunc PA_succ [var_term 0]]]]
                   PA_prod_O_succ (fun x => var_term x) ID_O_succ) as H1; cbn in *.
     apply H1; intuition. inversion H0; subst; apply inj_pair2 in H0; subst; cbn in *.
     apply AxExtended.
   - pose proof (@IndR _ Φ__PA
-                  ([(@FIndPred Σ__PA PA_Odd ([(@TFunc Σ__PA PA_succ ([var_term 0]))]));
-                  (@FIndPred Σ__PA PA_Even ([var_term 0]))])
+                  [FIndPred PA_Odd [TFunc PA_succ [var_term 0]];
+                  FIndPred PA_Even [var_term 0]]
                   nil
-                  PA_prod_E_succ (fun x => (@TFunc Σ__PA PA_succ ([var_term 0]))) ID_E_succ); cbn in *.
+                  PA_prod_E_succ (fun x => TFunc PA_succ [var_term 0]) ID_E_succ); cbn in *.
     apply H; intuition. inversion H1; subst; apply inj_pair2 in H1; subst; cbn.
     apply AxExtended.
 Qed.
@@ -651,11 +607,6 @@ Lemma Finite_zero_to_four : Finite zero_to_four.
 Proof.
   prove_finite.
 Qed.
-
-Lemma Finite_nats : Finite nats.
-Proof.
-  Fail Timeout 2 prove_finite.  (* ad infinitum *)
-Abort.
 
 CoInductive COINDFinite {A} : LList A -> Prop :=
 | COINDFinite_LNil : COINDFinite LNil

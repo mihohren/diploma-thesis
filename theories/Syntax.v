@@ -446,27 +446,9 @@ Instance Subst_formula (Σ : signature)  : Subst1 (var -> term Σ) (formula Σ )
 
 Instance VarInstance_term (Σ : signature) : Var (var) (term Σ) := @var_term Σ .
 
-Notation "x '__term'" := (var_term x) (at level 5, format "x __term") : subst_scope.
-
-Notation "x '__term'" := (@ids (_) (_) VarInstance_term x) (at level 5, only printing, format "x __term") : subst_scope.
-
-Notation "'var'" := (var_term) (only printing, at level 1) : subst_scope.
-
 Class Up_term X Y := up_term : ( X ) -> Y.
 
-Notation "↑__term" := (up_term) (only printing) : subst_scope.
-
-Notation "↑__term" := (up_term_term) (only printing) : subst_scope.
-
 Instance Up_term_term (Σ : signature)  : Up_term (_) (_) := @up_term_term Σ  .
-
-Notation "s [ σ ]" := (subst_term σ s) (at level 7, left associativity, only printing) : subst_scope.
-
-Notation "[ σ ]" := (subst_term σ) (at level 1, left associativity, only printing) : fscope.
-
-Notation "s [ σ ]" := (subst_formula σ s) (at level 7, left associativity, only printing) : subst_scope.
-
-Notation "[ σ ]" := (subst_formula σ) (at level 1, left associativity, only printing) : fscope.
 
 Ltac auto_unfold := repeat unfold subst1,  subst2,  Subst1,  Subst2,  ids,  ren1,  ren2,  Ren1,  Ren2,  Subst_term,  Subst_formula,  VarInstance_term.
 
