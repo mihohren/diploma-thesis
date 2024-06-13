@@ -56,35 +56,35 @@ Example PA_refl (* ∀ x, x = x *): formula Σ__PA.
   refine [_; _]; exact (var_term 0).
 Defined.
 
-Definition PA_prod_N_zero : @production Σ__PA.
+Definition PA_prod_N_zero : production Σ__PA.
   refine (mkProd nil nil PA_Nat _).
   refine [TFunc PA_zero []].
 Defined.
 
-Definition PA_prod_N_succ : @production Σ__PA.
+Definition PA_prod_N_succ : production Σ__PA.
   refine (mkProd nil _ PA_Nat _).
   - refine (cons _ nil). exists PA_Nat; refine [var_term 0].
   - refine [TFunc PA_succ [var_term 0]].
 Defined.
 
-Definition PA_prod_E_zero : @production Σ__PA.
+Definition PA_prod_E_zero : production Σ__PA.
   refine (mkProd nil nil PA_Even _).
   refine [ TFunc PA_zero []].
 Defined.
 
-Definition PA_prod_E_succ : @production Σ__PA.
+Definition PA_prod_E_succ : production Σ__PA.
   refine (mkProd nil _ PA_Even _).
   - refine (cons _ nil). exists PA_Odd; refine [var_term 0].
   - refine [TFunc PA_succ [var_term 0]].
 Defined.
 
-Definition PA_prod_O_succ : @production Σ__PA.
+Definition PA_prod_O_succ : production Σ__PA.
   refine (mkProd nil _ PA_Odd _).
   - refine (cons _ nil). exists PA_Even; refine [var_term 0].
   - refine [TFunc PA_succ [var_term 0]].
 Defined.
 
-Inductive Φ__PA : @production Σ__PA -> Prop :=
+Inductive Φ__PA : production Σ__PA -> Prop :=
 | ID_N_zero : Φ__PA PA_prod_N_zero
 | ID_N_succ : Φ__PA PA_prod_N_succ
 | ID_E_zero : Φ__PA PA_prod_E_zero
@@ -158,7 +158,7 @@ Definition M__PA : structure Σ__PA.
 Defined.
 
 
-Lemma NAT_φ_Φ_ω: forall n, @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Nat [n].
+Lemma NAT_φ_Φ_ω: forall n, φ_Φ_ω Φ__PA M__PA PA_Nat [n].
   induction n.
   - exists 1. unfold φ_Φ_n, φ_Φ, φ_P. exists PA_prod_N_zero, (conj eq_refl ID_N_zero).
     unfold φ_pr. cbn. eexists; intuition.
@@ -172,7 +172,7 @@ Lemma NAT_φ_Φ_ω: forall n, @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Nat [n].
       Unshelve. intros n. exact n.
 Qed.
 
-Lemma EVEN_φ_Φ_ω : forall n, EVEN n -> @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Even [n].
+Lemma EVEN_φ_Φ_ω : forall n, EVEN n -> φ_Φ_ω Φ__PA M__PA PA_Even [n].
 Proof.
   intros n HE. induction HE using EVEN_ind2.
   - exists 1. unfold φ_Φ_n, φ_Φ, φ_P. exists PA_prod_E_zero, (conj eq_refl ID_E_zero).
@@ -191,7 +191,7 @@ Proof.
     intros n; exact n.
 Qed.
 
-Lemma ODD_φ_Φ_ω : forall n, ODD n -> @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Odd [n].
+Lemma ODD_φ_Φ_ω : forall n, ODD n -> φ_Φ_ω Φ__PA M__PA PA_Odd [n].
 Proof.
   intros n HO. induction HO using ODD_ind2.
   - exists 2. unfold φ_Φ_n, φ_Φ, φ_P; cbn. exists PA_prod_O_succ, (conj eq_refl ID_O_succ); cbn.
@@ -212,8 +212,8 @@ Proof.
     apply inj_pair2 in H0; subst; assumption.
 Qed.
 
-Lemma φ_Φ_n_EVEN : forall m n, @φ_Φ_n Σ__PA M__PA Φ__PA PA_Even m [n] -> EVEN n
-  with φ_Φ_n_ODD : forall m n, @φ_Φ_n Σ__PA M__PA Φ__PA PA_Odd m [n] -> ODD n.
+Lemma φ_Φ_n_EVEN : forall m n, φ_Φ_n Φ__PA M__PA m PA_Even [n] -> EVEN n
+  with φ_Φ_n_ODD : forall m n, φ_Φ_n Φ__PA M__PA m PA_Odd [n] -> ODD n.
 Proof.
   - induction m; intros n.
     + contradiction.
@@ -225,7 +225,7 @@ Proof.
         unfold coerce_indpred in *; simpl_uip.
         inversion Heval.
         specialize (Hindpreds PA_Odd [var_term 0]); cbn in Hindpreds.
-        assert (@φ_Φ_n Σ__PA M__PA Φ__PA PA_Odd m [ρ 0]) by intuition.
+        assert (φ_Φ_n Φ__PA M__PA m PA_Odd [ρ 0]) by intuition.
         constructor. subst. clear Heval Hindpreds.
         now apply φ_Φ_n_ODD with m.
   - induction m; intros n.
@@ -235,21 +235,21 @@ Proof.
       cbn in *; unfold eq_rect in *; unfold coerce_indpred in *; simpl_uip.
       inversion Heval. constructor.
       specialize (Hindpreds PA_Even [var_term 0]).
-      assert (@φ_Φ_n Σ__PA M__PA Φ__PA PA_Even m (V.map (eval ρ) [var_term 0])) by auto.
+      assert (φ_Φ_n Φ__PA M__PA m PA_Even (V.map (eval ρ) [var_term 0])) by auto.
       now apply φ_Φ_n_EVEN with m.
 Qed.
 
-Lemma φ_Φ_ω_EVEN : forall n, @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Even [n] -> EVEN n.
+Lemma φ_Φ_ω_EVEN : forall n, φ_Φ_ω Φ__PA M__PA PA_Even [n] -> EVEN n.
 Proof.
   intros n [α Hα]; now apply φ_Φ_n_EVEN with α.
 Qed.
 
-Lemma φ_Φ_ω_ODD : forall n, @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Odd ([n]) -> ODD n.
+Lemma φ_Φ_ω_ODD : forall n, φ_Φ_ω Φ__PA M__PA PA_Odd [n] -> ODD n.
 Proof.
   intros n [α Hα]; now apply φ_Φ_n_ODD with α.
 Qed.
 
-Lemma standard_model__PA : @standard_model Σ__PA Φ__PA M__PA.
+Lemma standard_model__PA : standard_model Φ__PA M__PA.
 Proof.
   unfold standard_model. intros []; cbn; intros ts; split; intros H.
   - rewrite V.eta. remember (V.tl ts) as tail. cbn in *. pose proof (V.nil_spec tail).
@@ -264,9 +264,8 @@ Proof.
   - apply φ_Φ_ω_ODD. rewrite (V.eta ts) in H. pose proof (V.nil_spec (V.tl ts)).
     rewrite H0 in H. assumption.
 Qed.
-(* proof_irrelevance, Eqdep.Eq_rect_eq.eq_rect_eq *)
 
-Example mut_dep_E_O : @mutually_dependent Σ__PA Φ__PA PA_Even PA_Odd.
+Example mut_dep_E_O : mutually_dependent Φ__PA PA_Even PA_Odd.
 Proof.
   split.
   - constructor. exists PA_prod_E_succ; intuition.
@@ -279,7 +278,7 @@ Qed.
 
 Ltac simpl_destruct :=
   repeat match goal with
-    | [ H : Prem _ _ |- _ ] => unfold Prem in H
+    | [ H : Prem _ _ _ |- _ ] => unfold Prem in H
     | [ H : _ /\ _ |- _ ] => destruct H
     | [ H : ex _ |- _ ] => destruct H
     | _ => unfold Prem
@@ -292,14 +291,14 @@ Ltac destruct_productions :=
   | _ => idtac "No production in inductive definition set found."
   end.
 
-Lemma Prem_Nat_Nat : @Prem Σ__PA Φ__PA PA_Nat PA_Nat.
+Lemma Prem_Nat_Nat : Prem Φ__PA PA_Nat PA_Nat.
 Proof.
   exists PA_prod_N_succ; intuition.
   - apply ID_N_succ.
   - cbn. exists ([var_term 0]). now left.
 Qed.
     
-Lemma Prem_Nat_only_Nat : forall P, @Prem Σ__PA Φ__PA PA_Nat P -> P = PA_Nat.
+Lemma Prem_Nat_only_Nat : forall P, Prem Φ__PA PA_Nat P -> P = PA_Nat.
 Proof.
   intros [] H.
   - reflexivity.
@@ -311,7 +310,7 @@ Proof.
     + destruct H1 as [H | H]; inversion H.
 Qed.
 
-Lemma Prem_star_Nat : forall P, @Prem_star Σ__PA Φ__PA PA_Nat P -> P = PA_Nat.
+Lemma Prem_star_Nat : forall P, Prem_star Φ__PA PA_Nat P -> P = PA_Nat.
 Proof.
   intros P H; remember PA_Nat as x.
   induction H.
@@ -321,28 +320,28 @@ Proof.
 Qed.
   
 Example not_mut_dep_N_E :
-  ~ @mutually_dependent Σ__PA Φ__PA PA_Nat PA_Even.
+  ~ mutually_dependent Φ__PA PA_Nat PA_Even.
 Proof.
   intros [prem _].
   apply Prem_star_Nat in prem; discriminate.
 Qed.
 
 Example not_mut_dep_N_O :
-  ~ @mutually_dependent Σ__PA Φ__PA PA_Nat PA_Odd.
+  ~ mutually_dependent Φ__PA PA_Nat PA_Odd.
 Proof.
   intros [prem _].
   apply Prem_star_Nat in prem; discriminate.
 Qed.
 
 Lemma mut_dep_Nat_only_Nat :
-  forall (P : IndPredS Σ__PA), @mutually_dependent Σ__PA Φ__PA P PA_Nat -> P = PA_Nat.
+  forall (P : IndPredS Σ__PA), mutually_dependent Φ__PA P PA_Nat -> P = PA_Nat.
 Proof.
   intros []; auto; intros [H1 H2];
   now apply Prem_star_Nat in H2.
 Qed.                              
   
 Lemma approximants_of_PA_Nat : forall α n,
-    @approximant_of Σ__PA M__PA Φ__PA PA_Nat α [n]
+    approximant_of Φ__PA M__PA PA_Nat α [n]
     <-> n < α.
 Proof.
   intros α n; split; intros H.

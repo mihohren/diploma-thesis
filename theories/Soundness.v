@@ -4,12 +4,12 @@ From Coq Require Import Logic.Classical.
 Notation "Γ ⊢ Δ" := (mkSeq Γ Δ) (at level 61).
 
 Section soundness.
-  Variable Σ : signature.
-  Variable Φ : @IndDefSet Σ.
+  Context {Σ : signature}.
+  Context (Φ : IndDefSet Σ).
 
   Definition Sat_sequent (s : sequent) : Prop :=
     let '(Γ ⊢ Δ) := s in            
-    forall (M : structure Σ), standard_model Σ Φ M -> forall (ρ : env M),
+    forall (M : structure Σ), standard_model Φ M -> forall (ρ : env M),
         (forall φ, In φ Γ -> ρ ⊨ φ) -> exists ψ, In ψ Δ /\ ρ ⊨ ψ.
 
   Notation "Γ '⊫' Δ" := (Sat_sequent (mkSeq Γ Δ))
@@ -198,8 +198,8 @@ Section soundness.
         - assumption.
         - exfalso; apply HΔ; exists ξ; auto. }
       cbn in Hpreds', Hindpreds'. exists (FIndPred (indcons pr) (V.map (subst_term σ) (indargs pr))); split. now left.
-      apply Hstandard. apply ω_prefixed.
-      unfold φ_Φ. unfold φ_P. exists pr. exists (conj eq_refl HΦ). cbn. unfold φ_pr.
+      apply Hstandard. apply φ_Φ_ω_least_prefixed.
+      exists pr, (conj eq_refl HΦ); cbn.
       assert (Heq : eval (funcomp (eval ρ) σ) = fun t => eval ρ (subst_term σ t)) by (fext; apply eval_comp).
       exists (funcomp (eval ρ) σ); repeat split.
       + intros Q us Hin. rewrite Heq. rewrite <- V.map_map. apply Hpreds'. assumption.

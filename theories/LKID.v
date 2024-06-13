@@ -4,7 +4,8 @@ Require Import Sorting.Permutation.
 Import ListNotations.
 
 Section lkid.
-  Context {Σ : signature} {Φ : @IndDefSet Σ}.
+  Context {Σ : signature}.
+  Context (Φ : IndDefSet Σ).
 
   Inductive sequent : Set :=
   | mkSeq (Γ Δ : list (formula Σ)).

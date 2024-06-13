@@ -1,4 +1,4 @@
-Require Import Relations.
+Require Import Relations RelationClasses.
 Require Export Utf8.
 Require Export Arith Bool Lia Program.
 Require Export unscoped.
