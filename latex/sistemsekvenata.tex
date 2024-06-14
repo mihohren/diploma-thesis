@@ -394,7 +394,7 @@ označimo s \(\mathit{LKID}_{\mathit{PA}}\)  sustav koji se odnosi na skup induk
     \AxiomC{\( \Gamma \vdash G(o), \Delta \)}
     \AxiomC{\( G(x), \Gamma \vdash G(s(x)), \Delta \)}
     \AxiomC{\( G(t), \Gamma \vdash \Delta \)}
-    \RightLabel{\( \mathit{(NatIndL)} \)}
+    \RightLabel{\( \mathit{(NatInd)} \)}
     \TrinaryInfC{\( \mathit{Nat}(t), \Gamma \vdash \Delta \)}
   \end{prooftree}
   \noindent gdje je G induktivna hipoteza vezana uz induktivni predikatni simbol \(\mathit{Nat}\),
@@ -543,7 +543,7 @@ Lemma provable_Even_succ_succ_Even :
       \AxiomC{}
       \RightLabel{\(\mathit{(Ax)}\)}
       \UnaryInfC{\( Ex \lor Ox \vdash Ex \lor Ox\)}
-      \RightLabel{\(\mathit{(NatIndL)}\)}
+      \RightLabel{\(\mathit{(NatInd)}\)}
       \TrinaryInfC{\( Nx \vdash Ex \lor Ox \)}
       \RightLabel{\( \mathit{(ImpR)}\)}
       \UnaryInfC{\( Nx \rightarrow Ex \lor Ox \)}

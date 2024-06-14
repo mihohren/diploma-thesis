@@ -3,10 +3,9 @@ Svaki Coqov dokaz koji smo do sada prikazali je konačan term.
 Svi formalni dokazi u sustavu \(\mathit{LKID}\) (uključujući primjere~\ref{ex:lkid-indr-proof} i~\ref{ex:lkid-indl-proof}) su konačni.
 Ovakve dokaze jednim imenom nazivamo \textit{dobro utemeljenim dokazima} jer su sve \enquote{grane} njihovih dokaznih stabala konačne.
 Međutim, možemo promatrati i \textit{neutemeljene dokaze} kod kojih postoje beskonačne grane.
-\misao{\enquote{neutemeljen dokaz} zvuči kao \enquote{dokaz koji to nije}, treba neki bolji prijevod.}
 Već smo u odjeljku~\ref{sec:programiranje-u-gallini} spomenuli neutemeljene, odnosno koinduktivne tipove.
 Neutemeljeni dokaz je tada \enquote{beskonačan} dokaz neke koinduktivno definirane tvrdnje.
-U ovom poglavlju ćemo u Coqu ilustrirati neutemeljene dokaze.
+U ovom ćemo kratkom poglavlju ilustrirati neutemeljene dokaze te cikličke dokaze koji su posebna vrsta neutemeljenih.
 
 \section{Primjer: lijene liste}
 Definirajmo za početak \textit{lijene liste}, to jest liste koje mogu biti konačne, a mogu biti i beskonačne.
@@ -90,7 +89,7 @@ dok je predikat \texttt{Finite} definiran induktivno, a njegovi stanovnici \text
 dobro utemeljeni. Štoviše, kada bismo predikat \texttt{Finite} definirali koinduktivno,
 on bi postao trivijalan, to jest vrijedio bi za proizvoljnu lijenu listu.
 
-
+\section{Primjer: \(\mathit{CLKID}^{\omega}\)}
 Brotherston je formalizirao ideju cikličkih dokaza u dokaznom sustavu
 \(\mathit{CLKID}^{\omega}\), podsustavu dokaznog sustava \(\mathit{LKID}^{\omega}\),
 koji pak je proširenje sustava \(\mathit{LKID}\) potencijalno beskonačnim dokaznim stablima.
@@ -98,13 +97,159 @@ Dokazni sustav \(\mathit{CLKID}^{\omega}\) ograničen je u odnosu na sustav \(\m
 tako što svako (potencijalno beskonačno) dokazno stablo
 smije imati \textit{najviše konačno mnogo} različitih podstabala te
 svaka beskonačna grana tog stabla mora imati beskonačno mnogo \enquote{napredaka}.
-% drugim riječima, beskonačno mnogo primjena induktivnih pravila
+Dokazni sustav \(\mathit{CLKID}^{\omega}\) prikazati ćemo neformalno.
+
+\begin{example}
+  Dokazujemo tvrdnju \(\forall x, \mathit{Nat}(x) \rightarrow \mathit{Even}(x) \lor \mathit{Odd}(x)\)
+  u sustavu \(\mathit{CLKID}^{\omega}\).
+  Koristimo pokrate kao u primjeru~\ref{ex:lkid-indl-proof}..
+  \begin{prooftree}\label{ex:clkidw1}
+    \AxiomC{}
+    \RightLabel{(\texttt{PA\_prod\_E\_zero}\textit{IndR})}
+    \UnaryInfC{\(\vdash Eo, Oo\)}
+    \AxiomC{\(Nx \vdash Ex, Ox \, (\dagger)\)}
+    \RightLabel{\( \mathit{(Subst)} \)}
+    \UnaryInfC{\(Ny \vdash Ey, Oy\)}
+    \RightLabel{\(\mathit{(Perm)}\)}
+    \UnaryInfC{\( Ny \vdash Oy, Ey \)}
+    \RightLabel{(\texttt{PA\_prod\_O\_succ}\textit{IndR})}
+    \UnaryInfC{\( Ny \vdash Oy, Osy \)}
+    \RightLabel{(\texttt{PA\_prod\_E\_succ}\textit{IndR})}
+    \UnaryInfC{\(Ny \vdash Esy, Osy\)}
+    \RightLabel{\(\mathit{(EqL)}\)}
+    \UnaryInfC{\(x = sy, Ny \vdash Ex, Ox\)}
+    \RightLabel{\(\mathit{(Case \, N)}\)}    
+    \BinaryInfC{\( Nx \vdash Ex, Ox \, (\dagger) \)}
+    \RightLabel{\(\mathit{(OrR)}\)}
+    \UnaryInfC{\( Nx \vdash Ex \lor Ox \)}
+    \RightLabel{\(\mathit{(ImpR)}\)}
+    \UnaryInfC{\(\vdash Nx \rightarrow Ex \lor Ox\)}
+    \RightLabel{\(\mathit{(AllR)}\)}
+    \UnaryInfC{\(\vdash \forall x, Nx \rightarrow Ex \lor Ox\)}
+  \end{prooftree}
+  Iako zapisan u konačnom stablu, ovaj dokaz je beskonačan.
+  Čitajući dokaz od dna do vrha, primjećujemo nove oznake te nova pravila.
+  Za početak, vidimo da su znakom \(\dagger\) označene gornja i donja sekventa \(Nx \vdash Ex, Ox\).
+  Gornju sekventu nazivamo \textit{pupoljkom} (\textit{bud}), a donju nazivamo \textit{pratilcem} (\textit{companion}).
+  Može se reći da su pupoljak i njegov pratilac povezani bridom, tvoreći ciklus u dokaznom
+  stablu --- odavde dolazi naziv \textit{ciklički} dokaz.
+  U stvari se isječak stabla dokaza između pratilca i pupoljka ponavlja \textit{ad infinitum}
+  pa je dokaz beskonačan.
+  Nadalje, vidimo novo pravilo izvoda \(\mathit{Case}\) koje odgovara rastavu po slučajevima,
+  a koristi se umjesto pravila indukcije.
+  Ako se između pupoljka i njegovog pratilca javlja primjena pravila \(\mathit{Case}\),
+  kažemo da je napravljen \textit{napredak}.
+  Konačno, vidimo znak jednakosti uz kojeg je vezano lijevo pravilo za jednakost \(\mathit{EqL}\).
+  Znak jednakosti je za potrebe sustava \(\mathit{LKID}^{\omega}\) i \(\mathit{CLKID}^{\omega}\)
+  (odnosno, \(\mathit{Case}\) pravila) ugrađen u definiciju formule.\footnote{Jednakost se u matematičkoj logici najčešće tretira kao predikatni simbol signature, a ne kao primitivni veznik u formulama.}
+\end{example}
+
+U primjeru~\ref{ex:clkidw1}, pupoljak i njegov pratilac javljaju se u istoj grani dokaza,
+no to nije nužno. Ovu pojavu možemo vidjeti na dokazu obrata sekvente \(Nx \vdash Ex \lor Ox\).
 
 
+\begin{example}
+  Dokazujemo sekventu \(Ex \lor Ox \vdash Nx \) u sustavu \(\mathit{CLKID}^{\omega}\).
+  \begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\((1)\)}
+    % \RightLabel{(\texttt{PA\_prod\_N\_zero}\textit{IndR})}
+    \UnaryInfC{\(\vdash No\)}
+    \RightLabel{\(\mathit{(EqL)}\)}
+    \UnaryInfC{\(x = o \vdash Nx\)}
+    \AxiomC{\(Ox \vdash Nx \, (\dagger)\)}
+    \RightLabel{\(\mathit{(Subst)}\)}
+    \UnaryInfC{\(Oy \vdash Ny\)}
+    % \RightLabel{(\texttt{PA\_prod\_N\_succ}\textit{IndR})}
+    \RightLabel{\((2)\)}
+    \UnaryInfC{\(Oy \vdash Nsy\)}
+    \RightLabel{\(\mathit{(EqL)}\)}
+    \UnaryInfC{\(x = sy, Oy \vdash Nx \)}
+    \RightLabel{\(\mathit{(Case \, E)}\)}
+    \BinaryInfC{\(Ex \vdash Nx \, (\ast)\)}
+    \AxiomC{\(Ex \vdash Nx \, (\ast)\)}
+    \RightLabel{\(\mathit{(Subst)}\)}
+    \UnaryInfC{\(Ey \vdash Ny\)}
+    % \RightLabel{(\texttt{PA\_prod\_N\_succ}\textit{IndR})}
+    \RightLabel{\((3)\)}
+    \UnaryInfC{\(Ey \vdash Nsy\)}
+    \RightLabel{\(\mathit{(EqL)}\)}
+    \UnaryInfC{\(x = sy, Ey \vdash Nx\)}
+    \RightLabel{\((\mathit{Case \, O})\)}
+    \UnaryInfC{\( Ox \vdash Nx \, (\dagger) \)}
+    \RightLabel{\(\mathit{(OrL)}\)}
+    \BinaryInfC{\( Ex \lor Ox \vdash Nx \)}
+  \end{prooftree}
+  Ovdje je znakom \(\dagger\) označen par pupoljka i pratilca sekvente \(Ox \vdash Nx\),
+  a znakom \(\ast\) je označen par pupoljka i pratilca sekvente \(Ex \vdash Nx\).
+  Iako se odgovarajući parovi pupoljaka i pratilaca naizgled javljaju u različitim granama,
+  uz dva \enquote{odmatanja} stabla dokaza vidimo da to u stvari nije slučaj.
+  \begin{scriptsize}
+    \begin{prooftree}
+      \AxiomC{}
+      \RightLabel{\((1)\)}
+      % \RightLabel{(\texttt{PA\_prod\_N\_zero}\textit{IndR})}
+      \UnaryInfC{\(\vdash No\)}
+      \RightLabel{\(\mathit{(EqL)}\)}
+      \UnaryInfC{\(x = o \vdash Nx\)}
 
+      \AxiomC{\(Ex \vdash Nx \, (\ast)\)}
+      \RightLabel{\(\mathit{(Subst)}\)}
+      \UnaryInfC{\(Ey \vdash Ny\)}
+      % \RightLabel{(\texttt{PA\_prod\_N\_succ}\textit{IndR})}
+      \RightLabel{\((3)\)}
+      \UnaryInfC{\(Ey \vdash Nsy\)}
+      \RightLabel{\(\mathit{(EqL)}\)}
+      \UnaryInfC{\(x = sy, Ey \vdash Nx\)}
+      \RightLabel{\((\mathit{Case \, O})\)}
+      \UnaryInfC{\( Ox \vdash Nx \, \xcancel{(\dagger)}\)}
+      
+      \RightLabel{\(\mathit{(Subst)}\)}
+      \UnaryInfC{\(Oy \vdash Ny\)}
+      % \RightLabel{(\texttt{PA\_prod\_N\_succ}\textit{IndR})}
+      \RightLabel{\((2)\)}
+      \UnaryInfC{\(Oy \vdash Nsy\)}
+      \RightLabel{\(\mathit{(EqL)}\)}
+      \UnaryInfC{\(x = sy, Oy \vdash Nx \)}
+      \RightLabel{\(\mathit{(Case \, E)}\)}
+      \BinaryInfC{\(Ex \vdash Nx \, (\ast)\)}
 
-% bilo bi zanimljivo vidjeti vezu s LTL, prikazanu u Coq'Art
-% možda dokazati neke teže "Exercises" od tamo
+      \AxiomC{}
+      \RightLabel{\((1)\)}
+      % \RightLabel{(\texttt{PA\_prod\_N\_zero}\textit{IndR})}
+      \UnaryInfC{\(\vdash No\)}
+      \RightLabel{\(\mathit{(EqL)}\)}
+      \UnaryInfC{\(x = o \vdash Nx\)}
+      \AxiomC{\(Ox \vdash Nx \, (\dagger)\)}
+      \RightLabel{\(\mathit{(Subst)}\)}
+      \UnaryInfC{\(Oy \vdash Ny\)}
+      % \RightLabel{(\texttt{PA\_prod\_N\_succ}\textit{IndR})}
+      \RightLabel{\((2)\)}
+      \UnaryInfC{\(Oy \vdash Nsy\)}
+      \RightLabel{\(\mathit{(EqL)}\)}
+      \UnaryInfC{\(x = sy, Oy \vdash Nx \)}
+      \RightLabel{\(\mathit{(Case \, E)}\)}
+      
+      \BinaryInfC{\(Ex \vdash Nx \, \xcancel{(\ast)}\)}
+      \RightLabel{\(\mathit{(Subst)}\)}
+      \UnaryInfC{\(Ey \vdash Ny\)}
+      % \RightLabel{(\texttt{PA\_prod\_N\_succ}\textit{IndR})}
+      \RightLabel{\((3)\)}
+      \UnaryInfC{\(Ey \vdash Nsy\)}
+      \RightLabel{\(\mathit{(EqL)}\)}
+      \UnaryInfC{\(x = sy, Ey \vdash Nx\)}
+      \RightLabel{\((\mathit{Case \, O})\)}
+      \UnaryInfC{\( Ox \vdash Nx \, (\dagger) \)}
+      \RightLabel{\(\mathit{(OrL)}\)}
+      \BinaryInfC{\( Ex \lor Ox \vdash Nx \)}
+    \end{prooftree}
+  \end{scriptsize}
+  Pupoljak sekvente \(Ex \vdash Nx\) je zamijenjen
+  isječkom stabla od pratilca sekvente \(Ex \vdash Nx\) do pupoljka sekvente \(Ox \vdash Nx\),
+  Zatim smo odmotali stablo pri pupoljku sekvente \(Ox \vdash Nx\) zamijenivši ga
+  isječkom stabla od pratilca sekvente \(Ox \vdash Nx\) do pupoljka sekvente \(Ex \vdash Nx\).
+  \misao{Ako je moguće, tu bi bilo super koristiti boje teksta.}
+\end{example}
 
 %%% Local Variables:
 %%% mode: LaTeX
