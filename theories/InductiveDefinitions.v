@@ -25,52 +25,45 @@ Section definition_set_operator.
   Context (Φ : IndDefSet Σ).
   Context (M : structure Σ).
 
-  (* interpretation of inductive predicates *)
   Definition InterpInd := forall P : IndPredS Σ, vec M (indpred_ar P) -> Prop.
 
-  Definition subset (U V : InterpInd) := forall P v, U P v -> V P v.
-  Notation "U ⊑ V" := (subset U V) (at level 11).
+  Definition subinterp (U V : InterpInd) := forall P v, U P v -> V P v.
+  Notation "U ⊑ V" := (subinterp U V) (at level 11).
   
   Definition monotone (F : InterpInd -> InterpInd) := forall U V : InterpInd, U ⊑ V -> F U ⊑ F V.
   
   Definition φ_pr
     (pr : production Σ)
-    (args : InterpInd)
+    (interp : InterpInd)
     (ds : vec M (indpred_ar (indcons pr)))
     : Prop :=
         exists (ρ : env M),
         (forall Q us, List.In (Q; us) (preds pr) ->
                  interpP Q (V.map (eval ρ) us)) /\
           (forall P ts, List.In (P; ts) (indpreds pr) ->
-                    args P (V.map (eval ρ) ts)) /\
+                    interp P (V.map (eval ρ) ts)) /\
           ds = V.map (eval ρ) (indargs pr).
 
   Definition φ_P
     (P : IndPredS Σ)
-    (args : InterpInd)
+    (interp : InterpInd)
     : vec M (indpred_ar P) -> Prop.
     refine (fun ds => _).
     refine (@ex (production Σ) (fun pr => _)).
     refine (@ex (P = indcons pr /\ Φ pr) (fun '(conj Heq HΦ) => _)).
     rewrite Heq in ds.
-    exact (φ_pr pr args ds).
+    exact (φ_pr pr interp ds).
   Defined.
   
-  Definition φ_Φ (args : InterpInd) : InterpInd :=
-    fun P => φ_P P args.
+  Definition φ_Φ (interp : InterpInd) : InterpInd :=
+    fun P => φ_P P interp.
   
   Proposition φ_Φ_monotone : monotone φ_Φ.
   Proof.
-    intros f g Hle P v Hφ.
+    intros U V Hle P v Hφ.
     unfold φ_Φ, φ_P in *.
-    destruct Hφ as (pr & (Heq & HΦ) & Hφ_P_pr).
-    destruct Hφ_P_pr as (ρ & Hpreds & Hindpreds & Hcons).
-    exists pr, (conj Heq HΦ).
-    unfold φ_pr in *.
-    exists ρ; repeat split.
-    - apply Hpreds.
-    - intros PP ts HIn. apply Hle. apply Hindpreds; auto.
-    - apply Hcons.
+    destruct Hφ as (pr & (Heq & HΦ) & ρ & Hpreds & Hindpreds & Heval).
+    exists pr, (conj Heq HΦ), ρ; auto.
   Qed.
 
   Fixpoint φ_Φ_n (α : nat) : InterpInd :=
@@ -131,40 +124,28 @@ Section definition_set_operator.
     split.
     - intros P v H.
       unfold φ_Φ, φ_P, φ_pr in H;
-        destruct H as (pr & [Heq Hpr] & (ρ & H1 & H2 & H3)).
-      unfold eq_rect in H3; subst P; subst v.
-      assert (Hsup : exists α, forall P ts, In (P; ts) (indpreds pr) -> φ_Φ_n α P (V.map (eval ρ) ts)).
-      {
-        induction (indpreds pr).
-        + exists 0. intros. contradiction.
-        + destruct a. pose proof (H2 x t).
-          assert (In (x; t) ((x; t) :: l)) by now left.
-          apply H in H0. destruct H0 as [α Hα].
-          assert (IH_help : forall P ts, In (P; ts) l -> φ_Φ_ω P (V.map (eval ρ) ts)).
-          { intros P ts Hin. apply H2. now right. }
-          apply IHl in IH_help.
-          destruct IH_help as [β Hβ].
+        destruct H as (pr & [Heq Hpr] & (ρ & Hpreds & Hindpreds & Heval)). 
+      unfold eq_rect in Heval; subst P; subst v.
+      enough (Hsup : exists α, forall P ts, In (P; ts) (indpreds pr) -> φ_Φ_n α P (V.map (eval ρ) ts)).
+      + destruct Hsup as [κ Hsup].
+        exists (S κ), pr, (conj eq_refl Hpr), ρ; split; auto.
+      + induction (indpreds pr) as [| [P' v'] indpreds' IH].
+        * exists 0; inversion 1.
+        * pose proof (Hindpreds P' v').
+          assert (Hin: In (P'; v') ((P'; v') :: indpreds')) by now left.
+          apply H in Hin as [α Hα].
+          assert (IH_help : forall P ts, In (P; ts) indpreds' -> φ_Φ_ω P (V.map (eval ρ) ts)).
+          { intros P ts Hin. apply Hindpreds. now right. }
+          apply IH in IH_help as [β Hβ].
           exists (S (max α β)).
-          intros P ts Hin.
-          inversion Hin.
-          * apply approximant_monotone with α.
-            -- auto with arith.
-            -- apply EqdepFacts.eq_sigT_fst in H0 as HHH.
-               subst x. unfold approximant_of.
-               apply inj_pair2 in H0 as HH. subst t. assumption.
-          * apply approximant_monotone with β.
-            -- auto with arith.
-            -- clear Hin. now apply Hβ.                                
-      }
-      destruct Hsup as [κ Hsup].
-      exists (S κ).
-      cbn. unfold φ_Φ.
-      unfold φ_P.
-      exists pr, (conj eq_refl Hpr).
-      unfold φ_pr. exists ρ; split; auto.
-    - intros args Hprefixed P v Hω.
+          intros P ts Hin; inversion Hin.
+          -- apply φ_Φ_n_monotone with α; auto with arith.
+             inversion H0; subst P.
+             apply inj_pair2 in H0; now subst.
+          -- apply φ_Φ_n_monotone with β; auto with arith.
+    - intros interp Hprefixed P v Hω.
       destruct Hω as [α Hφ].
-      enough (H: forall β, φ_Φ (φ_Φ_n β) P v -> φ_Φ args P v).
+      enough (H: forall β, φ_Φ (φ_Φ_n β) P v -> φ_Φ interp P v).
       + now apply Hprefixed, (H α), φ_Φ_n_succ.
       + intros β; apply φ_Φ_monotone. induction β as [| β IH].
         * inversion 1.
