@@ -75,7 +75,7 @@ U Coqu, napredak je osiguran uvjetom produktivnosti kojeg smo spomenuli
 u odjeljku~\ref{sec:ogranicenja}.
 
 Pažljiv čitatelj će primijetiti da ista argumentacija vrijedi
-i za predikat \texttt{Finite}, definiran na idući način.
+i za tvrdnju \texttt{Finite (from n)}, gdje je predikat \texttt{Finite} definiran na idući način.
 \begin{minted}{coq}
 Inductive Finite {A} : LList A -> Prop :=
 | Finite_LNil : Finite LNil
@@ -105,16 +105,16 @@ Dokazni sustav \(\mathit{CLKID}^{\omega}\) prikazati ćemo neformalno.
   Koristimo pokrate kao u primjeru~\ref{ex:lkid-indl-proof}..
   \begin{prooftree}\label{ex:clkidw1}
     \AxiomC{}
-    \RightLabel{(\texttt{PA\_prod\_E\_zero}\textit{IndR})}
+    \RightLabel{(\texttt{PA\_prod\_E\_zero}\textit{Prod})}
     \UnaryInfC{\(\vdash Eo, Oo\)}
     \AxiomC{\(Nx \vdash Ex, Ox \, (\dagger)\)}
     \RightLabel{\( \mathit{(Subst)} \)}
     \UnaryInfC{\(Ny \vdash Ey, Oy\)}
     \RightLabel{\(\mathit{(Perm)}\)}
     \UnaryInfC{\( Ny \vdash Oy, Ey \)}
-    \RightLabel{(\texttt{PA\_prod\_O\_succ}\textit{IndR})}
+    \RightLabel{(\texttt{PA\_prod\_O\_succ}\textit{Prod})}
     \UnaryInfC{\( Ny \vdash Oy, Osy \)}
-    \RightLabel{(\texttt{PA\_prod\_E\_succ}\textit{IndR})}
+    \RightLabel{(\texttt{PA\_prod\_E\_succ}\textit{Prod})}
     \UnaryInfC{\(Ny \vdash Esy, Osy\)}
     \RightLabel{\(\mathit{(EqL)}\)}
     \UnaryInfC{\(x = sy, Ny \vdash Ex, Ox\)}
@@ -153,14 +153,14 @@ no to nije nužno. Ovu pojavu možemo vidjeti na dokazu obrata sekvente \(Nx \vd
   \begin{prooftree}
     \AxiomC{}
     \RightLabel{\((1)\)}
-    % \RightLabel{(\texttt{PA\_prod\_N\_zero}\textit{IndR})}
+    % \RightLabel{(\texttt{PA\_prod\_N\_zero}\textit{Prod})}
     \UnaryInfC{\(\vdash No\)}
     \RightLabel{\(\mathit{(EqL)}\)}
     \UnaryInfC{\(x = o \vdash Nx\)}
     \AxiomC{\(Ox \vdash Nx \, (\dagger)\)}
     \RightLabel{\(\mathit{(Subst)}\)}
     \UnaryInfC{\(Oy \vdash Ny\)}
-    % \RightLabel{(\texttt{PA\_prod\_N\_succ}\textit{IndR})}
+    % \RightLabel{(\texttt{PA\_prod\_N\_succ}\textit{Prod})}
     \RightLabel{\((2)\)}
     \UnaryInfC{\(Oy \vdash Nsy\)}
     \RightLabel{\(\mathit{(EqL)}\)}
@@ -170,7 +170,7 @@ no to nije nužno. Ovu pojavu možemo vidjeti na dokazu obrata sekvente \(Nx \vd
     \AxiomC{\(Ex \vdash Nx \, (\ast)\)}
     \RightLabel{\(\mathit{(Subst)}\)}
     \UnaryInfC{\(Ey \vdash Ny\)}
-    % \RightLabel{(\texttt{PA\_prod\_N\_succ}\textit{IndR})}
+    % \RightLabel{(\texttt{PA\_prod\_N\_succ}\textit{Prod})}
     \RightLabel{\((3)\)}
     \UnaryInfC{\(Ey \vdash Nsy\)}
     \RightLabel{\(\mathit{(EqL)}\)}
@@ -188,7 +188,7 @@ no to nije nužno. Ovu pojavu možemo vidjeti na dokazu obrata sekvente \(Nx \vd
     \begin{prooftree}
       \AxiomC{}
       \RightLabel{\((1)\)}
-      % \RightLabel{(\texttt{PA\_prod\_N\_zero}\textit{IndR})}
+      % \RightLabel{(\texttt{PA\_prod\_N\_zero}\textit{Prod})}
       \UnaryInfC{\(\vdash No\)}
       \RightLabel{\(\mathit{(EqL)}\)}
       \UnaryInfC{\(x = o \vdash Nx\)}
@@ -196,8 +196,8 @@ no to nije nužno. Ovu pojavu možemo vidjeti na dokazu obrata sekvente \(Nx \vd
       \AxiomC{\(Ex \vdash Nx \, (\ast)\)}
       \RightLabel{\(\mathit{(Subst)}\)}
       \UnaryInfC{\(Ey \vdash Ny\)}
-      % \RightLabel{(\texttt{PA\_prod\_N\_succ}\textit{IndR})}
-      \RightLabel{\((3)\)}
+      % \RightLabel{(\texttt{PA\_prod\_N\_succ}\textit{Prod})}
+      \RightLabel{\((2)\)}
       \UnaryInfC{\(Ey \vdash Nsy\)}
       \RightLabel{\(\mathit{(EqL)}\)}
       \UnaryInfC{\(x = sy, Ey \vdash Nx\)}
@@ -206,7 +206,7 @@ no to nije nužno. Ovu pojavu možemo vidjeti na dokazu obrata sekvente \(Nx \vd
       
       \RightLabel{\(\mathit{(Subst)}\)}
       \UnaryInfC{\(Oy \vdash Ny\)}
-      % \RightLabel{(\texttt{PA\_prod\_N\_succ}\textit{IndR})}
+      % \RightLabel{(\texttt{PA\_prod\_N\_succ}\textit{Prod})}
       \RightLabel{\((2)\)}
       \UnaryInfC{\(Oy \vdash Nsy\)}
       \RightLabel{\(\mathit{(EqL)}\)}
@@ -216,14 +216,14 @@ no to nije nužno. Ovu pojavu možemo vidjeti na dokazu obrata sekvente \(Nx \vd
 
       \AxiomC{}
       \RightLabel{\((1)\)}
-      % \RightLabel{(\texttt{PA\_prod\_N\_zero}\textit{IndR})}
+      % \RightLabel{(\texttt{PA\_prod\_N\_zero}\textit{Prod})}
       \UnaryInfC{\(\vdash No\)}
       \RightLabel{\(\mathit{(EqL)}\)}
       \UnaryInfC{\(x = o \vdash Nx\)}
       \AxiomC{\(Ox \vdash Nx \, (\dagger)\)}
       \RightLabel{\(\mathit{(Subst)}\)}
       \UnaryInfC{\(Oy \vdash Ny\)}
-      % \RightLabel{(\texttt{PA\_prod\_N\_succ}\textit{IndR})}
+      % \RightLabel{(\texttt{PA\_prod\_N\_succ}\textit{Prod})}
       \RightLabel{\((2)\)}
       \UnaryInfC{\(Oy \vdash Nsy\)}
       \RightLabel{\(\mathit{(EqL)}\)}
@@ -233,8 +233,8 @@ no to nije nužno. Ovu pojavu možemo vidjeti na dokazu obrata sekvente \(Nx \vd
       \BinaryInfC{\(Ex \vdash Nx \, \xcancel{(\ast)}\)}
       \RightLabel{\(\mathit{(Subst)}\)}
       \UnaryInfC{\(Ey \vdash Ny\)}
-      % \RightLabel{(\texttt{PA\_prod\_N\_succ}\textit{IndR})}
-      \RightLabel{\((3)\)}
+      % \RightLabel{(\texttt{PA\_prod\_N\_succ}\textit{Prod})}
+      \RightLabel{\((2)\)}
       \UnaryInfC{\(Ey \vdash Nsy\)}
       \RightLabel{\(\mathit{(EqL)}\)}
       \UnaryInfC{\(x = sy, Ey \vdash Nx\)}
@@ -246,10 +246,17 @@ no to nije nužno. Ovu pojavu možemo vidjeti na dokazu obrata sekvente \(Nx \vd
   \end{scriptsize}
   Pupoljak sekvente \(Ex \vdash Nx\) je zamijenjen
   isječkom stabla od pratilca sekvente \(Ex \vdash Nx\) do pupoljka sekvente \(Ox \vdash Nx\),
-  Zatim smo odmotali stablo pri pupoljku sekvente \(Ox \vdash Nx\) zamijenivši ga
+  Nadalje, pupoljak sekvene \(Ox \vdash Nx\) zamijenjen je
   isječkom stabla od pratilca sekvente \(Ox \vdash Nx\) do pupoljka sekvente \(Ex \vdash Nx\).
-  \misao{Ako je moguće, tu bi bilo super koristiti boje teksta.}
+  Dokaz ne bi bio moguć bez korištenja produkcijskih pravila za produkcije:
+  \begin{enumerate}[label={(\arabic*)}]
+  \item \texttt{PA\_prod\_N\_zero} i
+  \item \texttt{PA\_prod\_N\_succ}.
+  \end{enumerate}
 \end{example}
+
+Važno je spomenuti da je svojstvo \enquote{biti ispravan \(\mathit{CLKID}^{\omega}\) dokaz} odlučivo
+te je na temelju toga napravljen ciklički dokazivač teorema \textsc{Cyclist}\footnote{\url{http://www.cyclist-prover.org/}}~\cite{cyclist}.
 
 %%% Local Variables:
 %%% mode: LaTeX

@@ -40,7 +40,7 @@ Definition Prem_star := clos_refl_trans (IndPredS Σ) Prem.
   \noindent Za induktivne predikatne simbole \(P\) i \(Q\) kažemo da su
   \textit{međusobno zavisni} ako vrijedi \(\mathit{Prem}^{\ast}(P, Q)\) i \(\mathit{Prem}^{\ast}(Q, P)\).
 \begin{minted}{coq}
-Definition mutually_dependent (P Q : IndredS Σ) :=
+Definition mutually_dependent (P Q : IndPredS Σ) :=
   Prem_star P Q /\ Prem_star Q P.
 \end{minted}
   \noindent Za međusobno zavisne induktivne predikatne simbole kažemo još da su
@@ -354,7 +354,7 @@ a s \(^{\uparrow k}\) označavamo supstituciju koja svaku varijablu \(n\) mijenj
                 (finite_subst (z_i Pj) u)
                 (G_i Pj) in
     let minor_premises :=
-      (forall pr (HΦ : Φ pr) (Hdep : mutually_dependent (indcons pr) Pj),
+      (forall pr (HΦ:Φ pr) (Hdep: mutually_dependent (indcons pr) Pj),
           let Qs := shift_formulas_by
                       shift_factor
                       (FPreds_from_preds (preds pr)) in
@@ -394,7 +394,7 @@ označimo s \(\mathit{LKID}_{\mathit{PA}}\)  sustav koji se odnosi na skup induk
     \AxiomC{\( \Gamma \vdash G(o), \Delta \)}
     \AxiomC{\( G(x), \Gamma \vdash G(s(x)), \Delta \)}
     \AxiomC{\( G(t), \Gamma \vdash \Delta \)}
-    \RightLabel{\( \mathit{(NatInd)} \)}
+    \RightLabel{\( \mathit{(IndNat)} \)}
     \TrinaryInfC{\( \mathit{Nat}(t), \Gamma \vdash \Delta \)}
   \end{prooftree}
   \noindent gdje je G induktivna hipoteza vezana uz induktivni predikatni simbol \(\mathit{Nat}\),
@@ -408,7 +408,7 @@ označimo s \(\mathit{LKID}_{\mathit{PA}}\)  sustav koji se odnosi na skup induk
     \begin{prooftree}
       \AxiomC{\( \Gamma \vdash G_{E}(o), \Delta \quad \Gamma, G_{E}(x) \vdash G_{O}(s(x)), \Delta \quad \Gamma, G_{O}(x) \vdash G_{E}(s(x)), \Delta \)}
       \AxiomC{\( \Gamma, G_{E}(t) \vdash \Delta \)}
-      \RightLabel{\(\mathit{EvenIndL}\)}
+      \RightLabel{\(\mathit{IndEven}\)}
       \BinaryInfC{\( \Gamma, \mathit{Even}(t) \vdash \Delta \)}
     \end{prooftree}
   \end{small}
@@ -430,7 +430,7 @@ Možemo pretpostaviti da je \(pr\) idućeg oblika:
 \begin{prooftree}
   \AxiomC{\( \Gamma \vdash Q_{1} \mathbf{u}_{1}[\sigma], \Delta \quad \ldots \quad \Gamma \vdash Q_{n}\mathbf{u}_{n}[\sigma]\)}
   \AxiomC{\( \Gamma \vdash P_{1} \mathbf{v}_{1}[\sigma], \Delta \quad \ldots \quad \Gamma \vdash P_{m} \mathbf{v}_{m}[\sigma] \)}
-  \RightLabel{\( \mathit{ (prIndR) }\)}
+  \RightLabel{\( \mathit{ (prProd) }\)}
   \BinaryInfC{\( \Gamma \vdash P \mathbf{t}[\sigma] \)}
 \end{prooftree}
 \begin{minted}[firstnumber=58]{coq}
@@ -472,6 +472,42 @@ pišemo \(\vdash \varphi\) ako postoji dokaz sekvente \( () \vdash (\varphi)\).
 Neformalni pojam konačnog stabla formaliziran je induktivnim tipom \texttt{LKID},
 dok njegovi konstruktori formaliziraju odgovarajuća pravila izvoda.
 
+\begin{example}
+  \textit{Zakon isključenja trećeg} je dokaziv u sustavu \(\mathit{LKID}\).
+\begin{minted}{coq}
+Lemma LKID_XM : forall φ, LKID ([] ⊢ [FOr φ (FNeg φ)]).
+\end{minted}
+  \begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(\mathit{(Ax)}\)}
+    \UnaryInfC{\( \varphi \vdash \varphi\)}
+    \RightLabel{\(\mathit{(NegR)}\)}
+    \UnaryInfC{\( \vdash \neg\varphi, \varphi\)}
+    \RightLabel{\(\mathit{(Perm)}\)}
+    \UnaryInfC{\( \vdash \varphi, \neg\varphi\)}
+    \RightLabel{\(\mathit{(OrR)}\)}
+    \UnaryInfC{\( \vdash \varphi \lor \neg\varphi\)}
+  \end{prooftree}
+\end{example}
+
+\begin{example}
+  \textit{Princip eksplozije} je dokaziv u sustavu \(\mathit{LKID}\).
+\begin{minted}{coq}
+Lemma LKID_EXPLOSION : forall φ Δ, LKID ([FAnd φ (FNeg φ)] ⊢ Δ).
+\end{minted}
+  \begin{prooftree}
+    \AxiomC{}
+    \RightLabel{\(\mathit{(Ax)}\)}
+    \UnaryInfC{\(\varphi \vdash \varphi, \Delta\)}
+    \RightLabel{\(\mathit{(NegL)}\)}
+    \UnaryInfC{\(\neg \varphi, \varphi \vdash \Delta\)}
+    \RightLabel{\(\mathit{(Perm)}\)}
+    \UnaryInfC{\(\varphi, \neg\varphi \vdash \Delta\)}
+    \RightLabel{\(\mathit{(AndL)}\)}
+    \UnaryInfC{\(\varphi \land \neg \varphi \vdash \Delta\)}
+  \end{prooftree}
+\end{example}
+
 \begin{example}\label{ex:lkid-indr-proof}
   Formula \(\forall x, \mathit{Even}(x) \rightarrow \mathit{Even}(ssx)\) je dokaziva u sustavu \(\mathit{LKID}_{\mathit{PA}}\).
 \begin{minted}{coq}
@@ -483,18 +519,18 @@ Definition Even_succ_succ_Even : formula Σ__PA :=
                             [TFunc PA_succ
                                [var_term 0]]])).
 \end{minted}
-  Neformalni dokaz prikazujemo idućim stablom, a radi preglednosti
+  \noindent Neformalni dokaz prikazujemo idućim stablom, a radi preglednosti
   pišemo \(Et\) umjesto \(\mathit{Even}(t)\) te \(Ot\) umjesto \(\mathit{Odd}(t)\).
   \begin{prooftree}
     \AxiomC{}
     \RightLabel{\( \mathit{(Ax)} \)}
     \UnaryInfC{\( Ex \vdash Ex, Essx \)}
-    \RightLabel{\( \mathit{(} \mathtt{PA\_prod\_O\_succ} \mathit{IndR)} \)}
+    \RightLabel{\( \mathit{(} \mathtt{PA\_prod\_O\_succ} \mathit{Prod)} \)}
     \UnaryInfC{\( Ex \vdash Osx, Essx \)}
     \AxiomC{}
     \RightLabel{\( \mathit{(Ax)} \)}
     \UnaryInfC{\( Ex, Osx \vdash Osx \)}
-    \RightLabel{\( \mathit{(} \mathtt{PA\_prod\_E\_succ}\mathit{IndR)} \)}
+    \RightLabel{\( \mathit{(} \mathtt{PA\_prod\_E\_succ}\mathit{Prod)} \)}
     \UnaryInfC{\( Ex, Osx \vdash Essx \)}
     \RightLabel{\( \mathit{(Cut)} \)}
     \BinaryInfC{\( Ex \vdash Essx \)}
@@ -543,7 +579,7 @@ Lemma provable_Even_succ_succ_Even :
       \AxiomC{}
       \RightLabel{\(\mathit{(Ax)}\)}
       \UnaryInfC{\( Ex \lor Ox \vdash Ex \lor Ox\)}
-      \RightLabel{\(\mathit{(NatInd)}\)}
+      \RightLabel{\(\mathit{(IndNat)}\)}
       \TrinaryInfC{\( Nx \vdash Ex \lor Ox \)}
       \RightLabel{\( \mathit{(ImpR)}\)}
       \UnaryInfC{\( Nx \rightarrow Ex \lor Ox \)}

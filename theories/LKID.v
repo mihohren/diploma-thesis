@@ -217,23 +217,18 @@ Section lkid.
     - assumption.
   Qed.
 
-  Lemma AndL1 : forall Γ Δ φ ψ,
-      LKID (φ :: Γ ⊢ Δ) ->
-      LKID (FAnd φ ψ :: Γ ⊢ Δ).
-  Proof.
-    lkid_intros; lkid_propositional.
-    apply Wk with (φ :: Γ) Γ0; intuition.
-  Qed.
-
-  Lemma AndL2 : forall Γ Δ φ ψ,
-      LKID (ψ :: Γ ⊢ Δ) ->
+  Lemma AndL : forall Γ Δ φ ψ,
+      LKID (φ :: ψ :: Γ ⊢ Δ) ->
       LKID (FAnd φ ψ :: Γ ⊢ Δ).
   Proof.
     intros Γ Δ φ ψ H; unfold FAnd.
     apply NegL. apply ImpR. apply NegR.
-    apply Wk with (ψ :: Γ) Δ; intuition.
+    apply Perm with (φ :: ψ :: Γ) Δ.
+    - repeat constructor.
+    - apply Permutation_refl.
+    - assumption.
   Qed.
-
+    
   Lemma AndR : forall Γ Δ φ ψ,
       LKID (Γ ⊢ φ :: Δ) -> LKID (Γ ⊢ ψ :: Δ) ->
       LKID (Γ ⊢ FAnd φ ψ :: Δ).
@@ -243,23 +238,32 @@ Section lkid.
       LKID (φ :: Γ ⊢ Δ) -> LKID (ψ :: Γ ⊢ Δ) ->
       LKID (FOr φ ψ :: Γ ⊢ Δ).
   Proof. lkid_trysolve. Qed.
+    
+  Lemma OrR : forall Γ Δ φ ψ,
+      LKID (Γ ⊢ φ :: ψ :: Δ) ->
+      LKID (Γ ⊢ FOr φ ψ :: Δ).
+  Proof. lkid_trysolve. Qed.
 
   Lemma OrR1 : forall Γ Δ φ ψ,
       LKID (Γ ⊢ φ :: Δ) ->
       LKID (Γ ⊢ FOr φ ψ :: Δ).
   Proof.
-    intros Γ Δ φ ψ H; unfold FOr.
-    apply ImpR. apply NegL. eapply Wk; eauto; intuition.
+    intros Γ Δ φ ψ H.
+    apply OrR. eapply Wk; eauto.
+    - apply incl_refl.
+    - intros ε Hin; inversion Hin; subst; [ left | do 2 right ]; auto.
   Qed.
 
   Lemma OrR2 : forall Γ Δ φ ψ,
       LKID (Γ ⊢ ψ :: Δ) ->
       LKID (Γ ⊢ FOr φ ψ :: Δ).
   Proof.
-    intros Γ Δ φ ψ H; unfold FOr.
-    apply ImpR. apply NegL. eapply Wk; eauto; intuition.
+    intros Γ Δ φ ψ H.
+    apply OrR. eapply Wk; eauto.
+    - apply incl_refl.
+    - intros ε Hin; inversion Hin; subst; [ right; left | do 2 right ]; auto.
   Qed.
-
+  
   Lemma ExistL : forall Γ Δ φ,
       LKID (φ :: shift_formulas Γ ⊢ shift_formulas Δ) ->
       LKID (FExist φ :: Γ ⊢ Δ).
@@ -330,22 +334,31 @@ Section lkid.
   Qed.
   
   Section proof_examples.
-    Lemma LKID_XM : forall Γ Δ φ, LKID (Γ ⊢ FOr φ (FNeg φ) :: Δ).
+    Lemma LKID_XM : forall φ, LKID ([] ⊢ [FOr φ (FNeg φ)]).
     Proof.
-      intros Γ Δ φ; unfold FOr.
+      intros φ.
+      apply OrR.
+      apply Perm with [] [FNeg φ; φ]; auto using perm_nil, perm_swap.
+      apply NegR. apply AxExtended.
+    Qed.
+
+    Lemma LKID_ID : forall φ, LKID ([] ⊢ [FImp φ φ]).
+    Proof.
+      intros φ.
       apply ImpR. apply AxExtended.
     Qed.
 
-    Lemma LKID_ID : forall Γ Δ φ, LKID (Γ ⊢ FImp φ φ :: Δ).
+    Lemma LKID_EXPLOSION : forall φ Δ, LKID ([FAnd φ (FNeg φ)] ⊢ Δ).
     Proof.
-      intros Γ Δ φ.
-      apply ImpR. apply AxExtended.
+      intros φ Δ. apply AndL.
+      apply Perm with [FNeg φ; φ] Δ; auto using perm_swap.
+      apply NegL. apply AxExtended.
     Qed.
 
-    Lemma LKID_EXPLOSION : forall Γ Δ φ, LKID (FAnd φ (FNeg φ) :: Γ ⊢ Δ).
+    Lemma LKID_DN : forall φ, LKID ([] ⊢ [FImp (FNeg (FNeg φ)) φ]).
     Proof.
-      intros Γ Δ φ; unfold FAnd.
-      apply NegL. apply ImpR. apply NegR. apply NegL. apply AxExtended.
+      intros φ.
+      apply ImpR. apply NegL. apply NegR. apply AxExtended.
     Qed.
   End proof_examples.
 End lkid.
