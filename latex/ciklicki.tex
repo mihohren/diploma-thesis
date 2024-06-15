@@ -99,11 +99,11 @@ smije imati \textit{najviše konačno mnogo} različitih podstabala te
 svaka beskonačna grana tog stabla mora imati beskonačno mnogo \enquote{napredaka}.
 Dokazni sustav \(\mathit{CLKID}^{\omega}\) prikazati ćemo neformalno.
 
-\begin{example}
+\begin{example}\label{ex:clkidw1}
   Dokazujemo tvrdnju \(\forall x, \mathit{Nat}(x) \rightarrow \mathit{Even}(x) \lor \mathit{Odd}(x)\)
   u sustavu \(\mathit{CLKID}^{\omega}\).
   Koristimo pokrate kao u primjeru~\ref{ex:lkid-indl-proof}..
-  \begin{prooftree}\label{ex:clkidw1}
+  \begin{prooftree}
     \AxiomC{}
     \RightLabel{(\texttt{PA\_prod\_E\_zero}\textit{Prod})}
     \UnaryInfC{\(\vdash Eo, Oo\)}
@@ -257,6 +257,42 @@ no to nije nužno. Ovu pojavu možemo vidjeti na dokazu obrata sekvente \(Nx \vd
 
 Važno je spomenuti da je svojstvo \enquote{biti ispravan \(\mathit{CLKID}^{\omega}\) dokaz} odlučivo
 te je na temelju toga napravljen ciklički dokazivač teorema \textsc{Cyclist}\footnote{\url{http://www.cyclist-prover.org/}}~\cite{cyclist}.
+Za naš primjer proširene Peanove signature s produkcijama za induktivne predikatne simbole
+\(\mathit{Nat}\), \(\mathit{Even}\) i \(\mathit{Odd}\),
+definicije produkcija možemo zapisati u konfiguracijsku datoteka \texttt{fo.defs}
+na idući način.
+\begin{verbatim}
+Nat { 
+    true    => Nat(0)  | 
+    Nat(x)  => Nat(s(x)) 
+} ;
+Even {
+    true    => Even(0) |
+    Odd(x)  => Even(s(x))
+} ;
+Odd {
+    Even(x) => Odd(s(x))
+} ;
+\end{verbatim}
+Zatim možemo pokrenuti dokazivač naredbom
+\begin{verbatim}
+./fo_prove -D fo.defs -p -S "Nat(x) |- Even(x) \/ Odd(x)"
+\end{verbatim}
+i dobiti izlaz programa
+\begin{scriptsize}
+\begin{verbatim}
+0: Nat_0(x) |- Odd_2(x) \/ Even_1(x) (Nat L.Unf.) [1 <{(0, 1)}/{}>, 2 <{(0, 1)}/{(0, 0)}>]
+  1: Nat_1(0) |- Odd_2(0) \/ Even_1(0) (Even R.Unf.) [3 <{(1, 1)}/{}>]
+    3: Nat_1(0) |- T \/ Odd_2(0) (Id)
+  2: Nat_1(s(w)) /\ Nat_0(w) |- Odd_2(s(w)) \/ Even_1(s(w)) (Even R.Unf.) [4 <{(1, 1), (0, 0)}/{}>]
+    4: Nat_1(s(w)) /\ Nat_0(w) |- Odd_4(w) \/ Odd_2(s(w)) (Odd R.Unf.) [5 <{(1, 1), (0, 0)}/{}>]
+      5: Nat_1(s(w)) /\ Nat_0(w) |- Even_5(w) \/ Odd_4(w) (Weaken) [6 <{(0, 0)}/{}>]
+        6: Nat_0(w) |- Odd_2(w) \/ Even_1(w) (Subst) [7 <{(0, 0)}/{}>]
+          7: Nat_0(x) |- Odd_2(x) \/ Even_1(x) (Backl) [0] <pre={(0, 0)}>
+\end{verbatim}
+\end{scriptsize}
+koji predstavlja dokaz sekvente \(\mathit{Nat}(x) \vdash \mathit{Even}(x) \lor \mathit{Odd}(x)\).
+Možemo primijetiti da je ovaj generirani dokaz sličan našem dokazu iz primjera~\ref{ex:clkidw1}..
 
 %%% Local Variables:
 %%% mode: LaTeX
