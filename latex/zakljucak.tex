@@ -1,1 +1,35 @@
 \chapter{Zaključak}\label{cha:zakljucak}
+Cilj ovog rada bio je ponuditi pregled visoke razine na alat za dokazivanje Coq te
+ga primijeniti na formalizaciju logike prvog reda s induktivnim definicijama.
+U tu svrhu smo u prvom poglavlju prikazali osnove Coqa i teorije na kojoj se on temelji,
+dok smo ostala poglavlja posvetili logici.
+Definirali smo osnovne pojmove poput formule, strukture, standardnog modela te dokaznog sustava
+i dokazali smo neka njihova svojstva.
+Kroz cijeli rad ilustrirali smo definicije i leme neformalnim i formaliziranim primjerima.
+Iako je ponekad bilo teže razlučiti bitne dijelove neformalne definicije,
+ipak se pokazalo da je Coq prikladan alat za formalizaciju logike te autor smatra
+da je cilj rada uspješno postignut.
+
+Ovim radom smo tek zagrebali površinu formalizacije logike prvog reda s induktivnim definicijama.
+Prirodni nastavak rada jest dokaz potpunosti sustava \(\mathit{LKID}\) pomoću Henkinovih modela,
+a nakon toga i formalizacija cikličkog dokaznog sustava \(\mathit{CLKID}^{\omega}\).
+Nadalje, ima smisla formalizirati dokazivače teorema za sustave \(\mathit{LKID}\)
+i \(\mathit{CLKID}^{\omega}\). Kako logika prvog reda nije odlučiva, takvi dokazivači teorema
+trebali bi uvesti dodatne pretpostavke (kao što je pretpostavka zatvorenog svijeta u Prologu)
+ili se usmjeriti prema interaktivnom dokazivanju.
+Za našu formalizaciju sustava \(\mathit{LKID}\),
+ima smisla iskoristiti dodatne Coqove mogućnosti,
+posebno za automatizaciju dokaza jezikom taktika Ltac
+te za prikladniju notaciju terma, formula i dokaza.
+
+Po autorevu mišljenju, računalna formalizacija matematike je odličan način razmišljanja i razumijevanja,
+posebno kada se koristi zajedno s tradicionalnim učenjem jer tada u potpunosti
+postaje jasan pojam koji se proučava --- formalizacija nas tjera da budemo
+posebice pažljivi. Nadalje, u današnje vrijeme umjetne inteligencije i automatski
+generiranog koda, dokazivanje točnosti programa postaje bitnije no što je ikad bilo.
+Za kraj ćemo reći da je formalizacija često naporan ali uvijek zadovoljavajuć proces.
+
+%%% Local Variables:
+%%% mode: LaTeX
+%%% TeX-master: "master"
+%%% End:

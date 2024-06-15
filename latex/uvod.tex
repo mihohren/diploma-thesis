@@ -1,1 +1,37 @@
 \chapter{Uvod}\label{cha:uvod}
+Coq je interaktivni dokazivač teorema u kojem
+korisnik iskazuje matematičke tvrdnje tipovima te ih dokazuje programiranjem.
+Teorija tipova koju Coq implementira temelji se na računu induktivnih konstrukcija
+koji pak je proširenje \(\lambda\)-računa tipovima.
+Iskazivanje tvrdnji moguće je zahvaljujući sorti \coqprop{} te zavisnim tipovima.
+Zahvaljujući jeziku taktika moguće je i automatizirano dokazivanje nekih tvrdnji,
+a osim za dokazivanje, Coq se može koristiti i za pisanje dokazano točnih programa.
+
+Centralni pojam ovog rada je logika prvog reda s induktivnim definicijama
+\(\mathit{FOL}_{\mathit{ID}}\), koju je prvi uveo James Brotherston, a u kojoj
+se neki predikati definiraju na induktivan način produkcijama.
+Zbog induktivnih predikata nužno je sa semantičkog stajališta promatrati
+posebne vrste struktura u kojima interpretacije induktivnih predikata imaju smisla
+s obzirom na njihove definicije .
+Sa sintaksnog stajališta promatra se Gentzenov sistem sekvenata proširen
+pravilima za induktivne predikate.
+
+Ovaj rad podijeljen je na četiri poglavlja.
+U prvom poglavlju prikazujemo osnovne Coqa kao programskog jezika te osnove njegove
+teorijske pozadine, prvenstveno hijerarhije tipova i Curry--Howardove korespondencije.
+U drugom poglavlju čitatelj se upoznaje s logikom \(\mathit{FOL}_{\mathit{ID}}\) kroz
+pojmove formula, struktura te standardnih modela.
+U trećem poglavlju definiramo dokazni sustav \(\mathit{LKID}\) za logiku \(\mathit{FOL}_{\mathit{ID}}\)
+te dokazujemo neka njegova svojstva.
+Sve definicije i tvrdnje u drugom i trećem poglavlju popraćene su svojom formalizacijom u Coqu.
+Konačno, u četvrtom poglavlju ilustriramo pojam cikličkog dokaza primjerima u Coqu i u dokaznom
+sustavu \(\mathit{CLKID}^{\omega}\).
+Cijeli rad prožet je ilustrativnim primjerima, što neformalnih definicija i iskaza,
+što njihovih formalnih reprezentacija u Coqu.
+
+
+
+%%% Local Variables:
+%%% mode: LaTeX
+%%% TeX-master: "master"
+%%% End:
