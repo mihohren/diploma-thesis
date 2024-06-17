@@ -2,6 +2,7 @@ Require Import Relations RelationClasses.
 Require Export Utf8.
 Require Export Arith Bool Lia Program.
 Require Export unscoped.
+Require Export ListSet.
 
 Export SigTNotations.
 
@@ -11,6 +12,11 @@ Notation vec := (V.t).
 Arguments V.nil {A}.
 Arguments V.cons {A} _ {n} _.
 Arguments V.In {A} a {n} v.
+
+Lemma vec_In_nil_false : forall A (a : A), V.In a V.nil -> False.
+Proof.
+  inversion 1.
+Qed.
 
 Lemma vec_Exists_exists : forall A (P : A -> Prop) n (v : vec A n),
     V.Exists P v <-> exists t, V.In t v /\ P t.
@@ -23,6 +29,10 @@ Proof.
     + apply V.Exists_cons_hd; assumption.
     + apply V.Exists_cons_tl; assumption.
 Qed.
+
+Inductive ForallT {A : Type} (P : A -> Type) : forall {n : nat}, vec A n -> Type :=
+| ForallT_nil : ForallT P V.nil
+| ForallT_cons : forall (a : A) {n} (v : vec A n), P a -> ForallT P v -> ForallT P (V.cons a v).  
 
 Definition vec_id {A : Type} {f : A -> A} (Hid : forall x, f x = x) :
   forall {n} (v : vec A n), V.map f v = v.

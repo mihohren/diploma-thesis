@@ -160,56 +160,49 @@ Defined.
 
 Lemma NAT_φ_Φ_ω: forall n, φ_Φ_ω Φ__PA M__PA PA_Nat [n].
   induction n.
-  - exists 1. unfold φ_Φ_n, φ_Φ, φ_P. exists PA_prod_N_zero, (conj eq_refl ID_N_zero).
-    unfold φ_pr. cbn. eexists; intuition.
+  - exists 1. unfold φ_Φ_n, φ_Φ, φ_P. exists PA_prod_N_zero, (conj eq_refl ID_N_zero), id.
+    repeat split; intros; contradiction.
   - destruct IHn as [α IH]. exists (S α).
-    cbn. unfold φ_Φ, φ_P. exists PA_prod_N_succ, (conj eq_refl ID_N_succ).
-    unfold φ_pr. cbn. intuition. exists (fun x => n).
-    intuition. destruct P; cbn.
-    + apply inj_pair2 in H0. subst. cbn. assumption.
-    + inversion H0.
-    + inversion H0.
-      Unshelve. intros n. exact n.
+    cbn. unfold φ_Φ, φ_P. exists PA_prod_N_succ, (conj eq_refl ID_N_succ), (fun x => n).
+    cbn; repeat split; auto; intros; try contradiction.
+    destruct H; try contradiction.
+    inversion H; subst. apply inj_pair2 in H; now subst.
 Qed.
 
 Lemma EVEN_φ_Φ_ω : forall n, EVEN n -> φ_Φ_ω Φ__PA M__PA PA_Even [n].
 Proof.
   intros n HE. induction HE using EVEN_ind2.
-  - exists 1. unfold φ_Φ_n, φ_Φ, φ_P. exists PA_prod_E_zero, (conj eq_refl ID_E_zero).
-    unfold φ_pr. cbn. eexists; intuition.
+  - exists 1. unfold φ_Φ_n, φ_Φ, φ_P. exists PA_prod_E_zero, (conj eq_refl ID_E_zero), id.
+    repeat split; auto; inversion 1.
   - destruct IHHE as [a Ha]. exists (S (S a)); cbn.
     unfold φ_Φ at 1. unfold φ_P at 1.
-    exists PA_prod_E_succ, (conj eq_refl ID_E_succ); cbn.
-    unfold φ_pr. cbn. exists (fun x => S n); intuition.
-    destruct P; try discriminate.
-    apply inj_pair2 in H0; subst; cbn.
-    unfold φ_Φ, φ_P. exists PA_prod_O_succ, (conj eq_refl ID_O_succ); cbn.
-    unfold φ_pr; cbn. exists (fun x => n); intuition.
-    destruct P; try discriminate.
-    apply inj_pair2 in H0; subst; cbn. assumption.
-    Unshelve.
-    intros n; exact n.
+    exists PA_prod_E_succ, (conj eq_refl ID_E_succ), (fun x => S n).
+    repeat split; cbn; intros; try contradiction.
+    destruct H; try contradiction.
+    inversion H; subst. apply inj_pair2 in H; subst.
+    exists PA_prod_O_succ, (conj eq_refl ID_O_succ), (fun x => n).
+    repeat split; cbn; intros; try contradiction.
+    destruct H; try contradiction.
+    inversion H; subst. apply inj_pair2 in H; now subst.
 Qed.
 
 Lemma ODD_φ_Φ_ω : forall n, ODD n -> φ_Φ_ω Φ__PA M__PA PA_Odd [n].
 Proof.
   intros n HO. induction HO using ODD_ind2.
-  - exists 2. unfold φ_Φ_n, φ_Φ, φ_P; cbn. exists PA_prod_O_succ, (conj eq_refl ID_O_succ); cbn.
-    unfold φ_pr; cbn. exists (fun x => x); cbn; intuition.
-    injection H0; intros Heq; subst.
-    exists PA_prod_E_zero, (conj eq_refl ID_E_zero); cbn.
-    exists (fun x => x); cbn; intuition. apply inj_pair2 in H0; subst; reflexivity.
-  - destruct IHHO as [a Ha]; exists (S (S a)).
-    cbn; unfold φ_Φ, φ_P at 1.
-    exists PA_prod_O_succ; cbn. exists (conj eq_refl ID_O_succ).
-    unfold φ_pr; cbn.
-    exists (fun x => S n); cbn; intuition.
-    injection H0; intros Heq; subst.
-    apply inj_pair2 in H0; subst; cbn.
-    exists PA_prod_E_succ, (conj eq_refl ID_E_succ); cbn.
-    unfold φ_pr; cbn; exists (fun x => n); cbn; intuition.
-    injection H0; intros Heq; subst.
-    apply inj_pair2 in H0; subst; assumption.
+  - exists 2, PA_prod_O_succ, (conj eq_refl ID_O_succ), id.
+    cbn; repeat split; intros; try contradiction.
+    destruct H; try contradiction.
+    inversion H; subst. apply inj_pair2 in H; subst.
+    exists PA_prod_E_zero, (conj eq_refl ID_E_zero), id.
+    cbn; repeat split; intros; contradiction.
+  - destruct IHHO as [a Ha]; exists (S (S a)), PA_prod_O_succ, (conj eq_refl ID_O_succ), (fun x => S n).
+    cbn; repeat split; intros; try contradiction.
+    destruct H; try contradiction.
+    inversion H; subst. apply inj_pair2 in H; subst.
+    exists PA_prod_E_succ, (conj eq_refl ID_E_succ), (fun x => n).
+    cbn; repeat split; intros; try contradiction.
+    destruct H; try contradiction.
+    inversion H; subst. apply inj_pair2 in H; now subst.
 Qed.
 
 Lemma φ_Φ_n_EVEN : forall m n, φ_Φ_n Φ__PA M__PA m PA_Even [n] -> EVEN n
@@ -225,7 +218,7 @@ Proof.
         unfold coerce_indpred in *; simpl_uip.
         inversion Heval.
         specialize (Hindpreds PA_Odd [var_term 0]); cbn in Hindpreds.
-        assert (φ_Φ_n Φ__PA M__PA m PA_Odd [ρ 0]) by intuition.
+        assert (φ_Φ_n Φ__PA M__PA m PA_Odd [ρ 0]) by auto.
         constructor. subst. clear Heval Hindpreds.
         now apply φ_Φ_n_ODD with m.
   - induction m; intros n.
@@ -268,12 +261,12 @@ Qed.
 Example mut_dep_E_O : mutually_dependent Φ__PA PA_Even PA_Odd.
 Proof.
   split.
-  - constructor. exists PA_prod_E_succ; intuition.
+  - constructor. exists PA_prod_E_succ; repeat split.
     + apply ID_E_succ.
-    + eexists; cbn; eauto.
-  - constructor. exists PA_prod_O_succ; intuition.
+    + exists [var_term 0]; now left.
+  - constructor. exists PA_prod_O_succ; repeat split.
     + apply ID_O_succ.
-    + eexists; cbn; eauto.
+    + exists [var_term 0]; now left.
 Qed.
 
 Ltac simpl_destruct :=
@@ -293,9 +286,9 @@ Ltac destruct_productions :=
 
 Lemma Prem_Nat_Nat : Prem Φ__PA PA_Nat PA_Nat.
 Proof.
-  exists PA_prod_N_succ; intuition.
+  exists PA_prod_N_succ; repeat split.
   - apply ID_N_succ.
-  - cbn. exists ([var_term 0]). now left.
+  - exists ([var_term 0]). now left.
 Qed.
     
 Lemma Prem_Nat_only_Nat : forall P, Prem Φ__PA PA_Nat P -> P = PA_Nat.
@@ -357,13 +350,13 @@ Proof.
   - generalize dependent n. induction α as [| α IH].
     + inversion 1.
     + intros n Hlt. cbn. destruct n.
-      * exists PA_prod_N_zero, (conj eq_refl ID_N_zero); cbn.
-        exists (fun x => x); intuition.
-      * exists PA_prod_N_succ, (conj eq_refl ID_N_succ); cbn.
-        exists (fun x => n); intuition.
-        cbn in H; inversion H; try contradiction.
-        inversion H0; subst. apply inj_pair2 in H0; subst; cbn in *. apply IH.
-        auto with arith.
+      * exists PA_prod_N_zero, (conj eq_refl ID_N_zero), id.
+        repeat split; intros; contradiction.
+      * exists PA_prod_N_succ, (conj eq_refl ID_N_succ), (fun x => n).
+        cbn; repeat split; intros; try contradiction.
+        destruct H; try contradiction.
+        inversion H; subst. apply inj_pair2 in H; subst.
+        apply IH. auto with arith.
 Qed.
 
 Import ListNotations.
@@ -575,7 +568,6 @@ Proof.
   rewrite zeros_unfold; constructor.
   apply H.
 Qed.
-Print Assumptions Infinite_zeros.
 
 CoFixpoint from (n : nat) : LList nat := LCons n (from (S n)).
 
@@ -585,8 +577,6 @@ Proof.
   intros n.
   now llist_unfold (from n).
 Qed.
-Print Infinite_from.
-Print Assumptions Infinite_from. (* Closed under the global context. *)
 
 Definition nats : LList nat := from 0.
 Lemma Infinite_nats : Infinite nats.

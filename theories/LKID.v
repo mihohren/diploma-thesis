@@ -11,7 +11,6 @@ Section lkid.
   | mkSeq (Γ Δ : list (formula Σ)).
 
   Notation "Γ ⊢ Δ" := (mkSeq Γ Δ) (no associativity, at level 61).
-  (* Γ izvodi Δ *)
 
   Definition Prem (Pi Pj : IndPredS Σ) :=
     exists pr, Φ pr /\ indcons pr = Pi /\ exists ts, List.In (Pj; ts) (indpreds pr).
@@ -46,25 +45,21 @@ Section lkid.
 
   Lemma mutually_dependent_trans : Transitive mutually_dependent. 
   Proof.
-    Hint Constructors clos_refl_trans.
-    intros P Q R [HPQ HQP] [HQR HRQ]; unfold Prem_star in *; split.
-    - induction HPQ; eauto 10. apply rt_trans with y; auto.
-    - induction HQP; eauto 10. apply rt_trans with x; auto.
+    intros P Q R [HPQ HQP] [HQr HRQ]; split; now apply rt_trans with Q.
   Qed.
 
   Lemma mutually_dependent_equiv : Equivalence mutually_dependent.
   Proof.
     constructor.
-    - exact mutually_dependent_refl.
-    - exact mutually_dependent_symm.
-    - exact mutually_dependent_trans.              
+    - apply mutually_dependent_refl.
+    - apply mutually_dependent_symm.
+    - apply mutually_dependent_trans.              
   Qed.
   
-  Fixpoint FPreds_from_preds (ps : list {P : PredS Σ & vec (term Σ) (pred_ar P)}) : list (formula Σ) :=
-    match ps with
-    | [] => []
-    | (Q; us) :: xs => (FPred Q us) :: FPreds_from_preds xs
-    end.
+  Definition FPreds_from_preds (ps : list {P : PredS Σ & vec (term Σ) (pred_ar P)})
+    : list (formula Σ) :=
+    map (fun '(Q; us) => FPred Q us) ps.
+
   
   Inductive LKID : sequent -> Prop := 
   (* Structural rules. *)
@@ -192,13 +187,13 @@ Section lkid.
     - intros ψ Hin; inversion Hin.
       + subst; now left.
       + assumption.
-    - intuition.
+    - apply incl_refl.
   Qed.
   
   Lemma ContrR : forall Γ Δ φ, LKID (Γ ⊢ φ :: φ :: Δ) -> LKID (Γ ⊢ φ :: Δ).
   Proof.
     intros Γ Δ φ; apply Wk.
-    - intuition.
+    - apply incl_refl.
     - intros ψ Hin; inversion Hin.
       + subst; now left.
       + assumption.
@@ -279,14 +274,26 @@ Section lkid.
     intros Γ Δ φ t H; unfold FExist.
     apply NegR. apply AllL with t; cbn. apply NegL. apply H.
   Qed.
+
+  Ltac incl_auto :=
+    auto using incl_refl, incl_tl, in_eq, in_cons;
+    match goal with
+    | [ |- incl _ _ ] => solve [let φ := fresh "φ" in
+                              let Hin := fresh "Hin" in
+                              (intros φ Hin;
+                              inversion Hin;
+                              subst;
+                              auto using incl_refl, incl_tl, in_eq, in_cons)]
+    | _ => idtac
+    end.
   
   Lemma NegL_inversion : forall Γ Δ φ,
       LKID (FNeg φ :: Γ ⊢ Δ) -> LKID (Γ ⊢ φ :: Δ).
   Proof.
     intros Γ Δ φ H.
     apply Cut with (FNeg φ).
-    - apply NegR. apply Ax with φ; intuition.
-    - eapply Wk; eauto; intuition.
+    - apply NegR. apply Ax with φ; incl_auto.
+    - eapply Wk; eauto; incl_auto.
   Qed.
 
   Lemma NegR_inversion : forall Γ Δ φ,
@@ -294,8 +301,8 @@ Section lkid.
   Proof.
     intros Γ Δ φ H.
     apply Cut with (FNeg φ).
-    - eapply Wk; eauto; intuition.
-    - apply NegL. apply Ax with φ; intuition.
+    - eapply Wk; eauto; incl_auto.
+    - apply NegL. apply Ax with φ; incl_auto.
   Qed.
                                       
   Lemma ImpL_inversion : forall Γ Δ φ ψ,
@@ -303,11 +310,11 @@ Section lkid.
   Proof.
     intros Γ Δ φ ψ H; split.
     - apply Cut with (FImp φ ψ).
-      + apply ImpR. apply Ax with φ; intuition.
-      + eapply Wk; eauto; intuition.
+      + apply ImpR. apply Ax with φ; incl_auto.
+      + eapply Wk; eauto; incl_auto.
     - apply Cut with (FImp φ ψ).
-      + apply ImpR. apply Ax with ψ; intuition.
-      + eapply Wk; eauto; intuition.
+      + apply ImpR. apply Ax with ψ; incl_auto.
+      + eapply Wk; eauto; incl_auto.
   Qed.
   
   Lemma OrL_inversion : forall Γ Δ φ ψ, LKID (FOr φ ψ :: Γ ⊢ Δ) -> LKID (φ :: Γ ⊢ Δ) /\ LKID (ψ :: Γ ⊢ Δ).
@@ -316,21 +323,21 @@ Section lkid.
     unfold FOr in *.
     split.
     - eapply Cut with (FOr φ ψ); unfold FOr.
-      + apply ImpR. apply NegL. apply Ax with φ; intuition.
-      + eapply Wk; eauto; intuition.
+      + apply ImpR. apply NegL. apply Ax with φ; incl_auto.
+      + eapply Wk; eauto; incl_auto.
     - eapply Cut with (FOr φ ψ); unfold FOr.
-      + apply ImpR. apply NegL. apply Ax with ψ; intuition.
-      + eapply Wk; eauto; intuition.
+      + apply ImpR. apply NegL. apply Ax with ψ; incl_auto.
+      + eapply Wk; eauto; incl_auto.
   Qed.
   
   Lemma OrR_inversion : forall Γ Δ φ ψ, LKID (Γ ⊢ FOr φ ψ :: Δ) -> LKID (Γ ⊢ φ :: ψ :: Δ).
   Proof.
     intros Γ Δ φ ψ H.
     apply Cut with (FOr φ ψ).
-    - apply Wk with Γ (FOr φ ψ :: Δ); intuition.
+    - apply Wk with Γ (FOr φ ψ :: Δ); incl_auto.
     - unfold FOr in *. apply ImpL.
       + apply NegR. apply AxExtended.
-      + apply Ax with ψ; intuition.
+      + apply Ax with ψ; incl_auto.
   Qed.
   
   Section proof_examples.

@@ -6,7 +6,7 @@ Structure signature := {
     PredS : Set;
     pred_ar : PredS -> nat;
     IndPredS : Set;
-    indpred_ar : IndPredS -> nat
+    indpred_ar : IndPredS -> nat;
   }.
 
 Arguments fun_ar {Σ} f : rename.
@@ -26,6 +26,38 @@ Section term.
   
   Set Elimination Schemes.
 
+  Section term_rect.
+    Context (P : term -> Type).
+    Context (Pbase : forall v, P (var_term v)).
+    Context (Pind : forall (f : FuncS Σ) args,
+                (ForallT P args) -> P (TFunc f args)).
+
+    Definition term_rect' : forall t, P t.
+      fix term_rect' 1; intros [ | f args].
+      - apply Pbase.
+      - apply Pind. induction args; constructor.
+        + apply term_rect'.
+        + assumption.
+    Defined.
+  End term_rect.
+  
+  Section term_ind.
+    Context (P : term -> Prop).
+    
+    Context (Pbase : forall v, P (var_term v)).
+    Context (Pind : forall (f : FuncS Σ) args,
+        (forall st, V.In st args -> P st) -> P (TFunc f args)).
+
+    Definition term_ind : forall t, P t.
+      fix term_ind 1; intros [v | f args].
+      - apply Pbase.
+      - apply Pind. apply V.Forall_forall.
+        induction args; constructor.
+        + apply term_ind.
+        + apply IHargs.
+    Defined.
+  End term_ind.
+
   Inductive TV : term -> var -> Prop :=
   | TVVar : forall v, TV (var_term v) v
   | TVFunc : forall f args v st,
@@ -36,7 +68,15 @@ Section term.
     | var_term v => S v
     | TFunc f args => S (vec_max_fold (V.map some_var_not_in_term args))
     end.
-  
+
+  Fixpoint vars_of_term (t : term) : list var :=
+    match t with
+    | var_term v => cons v nil
+    | TFunc f args => nodup
+                       Nat.eq_dec
+                       (concat (V.to_list (V.map vars_of_term args)))
+    end.
+
   Lemma congr_TFunc
     {f : FuncS Σ}
     {s0 : vec term (fun_ar f)}
@@ -141,23 +181,6 @@ End term.
 
 Arguments term Σ : clear implicits.
 
-Section term_ind.
-  Context {Σ : signature} (P : term Σ -> Prop).
-  
-  Hypothesis Pbase : forall v, P (var_term v).
-  Hypothesis Pind : forall (f : FuncS Σ) args,
-      (forall st, V.In st args -> P st) -> P (TFunc f args).
-
-  Definition term_ind : forall t, P t.
-    fix IND_PRINCIPLE 1; intros [v | f args].
-    - apply Pbase.
-    - apply Pind. apply V.Forall_forall.         
-      induction args; constructor.
-      + apply IND_PRINCIPLE.
-      + assumption.
-  Defined.
-End term_ind.
-
 Section term_facts.
   Context {Σ : signature}.
 
@@ -260,6 +283,30 @@ Section term_facts.
     - apply some_var_not_in_term_valid.
     - intros H. apply some_var_not_in_term_gt_TV in H. lia.
   Qed.
+
+  Lemma NoDup_vars_of_term: forall t : term Σ, NoDup (vars_of_term t).
+  Proof.
+    induction t.
+    - repeat constructor; inversion 1.
+    - cbn. apply NoDup_nodup.
+  Qed.
+  
+  Lemma TV_iff_In_vars_of_term : forall (t : term Σ) v, TV t v <-> In v (vars_of_term t).
+  Proof.
+    intros t; split; intros Htv.
+    - induction Htv.
+      + now constructor.
+      + cbn. rewrite nodup_In. rewrite in_concat.
+        exists (vars_of_term st); split; auto.
+        rewrite V.to_list_map. apply in_map. now apply V.to_list_In.
+    - induction t as [| f args].
+      + inversion Htv; subst; [ constructor | contradiction ].
+      + cbn in Htv. rewrite nodup_In in Htv. rewrite V.to_list_map in Htv.
+        apply in_concat in Htv as [l [Hin1 Hin2]].
+        apply in_map_iff in Hin1 as [st [Heq Hin1]].
+        rewrite <- V.to_list_In in Hin1. subst. apply TVFunc with st; auto.
+  Qed.
+    
 End term_facts.
 
 Section formula.
@@ -353,16 +400,14 @@ Section formula.
     | FAll ψ => FAll (subst_formula (up_term_term σ) ψ)
     end.
 
-  Definition shift_formula := subst_formula (funcomp (@var_term Σ) shift).
-  Definition shift_formulas := map shift_formula.
-  
-  Fixpoint shift_formula_by (n : nat) :=
-    match n with
-    | O => id
-    | S m => funcomp shift_formula (shift_formula_by m)
-    end.
+  Definition shift_formula_by (n : nat) :=
+    subst_formula (funcomp var_term (fun x => n + x)).
+
   Definition shift_formulas_by (n : nat) :=
     map (shift_formula_by n).
+  
+  Definition shift_formula := shift_formula_by 1.
+  Definition shift_formulas := shift_formulas_by 1.
   
   Fixpoint idSubst_formula
     (σ : var -> term Σ) (Eq : forall x, σ x = var_term x) (s : formula )
