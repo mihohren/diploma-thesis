@@ -123,7 +123,22 @@ Proof.
     + specialize IH with x y.
       pose proof (IH Htl Hlt); lia.
 Qed.
-  
+
+Lemma NoDup_injective_map : forall {A B} (l : list A) (f : A -> B),
+    (forall x y, In x l -> In y l -> f x = f y -> x = y) -> NoDup l -> NoDup (map f l).
+Proof.
+  intros A B l f Hinj Hnodup. induction l as [| h t IHt].
+  - constructor.
+  - rewrite map_cons. constructor.
+    + intros Hin. inversion Hnodup; subst. apply H1.
+      apply in_map_iff in Hin as [b [Heq Hin]].
+      assert (Heq1 : b = h).
+      { apply Hinj; [right | left | ]; auto. }
+      now subst.
+    + inversion Hnodup; subst; apply IHt; auto.
+      intros x y Hinx Hiny Heq. apply Hinj; auto; now right.
+Qed.
+
 Section monotone_operator.
   Context {A : Type}.
   Context (le : relation A).

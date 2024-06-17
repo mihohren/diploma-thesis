@@ -63,18 +63,18 @@ Section term.
   | TVFunc : forall f args v st,
       V.In st args -> TV st v -> TV (TFunc f args) v.
 
-  Fixpoint some_var_not_in_term (t : term) : var :=
-    match t with
-    | var_term v => S v
-    | TFunc f args => S (vec_max_fold (V.map some_var_not_in_term args))
-    end.
-
   Fixpoint vars_of_term (t : term) : list var :=
     match t with
     | var_term v => cons v nil
     | TFunc f args => nodup
                        Nat.eq_dec
                        (concat (V.to_list (V.map vars_of_term args)))
+    end.
+
+  Fixpoint some_var_not_in_term (t : term) : var :=
+    match t with
+    | var_term v => S v
+    | TFunc f args => S (vec_max_fold (V.map some_var_not_in_term args))
     end.
 
   Lemma congr_TFunc
@@ -306,7 +306,12 @@ Section term_facts.
         apply in_map_iff in Hin1 as [st [Heq Hin1]].
         rewrite <- V.to_list_In in Hin1. subst. apply TVFunc with st; auto.
   Qed.
-    
+
+  Definition eqdec_TV : forall (t : term Σ) v, {TV t v} + {~TV t v}.
+  Proof.
+    intros t v.
+    destruct (in_dec Nat.eq_dec v (vars_of_term t)); rewrite <- TV_iff_In_vars_of_term in *; auto.
+  Defined.
 End term_facts.
 
 Section formula.
@@ -337,6 +342,16 @@ Section formula.
   | FV_Imp_r : forall F G v, FV G v -> FV (FImp F G) v
   | FV_Neg : forall F v, FV F v -> FV (FNeg F) v
   | FV_All : forall F v, FV F (S v) -> FV (FAll F) v.
+
+  Fixpoint vars_of_formula (φ : formula) : list var :=
+    match φ with
+    | FPred _ args | FIndPred _ args => nodup
+                                         Nat.eq_dec
+                                         (concat (V.to_list (V.map vars_of_term args)))
+    | FNeg ψ => vars_of_formula ψ
+    | FImp ψ ξ => nodup Nat.eq_dec (vars_of_formula ψ ++ vars_of_formula ξ)
+    | FAll ψ => map pred (filter (fun x => negb (x =? 0)) (vars_of_formula ψ))
+    end.
 
   Fixpoint some_var_not_in_formula (φ : formula) : var :=
     match φ with
@@ -481,6 +496,58 @@ Section formula_facts.
     - apply some_var_not_in_formula_valid.
     - intros H. apply some_var_not_in_formula_gt_FV in H. lia.
   Qed.
+
+  Lemma NoDup_vars_of_formula : forall φ : @formula Σ, NoDup (vars_of_formula φ).
+  Proof.
+    induction φ; cbn; auto using NoDup_nodup.
+    apply (NoDup_filter (fun x => negb (x =? 0))) in IHφ.
+    apply NoDup_injective_map; auto.
+    intros x y Hin1 Hin2 Hpred.
+    apply filter_In in Hin1 as [Hin1 Hnegb1].
+    apply filter_In in Hin2 as [Hin2 Hnegb2].
+    apply negb_true_iff in Hnegb1, Hnegb2.
+    apply Nat.eqb_neq in Hnegb1, Hnegb2.
+    lia.
+  Qed.
+
+  Lemma FV_iff_In_vars_of_formula : forall (φ : @formula Σ) v, FV φ v <-> In v (vars_of_formula φ).
+  Proof.
+    intros φ v; split; intros Hfv.
+    - induction Hfv; cbn.
+      + rewrite nodup_In. rewrite in_concat. rewrite V.to_list_map.
+        apply TV_iff_In_vars_of_term in H0. exists (vars_of_term st); split; auto.
+        apply in_map_iff; exists st; split; auto. now apply V.to_list_In.
+      + rewrite nodup_In. rewrite in_concat. rewrite V.to_list_map.
+        apply TV_iff_In_vars_of_term in H0. exists (vars_of_term st); split; auto.
+        apply in_map_iff; exists st; split; auto. now apply V.to_list_In.
+      + rewrite nodup_In; auto using in_or_app.
+      + rewrite nodup_In; auto using in_or_app.
+      + assumption.
+      + rewrite in_map_iff; exists (S v); split; auto. apply filter_In; split; auto with arith.
+    - revert Hfv; revert v; induction φ; intros v Hfv.
+      + cbn in Hfv. rewrite nodup_In in Hfv. apply in_concat in Hfv as [l [Hin1 Hin2]].
+        rewrite V.to_list_map in Hin1. apply in_map_iff in Hin1 as [st [Heq Hin1]]; subst.
+        rewrite <- TV_iff_In_vars_of_term in Hin2. apply FV_Pred with st; auto.
+        now apply V.to_list_In.
+      + cbn in Hfv. rewrite nodup_In in Hfv. apply in_concat in Hfv as [l [Hin1 Hin2]].
+        rewrite V.to_list_map in Hin1. apply in_map_iff in Hin1 as [st [Heq Hin1]]; subst.
+        rewrite <- TV_iff_In_vars_of_term in Hin2. apply FV_IndPred with st; auto.
+        now apply V.to_list_In.
+      + constructor; auto.
+      + cbn in Hfv. rewrite nodup_In in Hfv; apply in_app_or in Hfv; destruct Hfv as [H | H].
+        * apply FV_Imp_l; auto.
+        * apply FV_Imp_r; auto.
+      + constructor. apply IHφ. cbn in Hfv. apply in_map_iff in Hfv as [w [Heq Hin]]; subst.
+        apply filter_In in Hin as [Hin Hnot0]. apply negb_true_iff in Hnot0.
+        rewrite Nat.eqb_neq in Hnot0. now rewrite (Nat.succ_pred w Hnot0).
+  Qed.
+
+  Definition eqdec_FV : forall (φ : @formula Σ) v, {FV φ v} + {~FV φ v}.
+  Proof.
+    intros φ v.
+    destruct (in_dec Nat.eq_dec v (vars_of_formula φ));
+      rewrite <- FV_iff_In_vars_of_formula in *; auto.
+  Defined.
 End formula_facts.
 
 Arguments formula Σ : clear implicits.
