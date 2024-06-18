@@ -57,13 +57,13 @@ Definition mutually_dependent (P Q : IndPredS Σ) :=
   su međusobno zavisni.
 \begin{minted}{coq}
 Example mut_dep_E_O :
-  @mutually_dependent Σ__PA Φ__PA PA_Even PA_Odd.
+  mutually_dependent Φ__PA PA_Even PA_Odd.
 \end{minted}
   \noindent S druge strane, induktivni predikatni simboli \(\mathit{Nat}\) i \(\mathit{Even}\)
   \textit{nisu} međusobno zavisni.
 \begin{minted}{coq}
 Example not_mut_dep_N_E :
-  ~ @mutually_dependent Σ__PA Φ__PA PA_Nat PA_Even.
+  ~mutually_dependent Φ__PA PA_Nat PA_Even.
 \end{minted}
 \end{example}
 
@@ -122,7 +122,7 @@ Posljedično, pravilo slabljenja \(\mathit{Wk}\) povlači pravila permutacije i 
   \caption{Strukturalna pravila sustava \(\mathit{LKID}\).}\label{fig:lkid-structural}
 \end{figure}
 \begin{minted}[firstnumber=last]{coq}
-(* Structural rules. *)
+(* Strukturalna pravila. *)
 | Ax : forall Γ Δ φ, In φ Γ -> In φ Δ -> LKID (Γ ⊢ Δ)
 | Wk : forall Γ' Δ' Γ Δ,
     Γ' ⊆ Γ ->
@@ -216,7 +216,7 @@ Ova su pravila identična u sustavima \(\mathit{LK}\) i \(\mathit{LKID}\).
   \caption{Propozicijska pravila sustava \(\mathit{LKID}\).}\label{fig:lkid-propositional}
 \end{figure}
 \begin{minted}[firstnumber=16]{coq}
-(* Propositional rules. *)
+(* Propozicijska pravila. *)
 | NegL : forall Γ Δ φ, LKID (Γ ⊢ φ :: Δ) -> LKID (FNeg φ :: Γ ⊢ Δ)
 | NegR : forall Γ Δ φ, LKID (φ :: Γ ⊢ Δ) -> LKID (Γ ⊢ FNeg φ :: Δ)
 | ImpL : forall Γ Δ φ ψ,
@@ -278,7 +278,7 @@ Kako implicitno kvantificiramo po varijabli \(0\), a  ona se javlja
   \caption{Pravila za kvantifikatore sustava \(\mathit{LKID}\).}\label{fig:lkid-quantificational}
 \end{figure}
 \begin{minted}[firstnumber=24]{coq}
-(* Quantifier rules. *)
+(* Kvantifikatorska pravila. *)
 | AllL : forall Γ Δ φ t,
     LKID (subst_formula (t .: ids) φ :: Γ ⊢ Δ) -> 
     LKID (FAll φ :: Γ ⊢ Δ)
@@ -302,25 +302,27 @@ Lemma ExistL : forall Γ Δ φ,
 \end{example}
 
 Preostaje nam definicija pravila za induktivne predikatne simbole,
-gdje ćemo prvo definirati lijevo pravilo koje nazivamo \textit{pravilo indukcije},
-a zatim ćemo definirati desno pravilo koje nazivamo \textit{produkcijsko pravilo}.
+gdje ćemo prvo za svaki induktivni predikatni simbol
+definirati lijevo pravilo koje nazivamo \textit{pravilo indukcije},
+a zatim ćemo za svaku produkciju
+definirati desno pravilo koje nazivamo \textit{produkcijsko pravilo}.
 
-\section{Pravilo indukcije}
+\section{Pravila indukcije}
 Neka je \(P_{j}\) proizvoljni induktivan predikatni simbol za koji definiramo pravilo indukcije.
 Svakom induktivnom predikatnom simbolu \(P_{i}\) dodjeljujemo
 proizvoljnu \(|P_{i}|\)-torku \textit{induktivnih varijabli} \(\mathbf{z}_{i}\) te
-proizvoljnu \textit{induktivnu hipotezu} \(G_{i}\) takvu da
+proizvoljnu \textit{pretpostavku indukcije} \(G_{i}\) takvu da
 vrijedi \(G_{i} = P_{i}(\mathbf{z}_{i})\) ako \(P_{i}\) i \(P_{j}\) nisu međusobno zavisni.
 Sada pravilo indukcije za induktivan predikatni simbol \(P_{j}\) glasi:
 \begin{prooftree}
   \AxiomC{\textit{male premise}}
   \AxiomC{\( G_{j} [\mathbf{u} / \mathbf{z}_{i}], \Gamma  \vdash \Delta\)}
-  \RightLabel{\( \mathit{ (Ind P_{j}) } \)}
+  \RightLabel{\( \mathit{ (P_{j} \, Ind), } \)}
   \BinaryInfC{\( P_{j} \mathbf{u}, \Gamma  \vdash \Delta \)}
 \end{prooftree}
 \noindent gdje sekventu \( G_{j} [\mathbf{u} / \mathbf{z}_{i}] , \Gamma  \vdash \Delta\) zovemo \textit{velikom premisom},
 a za svaku produkciju u skupu induktivnih definicija \(\Phi\) u čijoj se konkluziji javlja
-induktivni predikatni simbol \(P_{i}\) koji je međusobno zavisan sa simbolom \(P_{j}\), primjerice:
+induktivni predikatni simbol \(P_{i}\) međusobno zavisan sa simbolom \(P_{j}\), primjerice:
 \begin{prooftree}
   \AxiomC{\(  Q_{1}\mathbf{u}_{1}  \ldots   Q_{n}\mathbf{u}_{n}  \)}
   \AxiomC{\(  P_{i_{1}}\mathbf{v}_{i_{1}}  \ldots   P_{i_{m}}\mathbf{v}_{i_{m}}  \)}
@@ -334,9 +336,47 @@ induktivni predikatni simbol \(P_{i}\) koji je međusobno zavisan sa simbolom \(
   \Gamma \vdash G_{i}[\mathbf{t}^{\uparrow k} / \mathbf{z}_{i}], \Delta
 \]
 \noindent gdje je \(k\) neki prirodan broj koji se ne javlja u listama formula \(\Gamma\) i \(\Delta\) te formuli \(P_{j}\mathbf{u}\),
-a s \(^{\uparrow k}\) označavamo supstituciju koja svaku varijablu \(n\) mijenja varijablom \(n + k\).
+a s \(^{\uparrow k}\) označavamo supstituciju koja svaku varijablu \(n\) zamjenjuje varijablom \(n + k\).
+
+
+Ilustrirajmo pravilo indukcije primjerima u Peanovoj aritmetici.
+Kako se pravila za induktivne predikate sustava \(\mathit{LKID}\) odnose na proizvoljan skup induktivnih definicija \(\Phi\),
+označimo s \(\mathit{LKID}_{\mathit{PA}}\)  sustav koji se odnosi na skup induktivnih defincija \(\Phi_{\mathit{PA}}\).
+\begin{minted}{coq}
+Definition LKID__PA := LKID Φ__PA.
+\end{minted}
+\begin{example}
+  Pravilo indukcije simbola \(\mathit{Nat}\)
+  u sustavu \(\mathit{LKID}_{\mathit{PA}}\) glasi:
+  \begin{prooftree}
+    \AxiomC{\( \Gamma \vdash G(o), \Delta \)}
+    \AxiomC{\( G(x), \Gamma \vdash G(s(x)), \Delta \)}
+    \AxiomC{\( G(t), \Gamma \vdash \Delta \)}
+    \RightLabel{\( \mathit{(NatInd),} \)}
+    \TrinaryInfC{\( \mathit{Nat}(t), \Gamma \vdash \Delta \)}
+  \end{prooftree}
+  \noindent gdje je G pretpostavka indukcije vezana uz induktivni predikatni simbol \(\mathit{Nat}\),
+  a \(x\) je varijabla koja se ne javlja u \(\Gamma\), \(\Delta\) niti u \(\mathit{Nat}(t)\).
+\end{example}
+
+\begin{example}
+  Pravilo indukcije simbola  \(\mathit{Even}\)
+  u sustavu \(\mathit{LKID}_{\mathit{PA}}\) glasi:
+  \begin{small}
+    \begin{prooftree}
+      \AxiomC{\( \Gamma \vdash G_{E}(o), \Delta \quad \Gamma, G_{E}(x) \vdash G_{O}(s(x)), \Delta \quad \Gamma, G_{O}(x) \vdash G_{E}(s(x)), \Delta \)}
+      \AxiomC{\( \Gamma, G_{E}(t) \vdash \Delta \)}
+      \RightLabel{\(\mathit{(EvenInd),}\)}
+      \BinaryInfC{\( \Gamma, \mathit{Even}(t) \vdash \Delta \)}
+    \end{prooftree}
+  \end{small}
+  \noindent gdje su \(G_{E}\) i \(G_{O}\) pretpostavke indukcije vezane uz
+  induktivne predikatne simbole \(\mathit{Even}\) i \(\mathit{Odd}\),
+  a \(x\) je varijabla koja se ne javlja u \(\Gamma\), \(\Delta\) ili \(\mathit{Even}(t)\).
+\end{example}
+
 \begin{minted}[firstnumber=31]{coq}
-(* Induction rules. *)
+(* Pravila indukcije. *)
 | IndL : forall Γ Δ
            (Pj : IndPredS Σ) (u : vec _ (indpred_ar Pj))
            (z_i : forall P, vec var (indpred_ar P))
@@ -384,56 +424,24 @@ a s \(^{\uparrow k}\) označavamo supstituciju koja svaku varijablu \(n\) mijenj
     LKID (FIndPred Pj u :: Γ ⊢ Δ)
 \end{minted}
 
-Ilustrirajmo pravilo indukcije primjerima u Peanovoj aritmetici.
-Kako se pravila za induktivne predikate sustava \(\mathit{LKID}\) odnose na proizvoljan skup induktivnih definicija \(\Phi\),
-označimo s \(\mathit{LKID}_{\mathit{PA}}\)  sustav koji se odnosi na skup induktivnih defincija \(\Phi_{\mathit{PA}}\).
-\begin{example}
-  Pravilo indukcije induktivnog predikatnog simbola \(\mathit{Nat}\)
-  u sustavu \(\mathit{LKID}_{\mathit{PA}}\) glasi:
-  \begin{prooftree}
-    \AxiomC{\( \Gamma \vdash G(o), \Delta \)}
-    \AxiomC{\( G(x), \Gamma \vdash G(s(x)), \Delta \)}
-    \AxiomC{\( G(t), \Gamma \vdash \Delta \)}
-    \RightLabel{\( \mathit{(IndNat)} \)}
-    \TrinaryInfC{\( \mathit{Nat}(t), \Gamma \vdash \Delta \)}
-  \end{prooftree}
-  \noindent gdje je G induktivna hipoteza vezana uz induktivni predikatni simbol \(\mathit{Nat}\),
-  a \(x\) je varijabla koja se ne javlja u \(\Gamma\), \(\Delta\) ili \(\mathit{Nat}(t)\).
-\end{example}
-
-\begin{example}
-  Pravilo indukcije induktivnog predikatnog simbola  \(\mathit{Even}\)
-  u sustavu \(\mathit{LKID}_{\mathit{PA}}\) glasi:
-  \begin{small}
-    \begin{prooftree}
-      \AxiomC{\( \Gamma \vdash G_{E}(o), \Delta \quad \Gamma, G_{E}(x) \vdash G_{O}(s(x)), \Delta \quad \Gamma, G_{O}(x) \vdash G_{E}(s(x)), \Delta \)}
-      \AxiomC{\( \Gamma, G_{E}(t) \vdash \Delta \)}
-      \RightLabel{\(\mathit{IndEven}\)}
-      \BinaryInfC{\( \Gamma, \mathit{Even}(t) \vdash \Delta \)}
-    \end{prooftree}
-  \end{small}
-  \noindent gdje su \(G_{E}\) i \(G_{O}\) induktivne hipoteze vezane uz
-  induktivne predikatne simbole \(\mathit{Even}\) i \(\mathit{Odd}\),
-  a \(x\) je varijabla koja se ne javlja u \(\Gamma\), \(\Delta\) ili \(\mathit{Even}(t)\).
-\end{example}
-
-\section{Produkcijsko pravilo}
+\section{Produkcijska pravilo}
 Neka je \(pr\) proizvoljna produkcija za koju definiramo produkcijsko pravilo.
-Možemo pretpostaviti da je \(pr\) idućeg oblika:
+Možemo pretpostaviti da je \(pr\) oblika:
 \begin{prooftree}
   \AxiomC{\(  Q_{1}\mathbf{u}_{1}  \ldots   Q_{n}\mathbf{u}_{n}  \)}
   \AxiomC{\(  P_{1}\mathbf{v}_{1}  \ldots   P_{m}\mathbf{v}_{m}  \)}
   \RightLabel{.}
   \BinaryInfC{\(P\mathbf{t}\)}
 \end{prooftree}
-\noindent Produkcijsko pravilo za produkciju \(pr\) glasi:
+\noindent Tada produkcijsko pravilo za produkciju \(pr\) glasi:
 \begin{prooftree}
   \AxiomC{\( \Gamma \vdash Q_{1} \mathbf{u}_{1}[\sigma], \Delta \quad \ldots \quad \Gamma \vdash Q_{n}\mathbf{u}_{n}[\sigma]\)}
   \AxiomC{\( \Gamma \vdash P_{1} \mathbf{v}_{1}[\sigma], \Delta \quad \ldots \quad \Gamma \vdash P_{m} \mathbf{v}_{m}[\sigma] \)}
-  \RightLabel{\( \mathit{ (prProd) }\)}
+  \RightLabel{\( \mathit{ (prProd) }\).}
   \BinaryInfC{\( \Gamma \vdash P \mathbf{t}[\sigma] \)}
 \end{prooftree}
 \begin{minted}[firstnumber=58]{coq}
+(* Produkcijska pravila. *)
 | IndR : forall Γ Δ pr σ,
     Φ pr ->
     (forall Q us,
@@ -452,6 +460,7 @@ Možemo pretpostaviti da je \(pr\) idućeg oblika:
   Produkcijsko pravilo za produkciju \texttt{PA\_prod\_E\_succ} glasi:
   \begin{prooftree}
     \AxiomC{\( \Gamma \vdash \mathit{Odd}(x)[\sigma], \Delta \)}
+    \RightLabel{(\texttt{PA\_prod\_E\_succ}\textit{Prod})}
     \UnaryInfC{\( \Gamma \vdash \mathit{Even}(s(x))[\sigma], \Delta \)}
   \end{prooftree}
   \noindent gdje je \(x\) proizvoljna varijabla, a \(\sigma\) proizvoljna supstitucija.
@@ -459,23 +468,22 @@ Možemo pretpostaviti da je \(pr\) idućeg oblika:
   već samo njihov redoslijed.
 \end{example}
 
-Konstruktorima \texttt{IndL} te \texttt{IndR} smo dovršili definiciju tipa \texttt{LKID}.
-Ističemo suptilnu razliku između pravila za induktivne predikate;
-lijevo pravilo se definira za pojedini \textit{induktivni predikatni simbol},
-dok se desno pravilo definira za pojedinu \textit{produkciju}.
-
 \section{Dokaz i teorem}
 Prikazali smo sva pravila izvoda sustava \(\mathit{LKID}\) te konačno možemo definirati dokaz.
-Za proizvoljnu sekventu \(\Gamma \vdash \Delta\), njen \textbf{dokaz} je stanovnik tipa \texttt{LKID(\(\Gamma \vdash \Delta\))}.
-Za formulu \(\varphi\) kažemo da je \textbf{teorem} sustava \(\mathit{LKID}\) te
-pišemo \(\vdash \varphi\) ako postoji dokaz sekvente \( () \vdash (\varphi)\).
-Neformalni pojam konačnog stabla formaliziran je induktivnim tipom \texttt{LKID},
+Za proizvoljnu sekventu \(s \coloneq (\Gamma \vdash \Delta)\), njen \textbf{dokaz} je stanovnik tipa \texttt{LKID s}.
+Za formulu \(\varphi\) kažemo da je \textbf{dokaziva} u sustavu \(\mathit{LKID}\) te
+pišemo \(\vdash \varphi\) ako postoji dokaz sekvente \( [] \vdash [\varphi]\).
+\begin{minted}{coq}
+Definition provable (proofsystem : sequent -> Prop) (φ : formula Σ) :=
+  proofsystem ([] ⊢ [φ]).
+\end{minted}
+\noindent Neformalni pojam konačnog stabla formaliziran je induktivnim tipom \texttt{LKID},
 dok njegovi konstruktori formaliziraju odgovarajuća pravila izvoda.
 
 \begin{example}
-  \textit{Zakon isključenja trećeg} je dokaziv u sustavu \(\mathit{LKID}\).
+  Za proizvoljnu formulu \(\varphi\), formula \(\varphi \lor \neg \varphi\) je dokaziva u sustavu \(\mathit{LKID}\).
 \begin{minted}{coq}
-Lemma LKID_XM : forall φ, LKID ([] ⊢ [FOr φ (FNeg φ)]).
+Lemma LKID_XM : forall φ, provable LKID (FOr φ (FNeg φ)).
 \end{minted}
   \begin{prooftree}
     \AxiomC{}
@@ -491,7 +499,7 @@ Lemma LKID_XM : forall φ, LKID ([] ⊢ [FOr φ (FNeg φ)]).
 \end{example}
 
 \begin{example}
-  \textit{Princip eksplozije} je dokaziv u sustavu \(\mathit{LKID}\).
+  Za sustav \(\mathit{LKID}\) vrijedi \textit{princip eksplozije}.
 \begin{minted}{coq}
 Lemma LKID_EXPLOSION : forall φ Δ, LKID ([FAnd φ (FNeg φ)] ⊢ Δ).
 \end{minted}
@@ -509,18 +517,20 @@ Lemma LKID_EXPLOSION : forall φ Δ, LKID ([FAnd φ (FNeg φ)] ⊢ Δ).
 \end{example}
 
 \begin{example}\label{ex:lkid-indr-proof}
-  Formula \(\forall x, \mathit{Even}(x) \rightarrow \mathit{Even}(ssx)\) je dokaziva u sustavu \(\mathit{LKID}_{\mathit{PA}}\).
+  Formula \(\forall x, \mathit{Even}(x) \rightarrow \mathit{Even}(s(s(x)))\) je dokaziva u sustavu \(\mathit{LKID}_{\mathit{PA}}\).
 \begin{minted}{coq}
 Definition Even_succ_succ_Even : formula Σ__PA :=
+  let x := var_term 0 in
   FAll
     (FImp
-       (FIndPred PA_Even [var_term 0])
+       (FIndPred PA_Even [x])
        (FIndPred PA_Even [TFunc PA_succ
                             [TFunc PA_succ
-                               [var_term 0]]])).
+                               [x]]])).
 \end{minted}
   \noindent Neformalni dokaz prikazujemo idućim stablom, a radi preglednosti
-  pišemo \(Et\) umjesto \(\mathit{Even}(t)\) te \(Ot\) umjesto \(\mathit{Odd}(t)\).
+  pišemo \(Et\) umjesto \(\mathit{Even}(t)\) te \(Ot\) umjesto \(\mathit{Odd}(t)\)
+  i ne pišemo zagrade u pozivu funkcijskog simbola \(s\).
   \begin{prooftree}
     \AxiomC{}
     \RightLabel{\( \mathit{(Ax)} \)}
@@ -540,15 +550,15 @@ Definition Even_succ_succ_Even : formula Σ__PA :=
     \UnaryInfC{\( \vdash \forall x, Ex \rightarrow Essx \)}
   \end{prooftree}
 \begin{minted}{coq}
-Lemma provable_Even_succ_succ_Even :
-    @LKID _ Φ__PA ([] ⊢ [Even_succ_succ_Even]).
+Lemma provable_every_succ_of_Even_is_Odd :
+  provable LKID__PA every_succ_of_Even_is_Odd.
 \end{minted}
 \end{example}
 
 \begin{example}\label{ex:lkid-indl-proof}
   Formula \(\forall x, \mathit{Nat}(x) \rightarrow \mathit{Even}(x) \lor \mathit{Odd}(x)\) je dokaziva u sustavu \(\mathit{LKID}_{\mathit{PA}}\).
-  Neformalni dokaz prikazujemo idućim stablom, a radi preglednosti
-  pišemo \(Nt\), \(Et\) i \(Ot\) redom umjesto \(\mathit{Nat}(t)\), \(\mathit{Even}(t)\) i \(\mathit{Odd}(t)\).
+  Neformalni dokaz prikazujemo idućim stablom koristeći iste pokrate kao u
+  primjeru~\ref{ex:lkid-indr-proof}, te \(Nt\) za \(\mathit{Nat}(t)\).
   \begin{scriptsize}
     \begin{prooftree}
       \AxiomC{}
@@ -579,7 +589,7 @@ Lemma provable_Even_succ_succ_Even :
       \AxiomC{}
       \RightLabel{\(\mathit{(Ax)}\)}
       \UnaryInfC{\( Ex \lor Ox \vdash Ex \lor Ox\)}
-      \RightLabel{\(\mathit{(IndNat)}\)}
+      \RightLabel{\(\mathit{(NatInd)}\)}
       \TrinaryInfC{\( Nx \vdash Ex \lor Ox \)}
       \RightLabel{\( \mathit{(ImpR)}\)}
       \UnaryInfC{\( Nx \rightarrow Ex \lor Ox \)}
@@ -587,8 +597,8 @@ Lemma provable_Even_succ_succ_Even :
       \UnaryInfC{\( \vdash \forall x, Nx \rightarrow Ex \lor Ox \)}
     \end{prooftree}
   \end{scriptsize}
-  \noindent Ovdje je induktivna hipoteza formula \(Ex \lor Ox\).
-  Valja primijetiti da smo u dokazu koristili i produkcijska pravila za produkcije:
+  \noindent Ovdje je pretpostavka indukcije formula \(Ex \lor Ox\).
+  Valja primijetiti da smo u dokazu koristili (označene brojevima) i produkcijska pravila za produkcije:
   \begin{enumerate}[label={(\arabic*)}]
   \item \texttt{PA\_prod\_E\_zero},
   \item \texttt{PA\_prod\_O\_succ} i
@@ -596,17 +606,18 @@ Lemma provable_Even_succ_succ_Even :
   \end{enumerate}
 \begin{minted}{coq}
 Lemma provable_every_nat_is_even_or_odd :
-  @LKID Σ__PA Φ__PA ([] ⊢ [every_nat_is_even_or_odd]).
+  provable LKID__PA every_nat_is_even_or_odd.
 \end{minted}
 \end{example}
 
 \section{Adekvatnost}\label{sec:adekvatnost}
 Za dokazivače teorema nužno je da dokazivost formule povlači njenu istinitost ---
 u~\ref{chap:coq} poglavlju objasnili smo zašto.
-Ovo svojstvo dokaznosg sustava naziva se \textit{adekvatnost},
-a ovdje ćemo ju prikazati na primjeru sustava \(\mathit{LKID}\).
-Za istinitost ćemo promatrati samo strukture koje su standardni modeli
+Ovo svojstvo dokaznog sustava naziva se \textit{adekvatnost},
+a ovdje ćemo je prikazati na primjeru sustava \(\mathit{LKID}\).
+Za istinitost ćemo promatrati samo strukture koje su standardni modeli,
 jer u takvima interpretacije induktivnih predikatnih simbola imaju smisla.
+Napomenimo da je \(\mathit{LKID}\) adekvatan i za nestandardne modele.
 
 \begin{definition}
   Kažemo da je sekventa \(\Gamma \vdash \Delta\) \textit{istinita} i pišemo \(\Gamma \VDash \Delta\) ako i samo ako
@@ -637,14 +648,14 @@ Lemma LS_Ax : forall Γ Δ φ, In φ Γ -> In φ Δ -> Γ ⊫ Δ.
 \end{minted}
 \end{example}
 
-Ako za sva pravila izvoda vrijedi lokalna adekvatnost,
+Ako za svako pravilo izvoda vrijedi lokalna adekvatnost,
 indukcijom po strukturi dokaza slijedi i (globalna) adekvatnost.
 Glavni cilj ovog poglavlja bio je dokazati lokalne adekvatnosti svih pravila sustava \(\mathit{LKID}\).
-Cilj nije postignut samo za pravilo indukcije.
+Cilj je postignut za sva pravila osim pravila indukcije.
 
 \begin{theorem}
   Za pravila izvoda sustava \(\mathit{LKID}\) osim \(\mathit{IndL}\) vrijedi lokalna adekvatnost.
-  Nadalje, ako je sekventa \(\Gamma \vdash \Delta\) dokaziva bez primjene pravila \(\mathit{IndL}\), onda je ona istinita.
+  Posljedično, ako je sekventa \(\Gamma \vdash \Delta\) dokaziva bez primjene pravila \(\mathit{IndL}\), onda je ona istinita.
 \end{theorem}
 
 \misao{Ako ne uspijem dokazati lokalnu adekvatnost za IndL, onda ću ostaviti ovaj tekst.}

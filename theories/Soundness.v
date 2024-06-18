@@ -310,7 +310,7 @@ Section soundness.
   (* Admitted. *)
     
     
-  Theorem soundness : forall Γ Δ, @LKID Σ Φ (Γ ⊢ Δ) -> Γ ⊫ Δ.
+  Theorem soundness : forall Γ Δ, LKID Φ (Γ ⊢ Δ) -> Γ ⊫ Δ.
   Proof.
     intros Γ Δ Hlkid.
     induction Hlkid; intros M Hstandard ρ Hsat.

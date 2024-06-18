@@ -30,8 +30,6 @@ Section definition_set_operator.
   Definition subinterp (U V : InterpInd) := forall P v, U P v -> V P v.
   Notation "U ⊑ V" := (subinterp U V) (at level 11).
   
-  Definition monotone (F : InterpInd -> InterpInd) := forall U V : InterpInd, U ⊑ V -> F U ⊑ F V.
-  
   Definition φ_pr
     (pr : production Σ)
     (interp : InterpInd)
@@ -57,6 +55,9 @@ Section definition_set_operator.
   
   Definition φ_Φ (interp : InterpInd) : InterpInd :=
     fun P => φ_P P interp.
+
+  Definition monotone (F : InterpInd -> InterpInd) :=
+    forall U V : InterpInd, U ⊑ V -> F U ⊑ F V.
   
   Proposition φ_Φ_monotone : monotone φ_Φ.
   Proof.
@@ -86,23 +87,7 @@ Section definition_set_operator.
     - pose proof (φ_Φ_n_succ β); red; auto.
   Qed.
       
-  Definition approximant_of (P : IndPredS Σ)
-    : nat -> vec M (indpred_ar P) -> Prop :=
-    fun α => φ_Φ_n α P.
-
-  Proposition approximant_succ : forall α P v,
-      approximant_of P α v -> approximant_of P (S α) v.
-  Proof.
-    now apply φ_Φ_n_succ.
-  Qed.
-  
-  Lemma approximant_monotone : forall α β, α <= β -> forall P v,
-        approximant_of P α v -> approximant_of P β v.
-  Proof.
-    now apply φ_Φ_n_monotone.
-  Qed.  
-      
-  Lemma approximation_characterization : forall α P v,
+  Lemma φ_Φ_n_characterization : forall α P v,
       φ_Φ_n α P v <-> exists β, β < α /\ φ_Φ (φ_Φ_n β) P v.
   Proof.
     intros α P v; split; intros H.
@@ -117,7 +102,8 @@ Section definition_set_operator.
   Definition φ_Φ_ω : InterpInd := fun P v => exists α, φ_Φ_n α P v.
   
   Definition prefixed (U : InterpInd) := φ_Φ U ⊑ U.
-  Definition least (P : InterpInd -> Prop) (U : InterpInd) := P U /\ (forall V, P V -> U ⊑ V).
+  Definition least (P : InterpInd -> Prop) (U : InterpInd) :=
+    P U /\ (forall V, P V -> U ⊑ V).
   
   Lemma φ_Φ_ω_least_prefixed : least prefixed φ_Φ_ω.
   Proof.

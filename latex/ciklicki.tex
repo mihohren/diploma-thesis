@@ -1,14 +1,16 @@
 \chapter{Ciklički dokazi}\label{cha:cikliki-dokazi}
 Svaki Coqov dokaz koji smo do sada prikazali je konačan term.
 Svi formalni dokazi u sustavu \(\mathit{LKID}\) (uključujući primjere~\ref{ex:lkid-indr-proof} i~\ref{ex:lkid-indl-proof}) su konačni.
-Ovakve dokaze jednim imenom nazivamo \textit{dobro utemeljenim dokazima} jer su sve \enquote{grane} njihovih dokaznih stabala konačne.
-Međutim, možemo promatrati i \textit{neutemeljene dokaze} kod kojih postoje beskonačne grane.
-Već smo u odjeljku~\ref{sec:programiranje-u-gallini} spomenuli neutemeljene, odnosno koinduktivne tipove.
-Neutemeljeni dokaz je tada \enquote{beskonačan} dokaz neke koinduktivno definirane tvrdnje.
-U ovom ćemo kratkom poglavlju ilustrirati neutemeljene dokaze te cikličke dokaze koji su posebna vrsta neutemeljenih.
+Ovakve dokaze jednim imenom nazivamo \textit{dokazima konačne dubine}
+jer su sve \enquote{grane} njihovih dokaznih stabala konačne.
+Međutim, možemo promatrati i \textit{dokaze beskonačne dubine} kod kojih postoje beskonačne grane.
+Već smo u odjeljku~\ref{sec:programiranje-u-gallini} spomenuli odnosno koinduktivne tipove,
+a dokaz beskonačne dubine je tada \enquote{beskonačan} dokaz neke koinduktivno definirane tvrdnje.
+U ovom ćemo kratkom poglavlju ilustrirati dokaze beskonačne dubine te jednu njihovu posebnu formu;
+cikličke dokaze.
 
 \section{Primjer: lijene liste}
-Definirajmo za početak \textit{lijene liste}, to jest liste koje mogu biti konačne, a mogu biti i beskonačne.
+Definirajmo za početak \textit{lijene liste}, koje mogu biti konačne, a mogu biti i beskonačne.
 Zbog potencijalne beskonačnosti koristimo koinduktivnu definiciju tipa.
 \begin{minted}{coq}
 CoInductive LList (A : Type) :=
@@ -21,12 +23,12 @@ CoInductive Infinite {A} : LList A -> Prop :=
 | Infinite_LCons : forall a l, Infinite l -> Infinite (LCons a l).
 \end{minted}
 \noindent Ovdje konstruktor \texttt{Infinite\_LCons} možemo shvatiti kao pravilo izvoda.
-Pokušajmo dokazati da je intuitivno beskonačna lista i formalno beskonačna.
+Pokušajmo dokazati da je neka intuitivno beskonačna lista i formalno beskonačna.
 Definiramo funkciju \texttt{from} analogno istoimenoj funkciji iz odjeljka~\ref{sec:programiranje-u-gallini}.
 \begin{minted}{coq}
 CoFixpoint from (n : nat) : LList nat := LCons n (from (S n)).
 \end{minted}
-\noindent Intuitivno je jasno da je za svaki \texttt{n} lijena lista \texttt{from n}
+\noindent Intuitivno je jasno da je (za svaki \texttt{n}) lijena lista \texttt{from n}
 beskonačna pa želimo dokazati tvrdnju \texttt{forall n, Infinite (from n)}.
 
 Prije glavnog dokaza, pogledajmo konkretan primjer na tvrdnji \texttt{Infinite (from 0)}.
@@ -67,7 +69,12 @@ dolazimo do tvrdnje \texttt{Infinite (from (S n))}.
 \enquote{skinut} je prvi član beskonačne liste te je napravljen \textit{napredak}
 u dokazu.
 Bez napretka nema smisla ponavljati prethodni postupak beskonačno mnogo puta
-jer se tvrdnja ne mijenja.
+jer se tvrdnja ne mijenja --- u suprotnom, mogli bismo  \textup{svaku} tvrdnju \(\varphi\)
+dokazati trivijalnim dokazom
+\AxiomC{\(\ast\)}
+\UnaryInfC{\(\varphi\)}
+\DisplayProof
+.
 Uz napredak u dokazivanju ima smisla pozivati se na \textit{tvrdnju koja se dokazuje} te
 takve dokaze nazivamo \textit{cikličkima}. Dokaz tvrdnje \texttt{forall n, Infinite (from n)}
 jedan je primjer cikličkog dokaza, gdje je simbolom \(\mathtt{*}\) označeno cikličko \enquote{pozivanje} dokaza.
@@ -144,6 +151,8 @@ Dokazni sustav \(\mathit{CLKID}^{\omega}\) prikazati ćemo neformalno.
   (odnosno, \(\mathit{Case}\) pravila) ugrađen u definiciju formule.\footnote{Jednakost se u matematičkoj logici najčešće tretira kao predikatni simbol signature, a ne kao primitivni veznik u formulama.}
 \end{example}
 
+Ciklički dokazi su oni dokazi beskonačne dubine u kojima je
+između svakog pupoljka i njegovog pratilca napravljen napredak, odnosno primijenjeno \(\mathit{Case}\) pravilo.
 U primjeru~\ref{ex:clkidw1}, pupoljak i njegov pratilac javljaju se u istoj grani dokaza,
 no to nije nužno. Ovu pojavu možemo vidjeti na dokazu obrata sekvente \(Nx \vdash Ex \lor Ox\).
 

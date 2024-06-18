@@ -21,6 +21,9 @@
 \usepackage[makeroom]{cancel}
 \usepackage[autostyle,croatian=quotes]{csquotes}
 
+\newfloat{code}{H}{cod}[section]
+\floatname{code}{Code}
+
 % https://github.com/stipub/stix_type1/issues/3
 \renewcommand{\mapsto}{\mathchar"39AD}
 
@@ -40,6 +43,7 @@
 \DeclareUnicodeCharacter{22A2}{\(\vdash\)}
 \DeclareUnicodeCharacter{2286}{\(\subseteq\)}
 \DeclareUnicodeCharacter{22AB}{\(\VDash\)}
+\DeclareUnicodeCharacter{2291}{\(\sqsubseteq\)}
 
 \renewcommand{\ldots}{\textellipsis}
 

@@ -9,8 +9,10 @@ Section lkid.
 
   Inductive sequent : Set :=
   | mkSeq (Γ Δ : list (formula Σ)).
-
   Notation "Γ ⊢ Δ" := (mkSeq Γ Δ) (no associativity, at level 61).
+
+  Definition provable (proofsystem : sequent -> Prop) (φ : formula Σ) :=
+    proofsystem ([] ⊢ [φ]).
 
   Definition Prem (Pi Pj : IndPredS Σ) :=
     exists pr, Φ pr /\ indcons pr = Pi /\ exists ts, List.In (Pj; ts) (indpreds pr).
@@ -40,7 +42,7 @@ Section lkid.
 
   Lemma mutually_dependent_symm : Symmetric mutually_dependent. 
   Proof.
-    intros P Q [HPQ HQP]; split; intuition.
+    intros P Q [HPQ HQP]; split; auto.
   Qed.
 
   Lemma mutually_dependent_trans : Transitive mutually_dependent. 
@@ -59,7 +61,6 @@ Section lkid.
   Definition FPreds_from_preds (ps : list {P : PredS Σ & vec (term Σ) (pred_ar P)})
     : list (formula Σ) :=
     map (fun '(Q; us) => FPred Q us) ps.
-
   
   Inductive LKID : sequent -> Prop := 
   (* Structural rules. *)
@@ -341,7 +342,7 @@ Section lkid.
   Qed.
   
   Section proof_examples.
-    Lemma LKID_XM : forall φ, LKID ([] ⊢ [FOr φ (FNeg φ)]).
+    Lemma LKID_XM : forall φ, provable LKID (FOr φ (FNeg φ)).
     Proof.
       intros φ.
       apply OrR.
@@ -349,7 +350,7 @@ Section lkid.
       apply NegR. apply AxExtended.
     Qed.
 
-    Lemma LKID_ID : forall φ, LKID ([] ⊢ [FImp φ φ]).
+    Lemma LKID_ID : forall φ, provable LKID (FImp φ φ).
     Proof.
       intros φ.
       apply ImpR. apply AxExtended.
@@ -362,7 +363,7 @@ Section lkid.
       apply NegL. apply AxExtended.
     Qed.
 
-    Lemma LKID_DN : forall φ, LKID ([] ⊢ [FImp (FNeg (FNeg φ)) φ]).
+    Lemma LKID_DN : forall φ, provable LKID (FImp (FNeg (FNeg φ)) φ).
     Proof.
       intros φ.
       apply ImpR. apply NegL. apply NegR. apply AxExtended.

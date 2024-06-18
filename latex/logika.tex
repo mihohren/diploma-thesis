@@ -133,7 +133,7 @@ skup varijabli uzimaju proizvoljni skup \(\mathcal{V}\),
 no za formalizaciju je pogodniji skup prirodnih brojeva \(\mathbb{N}\).
 Umjesto eksplicitne kvantifikacije po nekoj varijabli \(v\),
 implicitno ćemo kvantificirati po varijabli \(0\).
-Ovaj pristup kvantifikaciji\footnote{Ili općenitije, vezivanju varijabli.},
+Ovaj pristup kvantifikaciji\footnote{ili općenitije, vezivanju varijabli},
 imena \enquote{de Bruijnovo indeksiranje}~\cite{debruijnamelessdummies},
 bitno olakšava rad sa supstitucijama.
 O samoj implementaciji de Bruijnovog indeksiranja više se može pročitati u knjizi
@@ -143,7 +143,7 @@ za automatsko generiranje tipova terma i formula te pripadajućih funkcija supst
 
 Princip indukcije za \texttt{term} potrebno je ručno definirati.
 Naime, induktivni tip \texttt{term} je \textit{ugniježđen} po konstruktoru \texttt{TFunc} zato što
-se javlja omotan oko drugog induktivnog tipa\footnote{Ovdje \texttt{vec}.} kao argument.
+se javlja omotan oko drugog induktivnog tipa\footnote{ovdje \texttt{vec}} kao argument.
 Za ugniježđene induktivne tipove, Coq generira neprikladne principe indukcije jer ne zna
 kako izraziti tvrdnju \enquote{predikat vrijedi za sve ugniježđene elemente.}
 \begin{minted}{coq}
@@ -555,8 +555,8 @@ Ovaj odjeljak posvećujemo formalizaciji ovih pojmova.
   \RightLabel{.}
   \BinaryInfC{\(P \, \mathbf{t}\)}
 \end{prooftree}
-\noindent Neka je \(f\) proizvoljna interpretacija induktivnih predikatnih simbola.
-Tada definiramo \(\varphi_{pr}(f)\) kao skup svih \(|P|\)-torki \(\mathbf{d}\) elemenata nosača \(M\) za koje postoji okolina \(\rho\) za \(M\) takva da:
+\noindent Neka je \(I\) proizvoljna interpretacija induktivnih predikatnih simbola.
+Tada definiramo \(\varphi_{pr}(I)\) kao skup svih \(|P|\)-torki \(\mathbf{d}\) elemenata nosača \(M\) za koje postoji okolina \(\rho\) za \(M\) takva da:
 \begin{itemize}
 \item za sve \( i \in \{ 1, \ldots, n \} \) vrijedi \( \mathbf{u}_{i}^{\rho} \in Q_{i}^{M} \),
 \item za sve \( j \in \{ 1, \ldots, m \} \) vrijedi \( \mathbf{v}_{j}^{\rho} \in f(P_{j}) \) i
@@ -564,15 +564,15 @@ Tada definiramo \(\varphi_{pr}(f)\) kao skup svih \(|P|\)-torki \(\mathbf{d}\) e
 \end{itemize}
 \begin{minted}{coq}
 Definition φ_pr
-  (pr : production)
-  (args : forall P : IndPredS Σ, vec D (indpred_ar P) -> Prop)
-  (ds : vec D (indpred_ar (indcons pr)))
+  (pr : production Σ)
+  (interp : InterpInd) (* interpretacija I *)
+  (ds : vec M (indpred_ar (indcons pr)))
   : Prop :=
       exists (ρ : env M),
       (forall Q us, List.In (Q; us) (preds pr) ->
                interpP Q (V.map (eval ρ) us)) /\
         (forall P ts, List.In (P; ts) (indpreds pr) ->
-                  args P (V.map (eval ρ) ts)) /\
+                  interp P (V.map (eval ρ) ts)) /\
         ds = V.map (eval ρ) (indargs pr).
 \end{minted}
 \noindent Operator \(\varphi_{pr}\) je formalizacija ideje primjene produkcije.
@@ -582,22 +582,20 @@ gdje je \(pr^{\prime}\) produkcija u kojoj se \(P\) javlja u konkluziji.
 \begin{minted}{coq}
 Definition φ_P
   (P : IndPredS Σ)
-  (args : forall P : IndPredS Σ, vec D (indpred_ar P) -> Prop)
-  : vec D (indpred_ar P) -> Prop.
+  (interp : InterpInd)
+  : vec M (indpred_ar P) -> Prop.
   refine (fun ds => _).
-  refine (@ex production (fun pr => _)).
+  refine (@ex (production Σ) (fun pr => _)).
   refine (@ex (P = indcons pr /\ Φ pr) (fun '(conj Heq HΦ) => _)).
   rewrite Heq in ds.
-  exact (φ_pr pr args ds).
+  exact (φ_pr pr interp ds).
 Defined.
 \end{minted}
 \noindent Konačno, definiramo \textit{operator skupa definicija} \(\varphi_{\Phi}\) kao preslikavanje
 koje svakom induktivnom predikatnom simbolu \(P\) pridružuje skup \(\varphi_{P}(f)\).
 \begin{minted}{coq}
-Definition φ_Φ
-  (args : forall P : IndPredS Σ, vec D (indpred_ar P) -> Prop)
-    : forall P : IndPredS Σ, vec D (indpred_ar P) -> Prop :=
-    fun P => φ_P P args.
+Definition φ_Φ (interp : InterpInd) : InterpInd :=
+  fun P => φ_P P interp.
 \end{minted}
 \noindent Operator \(\varphi_{\Phi}\) omogućuje simultanu primjenu produkcija.
 \end{definition}
@@ -635,37 +633,43 @@ Definition φ_Φ
   \]
 \end{example}
 
+\begin{definition}
+  Neka su \(U\) i \(V\) proizvoljne interpretacije induktivnih predikatnih simbola.
+  Kažemo da je interpretacija \(U\) \textit{podinterpretacija} interpretacije \(V\)
+  i pišemo \(U \sqsubseteq V\)
+  ako za svaki induktivni predikatni simbol \(P\) vrijedi \(U(P) \subseteq V(P)\).
+\begin{minted}{coq}
+Definition subinterp (U V : InterpInd) := forall P v, U P v -> V P v.
+Notation "U ⊑ V" := (subinterp U V) (at level 11).
+\end{minted}
+\end{definition}
+
 \begin{proposition}
   Operator \(\varphi_{\Phi}\) je monoton.
 \begin{minted}{coq}
-Proposition φ_Φ_monotone :
-  forall (f g : forall P, vec D (indpred_ar P) -> Prop),
-    (forall P v, f P v -> g P v) ->
-    (forall P v, φ_Φ f P v -> φ_Φ g P v).
+Definition monotone (F : InterpInd -> InterpInd) :=
+  forall U V : InterpInd, U ⊑ V -> F U ⊑ F V.
+
+Proposition φ_Φ_monotone : monotone φ_Φ.
 \end{minted}
 \end{proposition}
 
 \begin{definition}
   Neka je \(M\) proizvoljna struktura.
-  Definiramo aproksimaciju skupa induktivnih definicija \(\Phi\) razine \(\alpha \in \mathbb{N}\), s oznakom \(\varphi_{\Phi}^{\alpha}\), rekurzivno na način:
+  Definiramo \textit{aproksimaciju} skupa induktivnih definicija \(\Phi\) razine \(\alpha \in \mathbb{N}\), s oznakom \(\varphi_{\Phi}^{\alpha}\), rekurzivno na način:
   \begin{enumerate}
   \item \( \varphi_{\Phi}^{0}(P) \coloneq \varnothing \) i
   \item \( \varphi_{\Phi}^{\alpha + 1} \coloneq \varphi_{\Phi}(\varphi_{\Phi}^{\alpha}) \).
   \end{enumerate}
   \noindent Neformalno možemo reći da operator \(\varphi_{\Phi}\) \textit{poboljšava} aproksimaciju prethodne razine.
 \begin{minted}{coq}
-Fixpoint φ_Φ_n P (α : nat) (v : vec M (indpred_ar P)) : Prop :=
+Fixpoint φ_Φ_n (α : nat) : InterpInd :=
   match α with
-  | 0 => False
-  | S α => @φ_Φ Σ M Φ (fun P => φ_Φ_n P α) P v
+  | 0 => fun _ _ => False
+  | S α => φ_Φ (φ_Φ_n α)
   end.
 \end{minted}
   \noindent Tada je \textit{aproksimant} induktivnog predikatnog simbola \(P\) razine \(\alpha\) upravo \(\varphi_{\Phi}^{\alpha}(P)\).
-\begin{minted}{coq}
-Definition approximant_of (P : IndPredS Σ)
-  : nat -> vec M (indpred_ar P) -> Prop :=
-  φ_Φ_n P.
-\end{minted}
 \end{definition}
 
 \begin{remark}
@@ -680,9 +684,8 @@ Definition approximant_of (P : IndPredS Σ)
     \varphi_{\Phi}^{\alpha}(P) = \bigcup_{\beta < \alpha} \varphi_{\Phi}(\varphi_{\Phi}^{\beta}(P)).
   \]
 \begin{minted}{coq}
-Lemma approximant_characterization : forall α P v,
-      φ_Φ_n P α v <-> exists β,
-                      β < α /\ @φ_Φ Σ M Φ (fun P => φ_Φ_n P β) P v.
+Lemma φ_Φ_n_characterization : forall α P v,
+    φ_Φ_n α P v <-> exists β, β < α /\ φ_Φ (φ_Φ_n β) P v.
 \end{minted}
 \end{lemma}
 
@@ -695,8 +698,7 @@ Lemma approximant_characterization : forall α P v,
   \]
 \begin{minted}{coq}
 Lemma approximants_of_PA_Nat : forall α n,
-    @approximant_of Σ__PA M__PA Φ__PA PA_Nat α ([n])
-    <-> n < α.
+    φ_Φ_n Φ__PA M__PA α PA_Nat [n] <-> n < α.
 \end{minted}
 \end{example}
 
@@ -704,7 +706,7 @@ Lemma approximants_of_PA_Nat : forall α n,
   \textit{Aproksimacija razine} \(\omega\), s oznakom \(\varphi_{\Phi}^{\omega}\), je (za svaki pojedini predikatni simbol)
   unija aproksimacija razina manjih od \(\omega\).
 \begin{minted}{coq}
-Definition φ_Φ_ω P v := exists α, φ_Φ_n P α v.
+Definition φ_Φ_ω : InterpInd := fun P v => exists α, φ_Φ_n α P v.
 \end{minted}
 \end{definition}
 
@@ -712,17 +714,29 @@ Definition φ_Φ_ω P v := exists α, φ_Φ_n P α v.
   Aproksimant razine \(\omega\) induktivnog predikatnog simbola \(\mathit{Nat}\)
   je cijeli skup prirodnih brojeva \(\mathbb{N}\).
 \begin{minted}{coq}
-Lemma NAT_φ_Φ_ω: forall (n : nat), @φ_Φ_ω Σ__PA M__PA Φ__PA PA_Nat [n].
+Lemma NAT_φ_Φ_ω: forall n, φ_Φ_ω Φ__PA M__PA PA_Nat [n].
 \end{minted}
 \end{example}
 
-\begin{lemma}\label{lemma:omega-least-prefixed}
-  Aproksimacija razine \(\omega\) je najmanji skup sa svojstvom \(\varphi_{\Phi}(\varphi_{\Phi}^{\omega}) \subseteq \varphi_{\Phi}^{\omega}\).
+\begin{definition}
+  Neka je \(U\) proizvoljna interpretacija induktivnih predikatnih simbola.
+  Kažemo da je interpretacija \(U\) \textit{prefiksna točka} ako
+  je poboljšanje interpretacije \(U\) podinterpretacija od \(U\),
+  odnosno vrijedi \(\varphi_{\Phi}(U) \sqsubseteq U\).
+  Za interpretaciju induktivnih predikatnih simbola \(V\) kažemo da je
+  \textit{najmanja prefiksna točka} ako je \(V\) prefiksna točka 
+  te je podinterpretacija svake druge prefiksne točke.
 \begin{minted}{coq}
-Lemma ω_prefixed : forall P v, @φ_Φ Σ M Φ φ_Φ_ω P v -> φ_Φ_ω P v.
-Lemma ω_least : forall args,
-                (forall P v, @φ_Φ Σ M Φ args P v -> args P v) ->
-                forall P v, φ_Φ_ω P v -> args P v.
+Definition prefixed (U : InterpInd) := φ_Φ U ⊑ U.
+Definition least (P : InterpInd -> Prop) (U : InterpInd) :=
+  P U /\ (forall V, P V -> U ⊑ V).
+\end{minted}
+\end{definition}
+
+\begin{lemma}\label{lemma:omega-least-prefixed}
+  Aproksimacija razine \(\omega\) je najmanja prefiksna točka operatora \(\varphi_{\Phi}\).
+\begin{minted}{coq}
+Lemma φ_Φ_ω_least_prefixed : least prefixed φ_Φ_ω.
 \end{minted}
 \end{lemma}
 
@@ -730,9 +744,8 @@ Lemma ω_least : forall args,
   Kažemo da je struktura \(M\) \textit{standardni model} za \(\Phi\) ako
   interpretira svaki induktivni predikatni simbol njegovim aproksimantom razine \(\omega\).
 \begin{minted}{coq}
-Definition standard_model
-  (Σ : signature) (Φ: @IndDefSet Σ) (M : structure Σ) : Prop :=
-  forall (P : IndPredS Σ) ts, interpIP P ts <-> @φ_Φ_ω Σ M Φ P ts.
+Definition standard_model (Φ: IndDefSet Σ) (M : structure Σ) : Prop :=
+    forall (P : IndPredS Σ) ts, interpIP P ts <-> φ_Φ_ω Φ M P ts.
 \end{minted}
 \end{definition}
 \noindent Prema lemi~\ref{lemma:omega-least-prefixed}, standardni model je
@@ -741,7 +754,7 @@ najmanja struktura koja ima smisla za zadani skup induktivnih definicija.
 \begin{proposition}
   Struktura \(M_{\mathit{PA}}\) je standardni model za skup induktivnih definicija \(\Phi_{\mathit{PA}}\).
 \begin{minted}{coq}
-Lemma standard_model__PA : @standard_model Σ__PA Φ__PA M__PA.
+Lemma standard_model__PA : standard_model Φ__PA M__PA..
 \end{minted}
 \end{proposition}
 

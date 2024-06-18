@@ -334,8 +334,7 @@ Proof.
 Qed.                              
   
 Lemma approximants_of_PA_Nat : forall α n,
-    approximant_of Φ__PA M__PA PA_Nat α [n]
-    <-> n < α.
+    φ_Φ_n Φ__PA M__PA α PA_Nat [n] <-> n < α.
 Proof.
   intros α n; split; intros H.
   - generalize dependent n. induction α as [| α IH]; intros n H.
@@ -365,10 +364,12 @@ Infix "⊢" := mkSeq (at level 10).
 Definition Even_zero : formula Σ__PA :=
   FIndPred PA_Even [TFunc PA_zero []].
 
+Definition LKID__PA := LKID Φ__PA. 
+
 Lemma provable_Even_zero :
-  @LKID Σ__PA Φ__PA ([] ⊢ [Even_zero]).
+  provable LKID__PA Even_zero.
 Proof.
-  pose proof (@IndR Σ__PA Φ__PA ([]) ([])) as H.
+  pose proof (IndR Φ__PA ([]) ([])) as H.
   specialize (H PA_prod_E_zero); cbn in H.
   apply H with (fun t => var_term t); try contradiction.
   apply ID_E_zero.
@@ -410,7 +411,7 @@ Definition G (P : IndPredS Σ__PA) : formula Σ__PA :=
 
 
 Lemma provable_every_nat_is_even_or_odd :
-  @LKID Σ__PA Φ__PA ([] ⊢ [every_nat_is_even_or_odd]).
+  provable LKID__PA every_nat_is_even_or_odd.
 Proof.
   apply AllR; cbn.
   apply ImpR.
@@ -457,14 +458,12 @@ Definition every_succ_of_Even_is_Odd : formula Σ__PA :=
        (FIndPred PA_Even [var_term 0])
        (FIndPred PA_Odd [TFunc PA_succ [var_term 0]])).
 
-
-Lemma provable_every_succ_of_Even_is_Odd : forall Γ Δ,
-  @LKID Σ__PA Φ__PA (Γ ⊢ (every_succ_of_Even_is_Odd :: Δ)).
+Lemma provable_every_succ_of_Even_is_Odd :
+  provable LKID__PA every_succ_of_Even_is_Odd.
 Proof.
-  intros Γ Δ.
   pose proof (@IndR Σ__PA Φ__PA
-                (cons (FIndPred PA_Even [var_term 0]) (shift_formulas Γ))
-                (shift_formulas Δ)
+                (cons (FIndPred PA_Even [var_term 0]) nil)
+                nil
                 PA_prod_O_succ).
   specialize (H (fun t => var_term t) ID_O_succ); cbn in H.
   apply AllR; cbn. apply ImpR.
@@ -474,15 +473,16 @@ Proof.
 Qed.
 
 Definition Even_succ_succ_Even : formula Σ__PA :=
+  let x := var_term 0 in
   FAll
     (FImp
-       (FIndPred PA_Even [var_term 0])
+       (FIndPred PA_Even [x])
        (FIndPred PA_Even [TFunc PA_succ
                             [TFunc PA_succ
-                               [var_term 0]]])).
+                               [x]]])).
 
 Lemma provable_Even_succ_succ_Even :
-    @LKID _ Φ__PA ([] ⊢ [Even_succ_succ_Even]).
+    provable LKID__PA Even_succ_succ_Even.
 Proof.
   apply AllR. apply ImpR.
   apply Cut with (FIndPred PA_Odd [TFunc PA_succ [var_term 0]]).
