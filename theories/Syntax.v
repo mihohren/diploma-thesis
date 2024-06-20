@@ -91,14 +91,13 @@ Section term.
     | TFunc f args => TFunc f (V.map (subst_term σ) args)
     end.
 
-  Fixpoint finite_subst {n} (u : vec var n) (v : vec term n) : var -> term :=
-    match u in Vector.t _ n return Vector.t term n -> var -> term with
-    | V.cons uh ut => fun v m =>
-                  if m =? uh
-                  then Vector.hd v
-                  else finite_subst ut (Vector.tl v) m
-    | V.nil => fun _ => var_term
-    end v.
+  Definition single_subst (x : var) (t : term) : var -> term :=
+    fun y => if y =? x then t else var_term y.
+  
+  Definition finite_subst {n} (u : vec var n) (v : vec term n) : var -> term :=
+    finitely_generated_fun var_term u v.
+
+
   
   Definition term_var_subst (t : term) (x : var) (u : term) : term :=
     subst_term (fun v => if v =? x then u else var_term v) t.

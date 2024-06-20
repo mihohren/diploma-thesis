@@ -209,6 +209,11 @@ Section soundness.
   Qed.
 
 
+  Axiom Φfin : exists prods : list (production Σ), forall pr, Φ pr <-> In pr prods.
+  Axiom mutdepdec : forall Pi Pj, {mutually_dependent Φ Pi Pj} + {~mutually_dependent Φ Pi Pj}.
+  Axiom e : forall (M : structure Σ) n, vec M n.
+  Axiom premstardec : forall Pi Pj, {Prem_star Φ Pi Pj} + {~Prem_star Φ Pi Pj}.
+  
   Lemma LS_IndL : forall Γ Δ
                     (Pj : IndPredS Σ) (u : vec _ (indpred_ar Pj))
                     (z_i : forall P, vec var (indpred_ar P))
@@ -246,69 +251,81 @@ Section soundness.
     { intros ψ Hin; apply Hpremises; now right. }
     assert (Hsat2: ρ ⊨ (FIndPred Pj u)).
     { apply Hpremises; now left. }
-    apply Hindhyp; auto.
-    intros φ [HφFj | HinΓ]; auto; clear Hsat1 Hpremises Hindhyp; subst φ.
-    apply Hstandard in Hsat2 as [[|α] Hsatα]; try contradiction.
-    destruct Hsatα as (pr & [Heq HΦ] & ρ' & Hpreds & Hindpreds & Heval); subst Pj;
-      cbn in Heval.
-    assert (forall t v,
-               eval ρ (subst_term (finite_subst v u) t) =
-                 eval ρ' (subst_term (finite_subst v (indargs pr)) t)).
-    { admit. }
-  Admitted.
-  (*   destruct (classic (exists ψ, In ψ Δ /\ ρ ⊨ ψ)) as [H | H]. *)
-  (*   { apply H. } *)
-  (*   assert (forall ψ, In ψ Δ -> ~ ρ ⊨ ψ) as HΔunsat. *)
-  (*   { intros ψ Hin Hsat. apply H; exists ψ; auto. } *)
-  (*   clear H.  *)
-
-  (*   specialize (Hminor pr HΦ (mutually_dependent_refl Φ (indcons pr))). *)
-  (*   cbn in Heval. *)
-  (*   remember (shift_formulas_by shift_factor (FPreds_from_preds (preds pr))) as Qs. *)
-  (*   remember (list_map *)
-  (*              (λ '(P; args), *)
-  (*                 let shifted_args := V.map (shift_term_by shift_factor) args in *)
-  (*                 let σ := finite_subst (z_i P) shifted_args in let G := G_i P in subst_formula σ G) *)
-  (*              (indpreds pr)) as Gs. *)
-  (*   remember (V.map (shift_term_by shift_factor) (indargs pr)) as ty. *)
-  (*   set (Pi := indcons pr). *)
-  (*   assert (HeqPi : Pi = indcons pr) by auto. *)
-  (*   remember (subst_formula (finite_subst (z_i Pi) ty) (G_i Pi)) as Fi. *)
-  (*   cbn in Hminor. *)
-  (*   specialize (Hminor M Hstandard ρ). *)
-  (*   subst Pi; clear HeqPi. *)
-  (*   rewrite <- HeqFi in Hminor. *)
-  (*   enough (H : forall ε, In ε (Qs ++ Gs ++ Γ) -> ρ ⊨ ε). *)
-  (*   { *)
-  (*     apply Hminor in H as [ξ [[H | H] Hξsat]]. *)
-  (*     - apply Hindhyp; auto. intros ψ Hinψ; destruct Hinψ as [HψFj | HinψΓ]. *)
-  (*       + subst ξ. subst ψ. subst Fi. apply strong_form_subst_sanity2 in Hξsat. *)
-  (*         subst Fj. apply strong_form_subst_sanity2. admit. *)
-  (*       + auto. *)
-  (*     - exists ξ; auto. *)
-  (*   } *)
-  (*   intros ψ Hin. *)
-  (*   apply in_app_or in Hin as [HinQs | Hin]. *)
-  (*   { *)
-  (*     subst Qs. *)
-  (*     apply in_map_iff in HinQs as [ξ [Heq Hin]]. *)
-  (*     apply in_map_iff in Hin as [[Q args] [Heq1 Hin]]. *)
-  (*     specialize (Hpreds Q args Hin). subst ψ. *)
-  (*     subst ξ. apply strong_form_subst_sanity2. *)
-  (*     admit. *)
-  (*   } *)
-  (*   apply in_app_or in Hin as [HinGs | HinΓ]. *)
-  (*   - subst Gs. apply in_map_iff in HinGs. *)
-  (*     destruct HinGs as ([P args] & Heq & Hin). *)
-  (*     remember (V.map (shift_term_by shift_factor) args) as shifted_args. *)
-  (*     remember (finite_subst (z_i P) shifted_args) as σ. *)
-  (*     remember (G_i P) as G. cbn in Heq. rewrite <- Heqσ in Heq. *)
-  (*     rewrite <- Heq. apply strong_form_subst_sanity2. *)
-  (*     specialize (Hindpreds P args Hin). *)
-  (*     admit. *)
-  (*   - auto. *)
-  (* Admitted. *)
-    
+    destruct (classic (exists ψ, In ψ Δ /\ ρ ⊨ ψ)) as [Hyes | Hno].
+    { assumption. }
+    assert (HΔunsat : forall ψ, In ψ Δ -> ~ ρ ⊨ ψ).
+    { intros ψ Hin Hsat. apply Hno; now exists ψ. } clear Hno.    
+    destruct Φfin as [prods Hprods].
+    set (xlist := map (fun v => v + shift_factor) (nodup Nat.eq_dec (concat (map (fun pr =>
+                     if mutdepdec (indcons pr) Pj then vars_of_production pr else nil
+                                          ) prods)))).
+    set (evec := e M (length xlist)).
+    set (xvec := V.of_list xlist).
+    assert (Hxvar : forall xvar, In xvar xlist -> xvar >= shift_factor).
+    { intros xvar Hinx. subst xlist; apply in_map_iff in Hinx as [xvar' [Heq Hin]]. lia. }
+    assert (Γfvx : forall ψ xvar, In ψ Γ -> In xvar xlist -> ~ FV ψ xvar).
+    { intros ψ xvar Hinψ Hinx Hfv.
+      assert (Hge : xvar >= shift_factor) by auto.
+      assert (Hge1: xvar >= maxΓ) by lia.
+      assert (xvar >= some_var_not_in_formula ψ).
+      { unfold ">=" in *. transitivity maxΓ; auto. subst maxΓ; apply max_fold_ge; auto using in_map. }
+      apply lt_some_var_not_in_term_not_FV in H.
+      contradiction. }
+    assert (Δfvx : forall ψ xvar, In ψ Δ -> In xvar xlist -> ~ FV ψ xvar).
+    { intros ψ xvar Hinψ Hinx Hfv.
+      assert (Hge : xvar >= shift_factor) by auto.
+      assert (Hge1: xvar >= maxΔ) by lia.
+      assert (xvar >= some_var_not_in_formula ψ).
+      { unfold ">=" in *. transitivity maxΔ; auto. subst maxΔ; apply max_fold_ge; auto using in_map. }
+      apply lt_some_var_not_in_term_not_FV in H.
+      contradiction. }
+    set (ρ' := env_finite_subst ρ xvec evec).
+    assert (HsatΓ' : forall ψ, In ψ Γ -> ρ' ⊨ ψ).
+    { intros ψ Hin. apply form_subst_sanity1_vec; auto.
+      intros x Hinx. apply Γfvx; auto. now apply vec_In_of_list. }
+    assert (HunsatΔ' : forall ψ, In ψ Δ -> ~ ρ' ⊨ ψ).
+    { intros ψ Hin Hsat'. apply form_subst_sanity1_vec in Hsat'.
+      - specialize (HΔunsat ψ Hin); contradiction.
+      - intros x Hinx. apply Δfvx; auto. now apply vec_In_of_list. }
+    set (Y := fun P v =>
+                if premstardec Pj P
+                then env_finite_subst ρ' (z_i P) v ⊨ (G_i P)
+                else True).
+    enough (HYpref : prefixed Φ M Y).
+    { assert (Hωsubinterp : forall P v, φ_Φ_ω Φ M P v -> Y P v).
+      { intros P v Hω. now apply (proj2 (φ_Φ_ω_least_prefixed Φ M) ). }
+      destruct (classic (ρ' ⊨ Fj)) as [HsatFj | HunsatFj].
+      { assert (forall ψ, In ψ (Fj :: Γ) -> ρ' ⊨ ψ).
+        { intros ψ; inversion 1; subst; auto. }
+        apply (Hindhyp M Hstandard ρ') in H as [ψ [Hin HsatΔ']].
+        exists ψ; split; auto. apply form_subst_sanity1_vec in HsatΔ'; auto.
+        intros x Hinx; apply Δfvx; auto. now apply vec_In_of_list. }
+      subst Fj. rewrite form_subst_sanity2_vec in HunsatFj.
+      assert (HnotYju : ~ Y Pj (V.map (eval ρ') u)).
+      { intros HYju. subst Y. cbn in HYju.
+        destruct (premstardec Pj Pj). contradiction. apply n. apply Prem_star_refl. }
+      assert (Hnotωju : ~ φ_Φ_ω Φ M Pj (V.map (eval ρ') u)).
+      { intros Hω. apply HnotYju. now apply (proj2 (φ_Φ_ω_least_prefixed Φ M)). }
+      assert (forall xvar, In xvar xlist -> xvar >= maxP).
+      { intros xvar Hinx. unfold ge. transitivity shift_factor. lia.
+        unfold ">=" in *. auto. }
+      assert (forall xvar uu, In xvar xlist -> V.In uu u -> ~ TV uu xvar).
+      { intros xvar uu Hinx Hinu Htv.
+        assert (xvar >= maxP) by auto; unfold ">=" in *. subst maxP.
+        cbn in H0. admit. }
+      assert (Hevaleq: V.map (eval ρ') u = V.map (eval ρ) u).
+      { admit. }
+      rewrite Hevaleq in Hnotωju. cbn in Hsat2. apply Hstandard in Hsat2. contradiction.
+    }
+    intros P v Hω. unfold Y.
+    destruct (premstardec Pj P) as [HpremstarPjP | HnotpremstarPjP].
+    2: { constructor. }
+    destruct (premstardec P Pj) as [HpremstarPPj | HnotpremstarPPj].
+    2: { assert (Hnotmutdep : ~ mutually_dependent Φ Pj P).
+         { intros [H1 H2]; contradiction. }
+         rewrite HmutdepG.
+         2: { intros H. apply mutually_dependent_symm in H; contradiction. }  
+  Admitted.    
     
   Theorem soundness : forall Γ Δ, LKID Φ (Γ ⊢ Δ) -> Γ ⊫ Δ.
   Proof.

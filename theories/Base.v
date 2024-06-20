@@ -30,6 +30,13 @@ Proof.
     + apply V.Exists_cons_tl; assumption.
 Qed.
 
+Lemma vec_In_of_list : forall A (a : A) (l : list A), In a l <-> V.In a (V.of_list l).
+Proof.
+  intros A a l; induction l as [| h t IH].
+  - split; inversion 1.
+  - cbn. rewrite V.In_cons_iff; split; intros [H | H]; tauto.
+Qed.
+
 Inductive ForallT {A : Type} (P : A -> Type) : forall {n : nat}, vec A n -> Type :=
 | ForallT_nil : ForallT P V.nil
 | ForallT_cons : forall (a : A) {n} (v : vec A n), P a -> ForallT P v -> ForallT P (V.cons a v).  
@@ -110,6 +117,14 @@ Proof.
       fold (vec_max_fold t). lia.
 Qed.
 
+Lemma max_fold_ge : forall (xs : list nat) x,
+    In x xs -> x <= max_fold xs.
+Proof.
+  induction xs as [| h t IH]; intros x; inversion 1; cbn.
+  - subst; auto with arith.
+  - specialize (IH x H0). unfold max_fold in IH. lia.
+Qed.
+    
 Lemma lt_any_lt_maxfold :
   forall {A : Type} (f : A -> nat) {n} (ys : vec A n) x y,
     V.In y ys -> x < f y -> x < vec_max_fold (V.map f ys).
@@ -138,6 +153,16 @@ Proof.
     + inversion Hnodup; subst; apply IHt; auto.
       intros x y Hinx Hiny Heq. apply Hinj; auto; now right.
 Qed.
+
+Fixpoint finitely_generated_fun {A} (f : nat -> A) {n} (x : vec nat n) (y : vec A n) : nat -> A :=
+  match x in vec _ n return vec A n -> nat -> A with
+  | V.cons xh xt =>
+      fun y m =>
+        if m =? xh
+        then V.hd y
+        else finitely_generated_fun f xt (V.tl y) m
+  | V.nil => fun _ => f
+  end y.          
 
 Section monotone_operator.
   Context {A : Type}.

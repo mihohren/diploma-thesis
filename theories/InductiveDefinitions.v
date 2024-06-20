@@ -12,6 +12,13 @@ Section inductive_definition_set.
       }.
   
   Definition IndDefSet := production -> Prop.
+
+  Definition vars_of_production (pr : production) : list var :=
+    nodup Nat.eq_dec
+      (concat (
+           map (fun p => vars_of_formula (FPred p.1 p.2)) (preds pr) ++
+             map (fun p => vars_of_formula (FIndPred p.1 p.2)) (indpreds pr) ++
+             V.to_list (V.map vars_of_term (indargs pr)))).
 End inductive_definition_set.
 
 Arguments mkProd {Σ}.
@@ -19,6 +26,7 @@ Arguments preds {Σ}.
 Arguments indpreds {Σ}.
 Arguments indcons {Σ}.
 Arguments indargs {Σ}.
+Arguments vars_of_production {Σ}.
 
 Section definition_set_operator.
   Context {Σ : signature}.

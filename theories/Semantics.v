@@ -23,6 +23,12 @@ Section environment.
 
   Definition env_subst (ρ : env) (x : var) (d : M) : var -> M :=
     fun (y : var) => if y =? x then d else ρ y.
+  
+  Fixpoint env_finite_subst (ρ : env) {n} (xvec : vec var n) (dvec : vec M n) : var -> M :=
+    match xvec in vec _ n return vec M n -> var -> M with
+    | V.cons xh xt => fun d => env_finite_subst (env_subst ρ xh (V.hd d)) xt (V.tl d)
+    | V.nil => fun _ => ρ
+    end dvec.
 
   Fixpoint eval (ρ : env) (t : term Σ) : M :=
     match t with
@@ -259,8 +265,24 @@ Section lemma_2_1_9.
         constructor; assumption.
   Qed.
 
-  Open Scope subst_scope.
+  Lemma form_subst_sanity1_vec :
+    forall (Σ : signature) (F : formula Σ) (M : structure Σ)
+      (ρ : env M) {n} (xvec : vec var n) (dvec : vec M n),
+      (forall x, V.In x xvec -> ~ FV F x) -> (ρ ⊨ F <-> (env_finite_subst ρ xvec dvec) ⊨ F).
+  Proof.
+    intros Σ F M ρ n xvec. revert ρ. induction xvec as [| h n t IH].
+    - tauto.
+    - intros ρ dvec Hfv. cbn; split; intros Hsat.
+      + apply IH.
+        * intros v Hin. apply Hfv. now right.
+        * apply form_subst_sanity1; auto. apply Hfv; now left.
+      + apply IH in Hsat.
+        * apply form_subst_sanity1 in Hsat; auto. apply Hfv; now left.
+        * intros x Hin. apply Hfv. now right.
+  Qed.
 
+  Open Scope subst_scope.
+  
   Lemma strong_form_subst_sanity2 :
     forall (Σ : signature) (φ : formula Σ) (σ : var -> term Σ)
       (M : structure Σ) (ρ : env M),
@@ -290,4 +312,25 @@ Section lemma_2_1_9.
       rewrite eval_shift.
       apply H.
   Qed.
+
+  Lemma form_subst_sanity2 :
+    forall (Σ : signature) (φ : formula Σ) (x : var) (t : term Σ)
+      (M : structure Σ) (ρ : env M),
+      ρ ⊨ (subst_formula (single_subst x t) φ) <-> (env_subst ρ x (eval ρ t)) ⊨ φ.
+  Proof.
+    intros Σ φ x t M ρ; rewrite strong_form_subst_sanity2.
+    enough (single_subst x t >> eval ρ = env_subst ρ x (eval ρ t)).
+    { rewrite H; tauto. }
+    fext; intros v. unfold ">>", funcomp; cbn.
+    unfold single_subst, env_subst.
+    destruct (v =? x); auto.
+  Qed.
+
+  Lemma form_subst_sanity2_vec :
+    forall (Σ : signature) (φ : formula Σ) {n} (xvec : vec var n ) (tvec : vec (term Σ) n)
+      (M : structure Σ) (ρ : env M),
+      ρ ⊨ (subst_formula (finite_subst xvec tvec) φ) <->
+        (env_finite_subst ρ xvec (V.map (eval ρ) tvec)) ⊨ φ.
+  Proof.
+  Admitted.
 End lemma_2_1_9.
