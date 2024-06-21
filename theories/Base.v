@@ -111,6 +111,19 @@ Proof.
       constructor; auto. now rewrite V.to_list_In.
 Qed.
 
+Lemma ListNoDup_iff_VecNoDup :
+  forall (A : Type) (l : list A),
+    NoDup l <-> VecNoDup (V.of_list l).
+Proof.
+  intros A l; split; intros H.
+  - induction H; cbn; constructor; auto; now rewrite vec_In_of_list in H.
+  - induction l; cbn; constructor.
+    + cbn in H. inversion H; subst. apply Eqdep_dec.inj_pair2_eq_dec in H2; auto using Nat.eq_dec; subst.
+      now rewrite vec_In_of_list.
+    + apply IHl. inversion H; subst. apply Eqdep_dec.inj_pair2_eq_dec in H2; auto using Nat.eq_dec; subst.
+      assumption.
+Qed.
+
 Definition max_fold (l : list nat) := fold_right Nat.max 0 l.
                                           
 Definition vec_max_fold {n} (v : vec nat n) := V.fold_right Nat.max v 0.

@@ -211,7 +211,7 @@ Section soundness.
 
   Axiom Φfin : exists prods : list (production Σ), forall pr, Φ pr <-> In pr prods.
   Axiom mutdepdec : forall Pi Pj, {mutually_dependent Φ Pi Pj} + {~mutually_dependent Φ Pi Pj}.
-  Axiom e : forall (M : structure Σ) n, vec M n.
+  Axiom Minhab : forall M, {e : M | True}.
   Axiom premstardec : forall Pi Pj, {Prem_star Φ Pi Pj} + {~Prem_star Φ Pi Pj}.
   
   Lemma LS_IndL : forall Γ Δ
@@ -247,6 +247,11 @@ Section soundness.
     intros Γ Δ Pj u z_i z_i_nodup G_i HmutdepG.
     intros maxΓ maxΔ maxP shift_factor Fj minor_premises.
     intros Hminor Hindhyp M Hstandard ρ Hpremises.
+    enough (He : (forall {n}, vec M n) -> exists ψ, In ψ Δ /\ ρ ⊨ ψ).
+    { apply He. induction n. apply V.nil. destruct (Minhab M) as [eM _].
+      apply V.cons. apply eM. apply IHn. }
+    intros e.
+                
     assert (Hsat1 : forall ψ, In ψ Γ -> ρ ⊨ ψ).
     { intros ψ Hin; apply Hpremises; now right. }
     assert (Hsat2: ρ ⊨ (FIndPred Pj u)).
@@ -259,7 +264,7 @@ Section soundness.
     set (xlist := map (fun v => v + shift_factor) (nodup Nat.eq_dec (concat (map (fun pr =>
                      if mutdepdec (indcons pr) Pj then vars_of_production pr else nil
                                           ) prods)))).
-    set (evec := e M (length xlist)).
+    set (evec := e (length xlist)).
     set (xvec := V.of_list xlist).
     assert (Hxvar : forall xvar, In xvar xlist -> xvar >= shift_factor).
     { intros xvar Hinx. subst xlist; apply in_map_iff in Hinx as [xvar' [Heq Hin]]. lia. }
@@ -369,10 +374,77 @@ Section soundness.
          exists pr, (conj eq_refl HΦ), ρ''; intuition.
          apply Hindpredsω. { apply in_map_iff. exists (P; ts); split; auto. }
          apply Hindpreds. assumption. }
-
+    
     assert (HmutdepPPj : mutually_dependent Φ P Pj).
     { now split. }
-                 
+    destruct HY as (pr & [Heq HΦ] & ρ'' & Hpreds & Hindpreds & Heval).
+    subst P; cbn in Heval.
+    specialize (Hminor pr HΦ HmutdepPPj).
+    remember (shift_formulas_by shift_factor (FPreds_from_preds (preds pr))) as Qs.
+    remember (list_map
+                (λ '(P; args),
+                  let shifted_args := V.map (shift_term_by shift_factor) args in
+                  let σ := finite_subst (z_i P) shifted_args in let G := G_i P in subst_formula σ G)
+                (indpreds pr)) as Gs.
+    remember (V.map (shift_term_by shift_factor) (indargs pr)) as ty.
+    remember (subst_formula (finite_subst (z_i (indcons pr)) ty) (G_i (indcons pr))) as Fi.
+    cbn zeta in Hminor.
+    rewrite <- HeqFi in Hminor.
+
+    assert (Hρ'e : V.map (eval ρ') (V.map var_term xvec) = evec).
+    { unfold ρ'. rewrite eval_finite_subst_on_args; auto. subst xvec.
+      rewrite <- ListNoDup_iff_VecNoDup. unfold xlist. apply NoDup_injective_map.
+      - intros x y _ _ Heq. lia.
+      - apply NoDup_nodup. }
+
+    assert (Himplies : (forall Q, In Q Qs -> ρ' ⊨ Q) -> (forall G, In G Gs -> ρ' ⊨ G) -> ρ' ⊨ Fi).
+    { intros HQ HG. destruct (classic (ρ' ⊨ Fi)) as [HsatFi | HunsatFi]; auto.
+      exfalso. specialize (Hminor M Hstandard ρ').
+      assert (H1 : forall φ, In φ (Qs ++ Gs ++ Γ) -> ρ' ⊨ φ).
+      { intros φ Hin. apply in_app_or in Hin as [HinQ | Hinrest]; auto.
+        apply in_app_or in Hinrest as [HinG | HinΓ]; auto. }
+      apply Hminor in H1 as [ψ [[HF | HinΔ] Hsat]].
+      - subst; contradiction.
+      - apply HunsatΔ' in HinΔ. contradiction. }
+    subst Qs; subst Gs; subst Fi; subst ty.
+    unfold shift_formulas_by in Himplies.
+    rewrite form_subst_sanity2_vec in Himplies.
+    assert (Himplies1 : (forall Q ts, In (Q; ts) (preds pr) ->
+                                 funcomp (eval ρ') (funcomp var_term (fun x => shift_factor + x))
+                                   ⊨ (FPred Q ts))
+                        -> (forall P us, In (P; us) (indpreds pr) ->
+                                   env_finite_subst ρ'
+                                     (z_i P)
+                                     (V.map (eval ρ') (V.map (shift_term_by shift_factor) us))
+                                     ⊨ (G_i P))
+                        -> env_finite_subst ρ' (z_i (indcons pr))
+                            (V.map (eval ρ') (V.map (shift_term_by shift_factor) (indargs pr)))
+                            ⊨ (G_i (indcons pr))).
+    { intros Qs Gs.
+      apply Himplies.
+      - intros Q Hin. apply in_map_iff in Hin as [φ [Heq Hin]].
+        subst. apply in_map_iff in Hin as [[Q ts] [Heq1 Hin1]]. subst.
+        unfold shift_formula_by. rewrite strong_form_subst_sanity2.
+        now apply Qs.
+      - intros G Hin. apply in_map_iff in Hin as [[P us] [Heq Hin]].
+        subst. rewrite form_subst_sanity2_vec. now apply Gs. }
+    assert (Hpremindpreds : forall Pk, In Pk (map (fun p => p.1) (indpreds pr)) ->
+                                  Prem_star Φ Pj Pk).
+    { intros Pk Hin. apply in_map_iff in Hin as [[P ts] [Heq Hin]]; subst; cbn.
+      assert (Hprem: Prem Φ (indcons pr) P).
+      { exists pr; split; auto; split; auto. now (exists ts). }
+      constructor 3 with (indcons pr).
+      - apply HpremstarPjP.
+      - constructor. apply Hprem. }
+    assert (forall P v, In P (map (fun p => p.1) (indpreds pr)) ->
+                   (env_finite_subst ρ' (z_i P) v) ⊨ (G_i P)).
+    { intros P v' Hin. specialize (Hpremindpreds P Hin).
+      apply in_map_iff in Hin as [[Pk ts] [Heq Hin]].
+      subst P; cbn in ts, v', Hpremindpreds.
+      specialize (Hindpreds Pk ts); cbn.
+      apply Hindpreds in Hin as HY. unfold Y in HY.
+      destruct (premstardec Pj Pk); try contradiction. admit.
+      }
   Admitted.
 
   Theorem soundness : forall Γ Δ, LKID Φ (Γ ⊢ Δ) -> Γ ⊫ Δ.

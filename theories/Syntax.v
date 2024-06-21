@@ -65,8 +65,7 @@ Section term.
     - destruct (Nat.eq_dec uv vv) as [E | E]; auto.
     - right; discriminate.
     - right; discriminate.
-    - Search vec "dec".
-      set (decider := fun u v => if term_eqdec u v then true else false).
+    - set (decider := fun u v => if term_eqdec u v then true else false).
       assert (decider_decides : forall u v, decider u v = true <-> u = v).
       { intros u v; subst decider; cbn. destruct (term_eqdec u v).
         - tauto.

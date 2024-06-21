@@ -31,7 +31,7 @@ Section lkid.
     - assumption.
     - auto.
   Qed.
-      
+  
   Definition mutually_dependent (P Q : IndPredS Σ) :=
     Prem_star P Q /\ Prem_star Q P.
 
