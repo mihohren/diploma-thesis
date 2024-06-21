@@ -37,6 +37,15 @@ Proof.
   - cbn. rewrite V.In_cons_iff; split; intros [H | H]; tauto.
 Qed.
 
+Lemma vec_in_map : forall A B (f : A -> B) {n} (a : A) (v : vec A n),
+    V.In a v -> V.In (f a) (V.map f v).
+Proof.
+  intros A B f n a v Hin.
+  rewrite V.to_list_In in *.
+  rewrite V.to_list_map.
+  now apply in_map.
+Qed.
+
 Inductive ForallT {A : Type} (P : A -> Type) : forall {n : nat}, vec A n -> Type :=
 | ForallT_nil : ForallT P V.nil
 | ForallT_cons : forall (a : A) {n} (v : vec A n), P a -> ForallT P v -> ForallT P (V.cons a v).  

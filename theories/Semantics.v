@@ -26,7 +26,7 @@ Section environment.
   
   Fixpoint env_finite_subst (ρ : env) {n} (xvec : vec var n) (dvec : vec M n) : var -> M :=
     match xvec in vec _ n return vec M n -> var -> M with
-    | V.cons xh xt => fun d => env_finite_subst (env_subst ρ xh (V.hd d)) xt (V.tl d)
+    | V.cons xh xt => fun dvec => env_subst (env_finite_subst ρ xt (V.tl dvec)) xh (V.hd dvec)
     | V.nil => fun _ => ρ
     end dvec.
 
@@ -66,7 +66,7 @@ Section lemma_2_1_5.
       + intros x_in_var_st. apply x_not_in_t.
         apply TVFunc with st; auto.
   Qed.
-
+  
   Lemma eval_subst_sanity2 : forall (u : term Σ),
       eval_subst ρ t x (eval ρ u) = eval ρ (term_var_subst t x u).
   Proof.
@@ -161,6 +161,66 @@ Section eval_facts.
       + intros st Hin. apply IH.
         * assumption.
         * eapply var_not_in_Func_not_in_args in HnotTV; eauto.
+  Qed.
+
+  Lemma eval_env_subst_unused_vec :
+    forall (ρ : env M) {n} (xvec : vec var n) (dvec : vec M n) u,
+      (forall xvar, V.In xvar xvec -> ~ TV u xvar) ->
+      eval ρ u = eval (env_finite_subst ρ xvec dvec) u.
+  Proof.
+    intros ρ n xvec. induction xvec as [| h m t IH]; intros dvec u Hin; auto.
+    cbn.
+    assert (Hin' : forall xvar, V.In xvar t -> ~ TV u xvar).
+    { intros xvar Hin'; apply Hin; now right. }
+    specialize (IH (V.tl dvec) u Hin').
+    rewrite IH.
+    apply eval_env_subst_unused. apply Hin; now left.
+  Qed.
+
+  Lemma env_finite_subst_not_in : forall ρ xvar {n} (xvec : vec var n) (dvec : vec M n),
+      ~V.In xvar xvec -> env_finite_subst ρ xvec dvec xvar = ρ xvar.
+  Proof.
+    intros ρ xvar n xvec; revert ρ; induction xvec as [| h n t IH]; intros ρ dvec Hnotin; auto.
+    cbn. unfold env_subst.
+    destruct (xvar =? h) eqn:E.
+    - apply Nat.eqb_eq in E; subst. exfalso; apply Hnotin; now left.
+    - apply IH. intros Hin; apply Hnotin; now right.
+  Qed.
+  
+  
+  Lemma env_subst_env_finite_subst_commute :
+    forall (ρ : env M) xvar dvar {n} (xvec : vec var n) (dvec : vec M n),
+      VecNoDup (V.cons xvar xvec) ->
+      env_subst (env_finite_subst ρ xvec dvec) xvar dvar =
+        env_finite_subst (env_subst ρ xvar dvar) xvec dvec.
+  Proof.
+    intros ρ xvar dvar n xvec dvec Hnodup. fext.
+    revert dvec ρ Hnodup. induction xvec as [| h n t IH]; intros dvec ρ Hnodup v; auto.
+    inversion Hnodup; subst; apply Eqdep_dec.inj_pair2_eq_dec in H1; auto using Nat.eq_dec; subst.
+    inversion H3; subst; apply Eqdep_dec.inj_pair2_eq_dec in H1; auto using Nat.eq_dec; subst.
+    assert (VecNoDup (V.cons xvar t)).
+    { constructor; auto. intros Hin; apply H2; now right. }
+    cbn. unfold env_subst at 1 3.
+    destruct (v =? xvar) eqn:E1, (v =? h) eqn:E2.
+    - exfalso. rewrite Nat.eqb_eq in *; subst. apply H2; now left.
+    - rewrite Nat.eqb_eq in *; subst. rewrite env_finite_subst_not_in.
+      + unfold env_subst; now rewrite Nat.eqb_refl.
+      + intros Hin; apply H2; now right.
+    - rewrite Nat.eqb_eq in *; subst. unfold env_subst; now rewrite Nat.eqb_refl.
+    - specialize (IH (V.tl dvec) ρ).
+      rewrite <- IH; auto.
+      unfold env_subst; now rewrite E1, E2.
+  Qed.
+  
+  Lemma eval_finite_subst_on_args : forall (ρ : env M) {n} (xvec : vec var n) (dvec : vec M n),
+      VecNoDup xvec -> V.map (eval (env_finite_subst ρ xvec dvec)) (V.map var_term xvec) = dvec.
+  Proof.
+    intros ρ n xvec; revert ρ.
+    induction xvec as [| h n t IH]; intros ρ dvec Hnodup; auto using (V.nil_spec dvec).
+    rewrite (V.eta dvec); cbn; f_equal.
+    - unfold env_subst; now rewrite Nat.eqb_refl.
+    - inversion Hnodup; subst. apply Eqdep_dec.inj_pair2_eq_dec in H1; auto using Nat.eq_dec; subst.
+      rewrite env_subst_env_finite_subst_commute; auto; now rewrite IH.
   Qed.
 
   Lemma eval_subst_env_subst :
@@ -273,12 +333,12 @@ Section lemma_2_1_9.
     intros Σ F M ρ n xvec. revert ρ. induction xvec as [| h n t IH].
     - tauto.
     - intros ρ dvec Hfv. cbn; split; intros Hsat.
-      + apply IH.
-        * intros v Hin. apply Hfv. now right.
-        * apply form_subst_sanity1; auto. apply Hfv; now left.
-      + apply IH in Hsat.
-        * apply form_subst_sanity1 in Hsat; auto. apply Hfv; now left.
-        * intros x Hin. apply Hfv. now right.
+      + apply form_subst_sanity1.
+        * apply Hfv; now left.
+        * apply IH; auto. intros x Hin. apply Hfv; now right.
+      + apply form_subst_sanity1 in Hsat.
+        * apply IH in Hsat; auto. intros x Hin. apply Hfv; now right.
+        * apply Hfv; now left.
   Qed.
 
   Open Scope subst_scope.
@@ -332,5 +392,15 @@ Section lemma_2_1_9.
       ρ ⊨ (subst_formula (finite_subst xvec tvec) φ) <->
         (env_finite_subst ρ xvec (V.map (eval ρ) tvec)) ⊨ φ.
   Proof.
-  Admitted.
+    intros Σ φ n xvec tvec M ρ. rewrite strong_form_subst_sanity2.
+    enough (Heq : (finite_subst xvec tvec >> eval ρ) = (env_finite_subst ρ xvec (V.map (eval ρ) tvec))).
+    { rewrite Heq; tauto. }
+    fext; unfold ">>", funcomp; cbn. revert ρ tvec.
+    induction xvec as [| hxvec nx txvec IH]; intros ρ tvec v; auto.
+    rewrite (V.eta tvec); cbn.
+    unfold env_subst.
+    destruct (v =? hxvec) eqn:E.
+    - reflexivity.
+    - apply IH.
+  Qed.
 End lemma_2_1_9.

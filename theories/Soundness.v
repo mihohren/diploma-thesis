@@ -310,23 +310,71 @@ Section soundness.
       { intros xvar Hinx. unfold ge. transitivity shift_factor. lia.
         unfold ">=" in *. auto. }
       assert (forall xvar uu, In xvar xlist -> V.In uu u -> ~ TV uu xvar).
-      { intros xvar uu Hinx Hinu Htv.
+      { intros xvar uu Hinx Hinu.
         assert (xvar >= maxP) by auto; unfold ">=" in *. subst maxP.
-        cbn in H0. admit. }
+        cbn in H0.
+        apply lt_some_var_not_in_term_not_TV.
+        pose proof (vec_max_fold_ge (V.map some_var_not_in_term u)).
+        assert (vec_max_fold (V.map some_var_not_in_term u) <= xvar) by lia.
+        transitivity (vec_max_fold (V.map some_var_not_in_term u)); auto.
+        apply H1. now apply vec_in_map.
+      }
       assert (Hevaleq: V.map (eval ρ') u = V.map (eval ρ) u).
-      { admit. }
+      { apply V.map_ext_in. intros st Hinst. subst ρ'.
+        symmetry. apply eval_env_subst_unused_vec.
+        intros xvar Hinxvar; apply H0; auto. now rewrite vec_In_of_list. }
       rewrite Hevaleq in Hnotωju. cbn in Hsat2. apply Hstandard in Hsat2. contradiction.
     }
-    intros P v Hω. unfold Y.
+    intros P v HY. unfold Y.
     destruct (premstardec Pj P) as [HpremstarPjP | HnotpremstarPjP].
     2: { constructor. }
     destruct (premstardec P Pj) as [HpremstarPPj | HnotpremstarPPj].
     2: { assert (Hnotmutdep : ~ mutually_dependent Φ Pj P).
          { intros [H1 H2]; contradiction. }
          rewrite HmutdepG.
-         2: { intros H. apply mutually_dependent_symm in H; contradiction. }  
-  Admitted.    
-    
+         2: { intros H. apply mutually_dependent_symm in H; contradiction. }
+         assert (Yω : forall v, Y P v <-> φ_Φ_ω Φ M P v).
+         { intros v'. unfold Y. destruct (premstardec Pj P); try contradiction.
+           rewrite HmutdepG; try (intros Hmutdep;
+                                  apply mutually_dependent_symm in Hmutdep; contradiction).
+           cbn. rewrite eval_finite_subst_on_args; auto. }
+         
+         cbn. rewrite eval_finite_subst_on_args; auto. apply Hstandard.
+         destruct HY as (pr & [Heq HΦ] & ρ'' & Hpreds & Hindpreds & Heval).
+         subst; cbn in Heval; subst.
+         assert (Hpremindpreds : forall Pk, In Pk (map (fun p => p.1) (indpreds pr)) ->
+                                       Prem_star Φ Pj Pk /\ ~Prem_star Φ Pk Pj).
+         { intros Pk HinPk; split.
+           - apply Prem_star_trans with (indcons pr); auto. apply Relation_Operators.rt_step.
+             unfold Prem. exists pr; repeat split; auto.
+             apply in_map_iff in HinPk as ([Pkk ts] & Heq & Hin).
+             cbn in Heq; subst. now (exists ts).
+           - intros HpremstarPkPj. apply HnotpremstarPPj. constructor 3 with Pk.
+             + constructor. exists pr; repeat split. auto.
+               apply in_map_iff in HinPk as ([Pkk ts] & Heq & Hin).
+               cbn in Heq; subst. now (exists ts).
+             + assumption. }
+         
+         assert (Hindpredsω : forall Pk, In Pk (map (fun p => p.1) (indpreds pr)) ->
+                                    forall v, Y Pk v <-> φ_Φ_ω Φ M Pk v).
+         { intros Pk Hin v. pose proof Hin as Hin1.
+           apply in_map_iff in Hin as ([Pkk ts] & Heq & Hin).
+           cbn in Heq; subst. unfold Y.
+           rewrite HmutdepG.
+           2: { intros [H1 H2]. specialize (Hpremindpreds Pk). apply Hpremindpreds; auto. }
+           destruct (premstardec Pj Pk).
+           - cbn. rewrite eval_finite_subst_on_args; auto.
+           - specialize (Hpremindpreds Pk). exfalso. now apply n, Hpremindpreds. }
+         apply φ_Φ_ω_least_prefixed.
+         exists pr, (conj eq_refl HΦ), ρ''; intuition.
+         apply Hindpredsω. { apply in_map_iff. exists (P; ts); split; auto. }
+         apply Hindpreds. assumption. }
+
+    assert (HmutdepPPj : mutually_dependent Φ P Pj).
+    { now split. }
+                 
+  Admitted.
+
   Theorem soundness : forall Γ Δ, LKID Φ (Γ ⊢ Δ) -> Γ ⊫ Δ.
   Proof.
     intros Γ Δ Hlkid.
@@ -343,5 +391,5 @@ Section soundness.
     - eapply LS_AllR; eauto.
     - eapply LS_IndL; eauto.
     - eapply LS_IndR; eauto.
-  Admitted.
+  Qed.
 End soundness.

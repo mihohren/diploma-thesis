@@ -58,6 +58,23 @@ Section term.
     Defined.
   End term_ind.
 
+  Lemma term_eqdec : forall u v : term, {u = v} + {u <> v}.
+  Proof.
+    fix term_eqdec 1.
+    intros [uv | uh tv] [vv | vh vt].
+    - destruct (Nat.eq_dec uv vv) as [E | E]; auto.
+    - right; discriminate.
+    - right; discriminate.
+    - Search vec "dec".
+      set (decider := fun u v => if term_eqdec u v then true else false).
+      assert (decider_decides : forall u v, decider u v = true <-> u = v).
+      { intros u v; subst decider; cbn. destruct (term_eqdec u v).
+        - tauto.
+        - split; inversion 1; contradiction. }
+      pose proof (V.eq_dec term decider decider_decides).
+      (* Missing: TFunc_eqdec *)
+  Abort.
+  
   Inductive TV : term -> var -> Prop :=
   | TVVar : forall v, TV (var_term v) v
   | TVFunc : forall f args v st,
@@ -94,10 +111,15 @@ Section term.
   Definition single_subst (x : var) (t : term) : var -> term :=
     fun y => if y =? x then t else var_term y.
   
-  Definition finite_subst {n} (u : vec var n) (v : vec term n) : var -> term :=
-    finitely_generated_fun var_term u v.
-
-
+  Fixpoint finite_subst {n} (u : vec var n) (v : vec term n) : var -> term :=
+    match u in vec _ n return vec term n -> var -> term with
+    | V.cons uh ut =>
+        fun v w =>
+          if w =? uh
+          then V.hd v
+          else finite_subst ut (V.tl v) w
+    | V.nil => fun _ => var_term
+    end v.
   
   Definition term_var_subst (t : term) (x : var) (u : term) : term :=
     subst_term (fun v => if v =? x then u else var_term v) t.
