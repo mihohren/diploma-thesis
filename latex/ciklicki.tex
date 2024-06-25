@@ -4,10 +4,10 @@ Svi formalni dokazi u sustavu \(\mathit{LKID}\) (uključujući primjere~\ref{ex:
 Ovakve dokaze jednim imenom nazivamo \textit{dokazima konačne dubine}
 jer su sve \enquote{grane} njihovih dokaznih stabala konačne.
 Međutim, možemo promatrati i \textit{dokaze beskonačne dubine} kod kojih postoje beskonačne grane.
-Već smo u odjeljku~\ref{sec:programiranje-u-gallini} spomenuli odnosno koinduktivne tipove,
-a dokaz beskonačne dubine je tada \enquote{beskonačan} dokaz neke koinduktivno definirane tvrdnje.
-U ovom ćemo kratkom poglavlju ilustrirati dokaze beskonačne dubine te jednu njihovu posebnu formu;
-cikličke dokaze.
+Već smo u odjeljku~\ref{sec:programiranje-u-gallini} spomenuli koinduktivne tipove,
+a dokaz beskonačne dubine je tada \enquote{beskonačni} dokaz neke koinduktivno definirane tvrdnje.
+U ovom ćemo kratkom poglavlju ilustrirati dokaze beskonačne dubine te jednu njihovu posebnu formu:
+\textit{cikličke} dokaze.
 
 \section{Primjer: lijene liste}
 Definirajmo za početak \textit{lijene liste}, koje mogu biti konačne, a mogu biti i beskonačne.
@@ -52,7 +52,7 @@ Ilustrirajmo ovaj postupak dokaznim stablom.
 \noindent Sada je jasno da ćemo dokazati originalnu tvrdnju tek nakon beskonačno
 mnogo primjena pravila \texttt{Infinite\_LCons}. Ipak, lakše je dokazati
 tvrdnju \texttt{forall n, Infinite (from n)}.
-Nakon introdukcije varijable \texttt{n}, odmatanja konstante \texttt{from n} i
+Nakon introdukcije varijable \texttt{n}, odmatanja definicije funkcije \texttt{from} i
 primjene pravila \texttt{Infinite\_LCons}
 dolazimo do tvrdnje \texttt{Infinite (from (S n))}.
 
@@ -66,7 +66,7 @@ dolazimo do tvrdnje \texttt{Infinite (from (S n))}.
 \end{prooftree}
 
 \noindent Između tvrdnji \texttt{Infinite (from n)} i \texttt{Infinite (from (S n))}
-\enquote{skinut} je prvi član beskonačne liste te je napravljen \textit{napredak}
+\enquote{skinut} je prvi član beskonačne liste, čime je napravljen \textit{napredak}
 u dokazu.
 Bez napretka nema smisla ponavljati prethodni postupak beskonačno mnogo puta
 jer se tvrdnja ne mijenja --- u suprotnom, mogli bismo  \textup{svaku} tvrdnju \(\varphi\)
@@ -78,7 +78,7 @@ dokazati trivijalnim dokazom
 Uz napredak u dokazivanju ima smisla pozivati se na \textit{tvrdnju koja se dokazuje} te
 takve dokaze nazivamo \textit{cikličkima}. Dokaz tvrdnje \texttt{forall n, Infinite (from n)}
 jedan je primjer cikličkog dokaza, gdje je simbolom \(\mathtt{*}\) označeno cikličko \enquote{pozivanje} dokaza.
-U Coqu, napredak je osiguran uvjetom produktivnosti kojeg smo spomenuli
+U Coqu, napredak je osiguran uvjetom produktivnosti spomenutim
 u odjeljku~\ref{sec:ogranicenja}.
 
 Pažljiv čitatelj će primijetiti da ista argumentacija vrijedi
@@ -99,12 +99,12 @@ on bi postao trivijalan, to jest vrijedio bi za proizvoljnu lijenu listu.
 \section{Primjer: \(\mathit{CLKID}^{\omega}\)}
 Brotherston je formalizirao ideju cikličkih dokaza u dokaznom sustavu
 \(\mathit{CLKID}^{\omega}\), podsustavu dokaznog sustava \(\mathit{LKID}^{\omega}\),
-koji pak je proširenje sustava \(\mathit{LKID}\) potencijalno beskonačnim dokaznim stablima.
+koji je pak proširenje sustava \(\mathit{LKID}\) potencijalno beskonačnim dokaznim stablima.
 Dokazni sustav \(\mathit{CLKID}^{\omega}\) ograničen je u odnosu na sustav \(\mathit{LKID}^{\omega}\)
 tako što svako (potencijalno beskonačno) dokazno stablo
 smije imati \textit{najviše konačno mnogo} različitih podstabala te
 svaka beskonačna grana tog stabla mora imati beskonačno mnogo \enquote{napredaka}.
-Dokazni sustav \(\mathit{CLKID}^{\omega}\) prikazati ćemo neformalno.
+Dokazni sustav \(\mathit{CLKID}^{\omega}\) prikazat ćemo neformalno.
 
 \begin{example}\label{ex:clkidw1}
   Dokazujemo tvrdnju \(\forall x, \mathit{Nat}(x) \rightarrow \mathit{Even}(x) \lor \mathit{Odd}(x)\)
@@ -137,39 +137,37 @@ Dokazni sustav \(\mathit{CLKID}^{\omega}\) prikazati ćemo neformalno.
   Iako zapisan u konačnom stablu, ovaj dokaz je beskonačan.
   Čitajući dokaz od dna do vrha, primjećujemo nove oznake te nova pravila.
   Za početak, vidimo da su znakom \(\dagger\) označene gornja i donja sekventa \(Nx \vdash Ex, Ox\).
-  Gornju sekventu nazivamo \textit{pupoljkom} (\textit{bud}), a donju nazivamo \textit{pratilcem} (\textit{companion}).
-  Može se reći da su pupoljak i njegov pratilac povezani bridom, tvoreći ciklus u dokaznom
+  Gornju sekventu nazivamo \textit{pupoljkom} (\textit{bud}), a donju nazivamo \textit{pratiteljem} (\textit{companion}).
+  Može se reći da su pupoljak i njegov pratitelj povezani bridom, tvoreći ciklus u dokaznom
   stablu --- odavde dolazi naziv \textit{ciklički} dokaz.
-  U stvari se isječak stabla dokaza između pratilca i pupoljka ponavlja \textit{ad infinitum}
-  pa je dokaz beskonačan.
+  U stvari se isječak stabla dokaza između pratitelja i pupoljka ponavlja \textit{ad infinitum}
+  pa je dokaz beskonačne dubine.
   Nadalje, vidimo novo pravilo izvoda \(\mathit{Case}\) koje odgovara rastavu po slučajevima,
   a koristi se umjesto pravila indukcije.
-  Ako se između pupoljka i njegovog pratilca javlja primjena pravila \(\mathit{Case}\),
+  Ako se između pupoljka i njegovog pratitelja javlja primjena pravila \(\mathit{Case}\),
   kažemo da je napravljen \textit{napredak}.
   Konačno, vidimo znak jednakosti uz kojeg je vezano lijevo pravilo za jednakost \(\mathit{EqL}\).
   Znak jednakosti je za potrebe sustava \(\mathit{LKID}^{\omega}\) i \(\mathit{CLKID}^{\omega}\)
-  (odnosno, \(\mathit{Case}\) pravila) ugrađen u definiciju formule.\footnote{Jednakost se u matematičkoj logici najčešće tretira kao predikatni simbol signature, a ne kao primitivni veznik u formulama.}
+  (odnosno pravila \(\mathit{Case}\)) ugrađen u definiciju formule.\footnote{Jednakost se u matematičkoj logici najčešće tretira kao predikatni simbol signature.}
 \end{example}
 
 Ciklički dokazi su oni dokazi beskonačne dubine u kojima je
-između svakog pupoljka i njegovog pratilca napravljen napredak, odnosno primijenjeno \(\mathit{Case}\) pravilo.
-U primjeru~\ref{ex:clkidw1}, pupoljak i njegov pratilac javljaju se u istoj grani dokaza,
+između svakog pupoljka i njegovog pratitelja napravljen napredak,
+odnosno primijenjeno je pravilo \(\mathit{Case}\).
+U primjeru~\ref{ex:clkidw1}, pupoljak i njegov pratitelj javljaju se u istoj grani dokaza,
 no to nije nužno. Ovu pojavu možemo vidjeti na dokazu obrata sekvente \(Nx \vdash Ex \lor Ox\).
 
-
 \begin{example}
-  Dokazujemo sekventu \(Ex \lor Ox \vdash Nx \) u sustavu \(\mathit{CLKID}^{\omega}\).
+  Dokazujemo sekventu \(Ex \lor Ox \vdash Nx \) u sustavu \(\mathit{CLKID}^{\omega}\).  
   \begin{prooftree}
     \AxiomC{}
     \RightLabel{\((1)\)}
-    % \RightLabel{(\texttt{PA\_prod\_N\_zero}\textit{Prod})}
     \UnaryInfC{\(\vdash No\)}
     \RightLabel{\(\mathit{(EqL)}\)}
     \UnaryInfC{\(x = o \vdash Nx\)}
     \AxiomC{\(Ox \vdash Nx \, (\dagger)\)}
     \RightLabel{\(\mathit{(Subst)}\)}
     \UnaryInfC{\(Oy \vdash Ny\)}
-    % \RightLabel{(\texttt{PA\_prod\_N\_succ}\textit{Prod})}
     \RightLabel{\((2)\)}
     \UnaryInfC{\(Oy \vdash Nsy\)}
     \RightLabel{\(\mathit{(EqL)}\)}
@@ -179,7 +177,6 @@ no to nije nužno. Ovu pojavu možemo vidjeti na dokazu obrata sekvente \(Nx \vd
     \AxiomC{\(Ex \vdash Nx \, (\ast)\)}
     \RightLabel{\(\mathit{(Subst)}\)}
     \UnaryInfC{\(Ey \vdash Ny\)}
-    % \RightLabel{(\texttt{PA\_prod\_N\_succ}\textit{Prod})}
     \RightLabel{\((3)\)}
     \UnaryInfC{\(Ey \vdash Nsy\)}
     \RightLabel{\(\mathit{(EqL)}\)}
@@ -189,10 +186,11 @@ no to nije nužno. Ovu pojavu možemo vidjeti na dokazu obrata sekvente \(Nx \vd
     \RightLabel{\(\mathit{(OrL)}\)}
     \BinaryInfC{\( Ex \lor Ox \vdash Nx \)}
   \end{prooftree}
-  Ovdje je znakom \(\dagger\) označen par pupoljka i pratilca sekvente \(Ox \vdash Nx\),
-  a znakom \(\ast\) je označen par pupoljka i pratilca sekvente \(Ex \vdash Nx\).
-  Iako se odgovarajući parovi pupoljaka i pratilaca naizgled javljaju u različitim granama,
-  uz dva \enquote{odmatanja} stabla dokaza vidimo da to u stvari nije slučaj.
+  
+  \noindent Ovdje je znakom \(\dagger\) označen par pupoljka i pratitelja sekvente \(Ox \vdash Nx\),
+  a znakom \(\ast\) je označen par pupoljka i pratitelja sekvente \(Ex \vdash Nx\).
+  Iako se odgovarajući parovi pupoljaka i pratitelja naizgled javljaju u različitim granama,
+  uz dva \enquote{odmatanja} stabla dokaza vidimo da to u stvari nije slučaj.\par
   \begin{scriptsize}
     \begin{prooftree}
       \AxiomC{}
@@ -253,10 +251,10 @@ no to nije nužno. Ovu pojavu možemo vidjeti na dokazu obrata sekvente \(Nx \vd
       \BinaryInfC{\( Ex \lor Ox \vdash Nx \)}
     \end{prooftree}
   \end{scriptsize}
-  Pupoljak sekvente \(Ex \vdash Nx\) je zamijenjen
-  isječkom stabla od pratilca sekvente \(Ex \vdash Nx\) do pupoljka sekvente \(Ox \vdash Nx\),
-  Nadalje, pupoljak sekvene \(Ox \vdash Nx\) zamijenjen je
-  isječkom stabla od pratilca sekvente \(Ox \vdash Nx\) do pupoljka sekvente \(Ex \vdash Nx\).
+  Pupoljak sekvente \(Ex \vdash Nx\) zamijenjen je
+  isječkom stabla od pratitelja sekvente \(Ex \vdash Nx\) do pupoljka sekvente \(Ox \vdash Nx\),
+  Nadalje, pupoljak sekvente \(Ox \vdash Nx\) zamijenjen je
+  isječkom stabla od pratitelja sekvente \(Ox \vdash Nx\) do pupoljka sekvente \(Ex \vdash Nx\).
   Dokaz ne bi bio moguć bez korištenja produkcijskih pravila za produkcije:
   \begin{enumerate}[label={(\arabic*)}]
   \item \texttt{PA\_prod\_N\_zero} i
@@ -264,7 +262,7 @@ no to nije nužno. Ovu pojavu možemo vidjeti na dokazu obrata sekvente \(Nx \vd
   \end{enumerate}
 \end{example}
 
-Važno je spomenuti da je svojstvo \enquote{biti ispravan \(\mathit{CLKID}^{\omega}\) dokaz} odlučivo
+Važno je spomenuti da je svojstvo \enquote{biti ispravan dokaz u sustavu \(\mathit{CLKID}^{\omega}\)} odlučivo
 te je na temelju toga napravljen ciklički dokazivač teorema \textsc{Cyclist}\footnote{\url{http://www.cyclist-prover.org/}}~\cite{cyclist}.
 Za naš primjer proširene Peanove signature s produkcijama za induktivne predikatne simbole
 \(\mathit{Nat}\), \(\mathit{Even}\) i \(\mathit{Odd}\),

@@ -10,13 +10,13 @@ nakon čega ćemo definirati njene standardne modele.
 Zatim ćemo prikazati dokazni sustav \(\mathit{LKID}\) te konačno dokazati dio adekvatnosti
 sustava \(LKID\) s obzirom na standardnu semantiku,
 što je ujedno i glavni rezultat ovog diplomskog rada.
-\misao{Ovo ću preformulirati ako uspijem dokazati zadnje pravilo.}
 
 Svaka definicija i lema u ovom poglavlju bit će popraćena svojom formalizacijom u Coqu.
 Jedan je od ciljeva diplomskog rada prikazati primjene Coqa u matematici,
 zbog čega leme nećemo dokazivati \enquote{na papiru},
-već se dokaz svake leme može pronaći u repozitoriju rada.\footnote{https://github.com/mihohren/diploma-thesis}
-Zainteresiranom čitatelju predlažemo interaktivni prolazak kroz dokaze lema.
+već se dokaz svake leme može pronaći u repozitoriju rada.\footnote{\url{https://github.com/mihohren/diploma-thesis}}
+Zainteresiranom čitatelju predlažemo interaktivni prolazak
+kroz dokaze lema u nekoj od razvojih okolina za Coq.
 
 Prije no što krenemo na formalizaciju, valja prokomentirati odnos matematičkog i Coqovog vokabulara
 što se tiče riječi \enquote{skup}.
@@ -35,7 +35,7 @@ Na primjer, tip prirodnih brojeva \texttt{nat} je sorte \texttt{Set}, a predikat
 \section{Sintaksa}\label{sec:sintaksa}
 Kao i u svakom izlaganju logike, na početku je potrebno definirati sintaksu.
 \begin{definition}\label{def:signatura}
-  \textit{Signatura prvog reda s induktivnim predikatima} (kratko: \textit{signatura}), u oznaci \(\Sigma\),
+  \textit{Signatura prvog reda s induktivnim predikatima} (kratko: \textit{signatura}), s oznakom \(\Sigma\),
   je skup simbola od kojih razlikujemo \textit{funkcijske}, \textit{obične predikatne}
   i \textit{induktivne predikatne} simbole.
   \textit{Mjesnost} simbola reprezentiramo funkcijom iz odgovarajućeg skupa simbola u skup \(\mathbb{N}\),
@@ -52,7 +52,7 @@ Structure signature := {
 \end{minted}
 \end{definition}
 \begin{example}
-  Funkcijski simboli Peanove aritmetike su redom simbol nule \(o\) (mjesnosti \(0\)),
+  Funkcijski simboli Peanove aritmetike su redom simbol nule \(o\) (mjesnosti~\(0\)),
   simbol sljedbenika \(s\) (mjesnosti \(1\))
   te simboli zbroja \(+\) i umnoška \(\cdot\) (mjesnosti \(2\)).
 \begin{minted}{coq}
@@ -69,14 +69,11 @@ Definition fun_ar__PA (s : Func__PA) : nat :=
   | PA_mult => 2
   end.
 \end{minted}
-  \noindent Simbol jednakosti \(=\) (mjesnosti \(2\)) je jedini običan predikatni simbol
+  \noindent Simbol jednakosti \(=\) (mjesnosti \(2\)) je jedini obični predikatni simbol
   Peanove aritmetike.
 \begin{minted}{coq}
 Inductive Pred__PA := PA_eq.
-Definition pred_ar__PA (s : Pred__PA) : nat :=
-  match s with
-  | PA_eq => 2
-  end.
+Definition pred_ar__PA (s : Pred__PA) : nat := 2.
 \end{minted}
   \noindent Definiramo induktivne predikatne simbole
   \(\mathit{Nat}\), \(\mathit{Even}\) i \(\mathit{Odd}\) mjesnosti 1 koje ćemo
@@ -87,12 +84,7 @@ Inductive IndPred__PA :=
 | PA_Nat
 | PA_Even
 | PA_Odd.
-Definition indpred_ar__PA (s : IndPred__PA) : nat :=
-  match s with
-  | PA_Nat => 1
-  | PA_Even => 1
-  | PA_Odd => 1
-  end.
+Definition indpred_ar__PA (s : IndPred__PA) : nat := 1.
 \end{minted}
   \noindent Konačno, \textit{proširena Peanova signatura}, s oznakom \(\Sigma_{\mathit{PA}}\), je signatura za
   Peanovu aritmetiku prvog reda s prethodno definiranim induktivnim predikatnim simbolima.
@@ -134,7 +126,7 @@ no za formalizaciju je pogodniji skup prirodnih brojeva \(\mathbb{N}\).
 Umjesto eksplicitne kvantifikacije po nekoj varijabli \(v\),
 implicitno ćemo kvantificirati po varijabli \(0\).
 Ovaj pristup kvantifikaciji\footnote{ili općenitije, vezivanju varijabli},
-imena \enquote{de Bruijnovo indeksiranje}~\cite{debruijnamelessdummies},
+nazvan \enquote{de Bruijnovo indeksiranje}~\cite{debruijnamelessdummies},
 bitno olakšava rad sa supstitucijama.
 O samoj implementaciji de Bruijnovog indeksiranja više se može pročitati u knjizi
 \textit{Types and Programming Languages}~\cite{pierce2002tapl}.
@@ -145,7 +137,7 @@ Princip indukcije za \texttt{term} potrebno je ručno definirati.
 Naime, induktivni tip \texttt{term} je \textit{ugniježđen} po konstruktoru \texttt{TFunc} zato što
 se javlja omotan oko drugog induktivnog tipa\footnote{ovdje \texttt{vec}} kao argument.
 Za ugniježđene induktivne tipove, Coq generira neprikladne principe indukcije jer ne zna
-kako izraziti tvrdnju \enquote{predikat vrijedi za sve ugniježđene elemente.}
+izraziti tvrdnju \enquote{predikat vrijedi za sve ugniježđene elemente}.
 \begin{minted}{coq}
 Lemma term_ind
      : forall P : term Σ -> Prop,
@@ -460,7 +452,7 @@ Defined.
   a koristimo ju u zadnjem koraku konstrukcije terma.
   Nadalje, taktika \texttt{intros x} služi uvođenju imena \texttt{x} u kontekst,
   a u našem je slučaju ekvivalentna taktici \texttt{refine (fun x => \_)}.
-  Konačno, taktika \texttt{destruct} služi analizi po slučajevima, a u pozadini koristi \texttt{match} izraze.
+  Konačno, taktika \texttt{destruct} služi analizi po slučajevima, a u pozadini koristi \textit{pattern matching}.
   Kako su interpretacije funkcijskih simbola funkcije koje primaju vektore,
   koristimo Coqove funkcije \texttt{V.hd} i \texttt{V.tl} za dohvaćanje glave, odnosno repa vektora.
 \end{remark}
@@ -541,10 +533,11 @@ Prisjetimo se, predikatni simbol \(P\) mjesnosti \(n\) interpretira se na strukt
 Indukciju smatramo dokazivanjem \textup{u razinama} pa ima smisla promatrati \textit{razine interpretacije} induktivnog predikata,
 gdje je nulta razina prazan skup,
 a svaku iduću razinu konstruiramo pomoću produkcija induktivnog skupa definicija i prethodnih razina.
-Tako je prva razina onaj podskup kojeg možemo dobiti najviše jednom \enquote{primjenom produkcija},
+Tako je prva razina onaj podskup kojeg možemo dobiti najviše jednom primjenom produkcija,
 druga je razina onaj podskup kojeg možemo dobiti pomoću najviše dviju primjena produkcija, i tako dalje.
 Na taj se način, korak po korak, gradi \textit{smislena} interpretacija induktivnih predikata.
-Napominjemo da se zbog mogućih međuovisnosti induktivnih predikata razine interpretacije definiraju simultano.
+Zbog mogućih međuovisnosti induktivnih predikata,
+razine interpretacije moramo definirati simultano.
 Ovaj odjeljak posvećujemo formalizaciji ovih pojmova.
 
 \begin{definition}
@@ -627,7 +620,7 @@ Definition φ_Φ (interp : InterpInd) : InterpInd :=
   \[(\mathit{Nat} \mapsto \mathit{N}, \mathit{Even} \mapsto \mathit{E}, \mathit{Odd} \mapsto \mathit{O})\]
   koje možemo reprezentirati uređenom trojkom \((N, E, O)\).
   Indeksiranje induktivnim predikatnim simbolom odgovara prethodno
-  navedenim projekcijama pa vrijedi:
+  navedenim projekcijama pa vrijedi primjerice:
   \[
     \varphi_{\Phi_{\mathit{PA}}, M_{\mathit{PA}}}(N, E, O)(\mathit{Nat}) = \{ 0 \} \cup \{ n + 1 \mid n \in N \}.
   \]

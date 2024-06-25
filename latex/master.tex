@@ -21,23 +21,17 @@
 \usepackage[makeroom]{cancel}
 \usepackage[autostyle,croatian=quotes]{csquotes}
 
-\newfloat{code}{H}{cod}[section]
-\floatname{code}{Code}
-
 % https://github.com/stipub/stix_type1/issues/3
 \renewcommand{\mapsto}{\mathchar"39AD}
 
 % smanjenje proreda u itemize i enumerate okolinama
-\setlist{nosep,topsep=-20pt}
+% \setlist{topsep=-20pt}
+\setlist{nosep, topsep=-10pt}
 
 % smanjenje proreda u minted okolini
 \BeforeBeginEnvironment{minted}{\begin{spacing}{1.0}}
 \AfterEndEnvironment{minted}{\end{spacing}}
 \AfterEndEnvironment{minted}{\vspace{0pt}}
-
-% % smanjenje razmaka između itemize/enumerate okoline i prethodnog teksta
-% \BeforeBeginEnvironment{itemize}{\vspace{-\topsep}}
-% \BeforeBeginEnvironment{enumerate}{\vspace{-\topsep}}
 
 \DeclareUnicodeCharacter{22A8}{\(\vDash\)}
 \DeclareUnicodeCharacter{22A2}{\(\vdash\)}

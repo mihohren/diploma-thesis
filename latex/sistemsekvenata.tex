@@ -78,15 +78,17 @@ Sustav \(\mathit{LKID}\) sastoji se od četiri vrste pravila izvoda:
 strukturalna, propozicijska, pravila za kvantifikatore i pravila za induktivne predikate.
 Navest ćemo ih tim redom, a definirati kroz više blokova Coqova koda.
 Napominjemo da se sustav \(\mathit{LKID}\) razlikuje od Gentzenova sustava \(\mathit{LK}\)
-na nekoliko mjesta, a zbog implementacijskih detalja te zbog induktivnih definicija.
-Za neko pravilo izvoda kažemo da je \textit{dopustivo} ako nije u definiciji sustava \(\mathit{LKID}\),
-ali je iz originalnih pravila izvedivo.
+na nekoliko mjesta, zbog implementacijskih detalja te zbog induktivnih definicija.
+Za neko pravilo izvoda kažemo da je \textit{dopustivo} ako
+sve što možemo dokazati (pod nekim pretpostavkama)
+korištenjem tog pravila, možemo dokazati pod istim pretpostavkama
+i bez njegova korištenja.
 \begin{minted}{coq}
 Inductive LKID : sequent -> Prop := (* nastavlja se *)
 \end{minted}
 \section{Strukturalna pravila}
 Strukturalna su pravila prikazana na slici~\ref{fig:lkid-structural}, a služe baratanju strukturom sekvente.
-Iako je sekventa implementirana kao par listi formula, te liste se ponašaju kao skupovi u strukturalnim pravilima
+Iako je sekventa implementirana kao par lista formula, te liste se ponašaju kao skupovi u strukturalnim pravilima
 jer za sadržanost jedne liste u drugoj koristimo Coqov predikat \texttt{incl} koji se oslanja na predikat \texttt{In}.
 Posljedično, pravilo slabljenja \(\mathit{Wk}\) povlači pravila permutacije i kontrakcije.
 \begin{figure}[!htb]
@@ -185,6 +187,7 @@ Lemma ContrR : forall Γ Δ φ,
 
 \section{Propozicijska pravila}
 Propozicijska su pravila prikazana na slici~\ref{fig:lkid-propositional}, a služe rasuđivanju s implikacijama i negacijama.
+Kao što smo rekli, ostale propozicijske veznike shvaćamo kao pokrate.
 Ova su pravila identična u sustavima \(\mathit{LK}\) i \(\mathit{LKID}\).
 \begin{figure}[!htb]
   \centering
@@ -335,12 +338,13 @@ induktivni predikatni simbol \(P_{i}\) međusobno zavisan sa simbolom \(P_{j}\),
   G_{i_{1}}[ \mathbf{v}_{i_{1}}^{\uparrow k} / \mathbf{z}_{i_{1}} ], \ldots, G_{i_{m}}[ \mathbf{v}_{i_{m}}^{\uparrow k} / \mathbf{z}_{i_{m}} ],
   \Gamma \vdash G_{i}[\mathbf{t}^{\uparrow k} / \mathbf{z}_{i}], \Delta
 \]
-\noindent gdje je \(k\) neki prirodan broj koji se ne javlja u listama formula \(\Gamma\) i \(\Delta\) te formuli \(P_{j}\mathbf{u}\),
+\noindent gdje je \(k\) neki prirodan broj takav da se nijedan \(k^{\prime} \geq k\) ne pojavljuje u listama formula \(\Gamma\) i \(\Delta\) te formuli \(P_{j}\mathbf{u}\)
+(takav postoji jer se u tih konačno mnogo formula sveukupno pojavljuje samo konačno mnogo varijabli),
 a s \(^{\uparrow k}\) označavamo supstituciju koja svaku varijablu \(n\) zamjenjuje varijablom \(n + k\).
 
 
 Ilustrirajmo pravilo indukcije primjerima u Peanovoj aritmetici.
-Kako se pravila za induktivne predikate sustava \(\mathit{LKID}\) odnose na proizvoljan skup induktivnih definicija \(\Phi\),
+Kako se pravila za induktivne predikate sustava \(\mathit{LKID}\) odnose na proizvoljni skup induktivnih definicija \(\Phi\),
 označimo s \(\mathit{LKID}_{\mathit{PA}}\)  sustav koji se odnosi na skup induktivnih defincija \(\Phi_{\mathit{PA}}\).
 \begin{minted}{coq}
 Definition LKID__PA := LKID Φ__PA.
@@ -372,7 +376,7 @@ Definition LKID__PA := LKID Φ__PA.
   \end{small}
   \noindent gdje su \(G_{E}\) i \(G_{O}\) pretpostavke indukcije vezane uz
   induktivne predikatne simbole \(\mathit{Even}\) i \(\mathit{Odd}\),
-  a \(x\) je varijabla koja se ne javlja u \(\Gamma\), \(\Delta\) ili \(\mathit{Even}(t)\).
+  a \(x\) je varijabla koja se ne javlja u \(\Gamma\), \(\Delta\) niti u \(\mathit{Even}(t)\).
 \end{example}
 
 \begin{minted}[firstnumber=31]{coq}
@@ -424,7 +428,7 @@ Definition LKID__PA := LKID Φ__PA.
     LKID (FIndPred Pj u :: Γ ⊢ Δ)
 \end{minted}
 
-\section{Produkcijska pravilo}
+\section{Produkcijska pravila}
 Neka je \(pr\) proizvoljna produkcija za koju definiramo produkcijsko pravilo.
 Možemo pretpostaviti da je \(pr\) oblika:
 \begin{prooftree}
@@ -433,7 +437,7 @@ Možemo pretpostaviti da je \(pr\) oblika:
   \RightLabel{.}
   \BinaryInfC{\(P\mathbf{t}\)}
 \end{prooftree}
-\noindent Tada produkcijsko pravilo za produkciju \(pr\) glasi:
+\noindent Tada produkcijsko pravilo za produkciju \(pr\) (i proizvoljnu supstituciju \(\sigma\)) glasi:
 \begin{prooftree}
   \AxiomC{\( \Gamma \vdash Q_{1} \mathbf{u}_{1}[\sigma], \Delta \quad \ldots \quad \Gamma \vdash Q_{n}\mathbf{u}_{n}[\sigma]\)}
   \AxiomC{\( \Gamma \vdash P_{1} \mathbf{v}_{1}[\sigma], \Delta \quad \ldots \quad \Gamma \vdash P_{m} \mathbf{v}_{m}[\sigma] \)}
@@ -558,7 +562,7 @@ Lemma provable_every_succ_of_Even_is_Odd :
 \begin{example}\label{ex:lkid-indl-proof}
   Formula \(\forall x, \mathit{Nat}(x) \rightarrow \mathit{Even}(x) \lor \mathit{Odd}(x)\) je dokaziva u sustavu \(\mathit{LKID}_{\mathit{PA}}\).
   Neformalni dokaz prikazujemo idućim stablom koristeći iste pokrate kao u
-  primjeru~\ref{ex:lkid-indr-proof}, te \(Nt\) za \(\mathit{Nat}(t)\).
+  primjeru~\ref{ex:lkid-indr-proof}, te \(Nt\) za \(\mathit{Nat}(t)\).\par
   \begin{scriptsize}
     \begin{prooftree}
       \AxiomC{}
@@ -636,7 +640,7 @@ Definition Sat_sequent (s : sequent) : Prop :=
 \end{definition}
 
 Kažemo da vrijedi \textit{lokalna adekvatnost} za pravilo izvoda
-ako istinitost premisa (a posebno i sekvenata u premisama) povlači istinitost konkluzije (odnosno sekvente u konkluziji).
+ako istinitost (sekventi) premisa povlači istinitost sekvente konkluzije.
 Lokalna adekvatnost kaže da se istinitost čuva kod primjena pravila zaključivanja.
 
 \begin{example}
@@ -657,8 +661,6 @@ Cilj je postignut za sva pravila osim pravila indukcije.
   Za pravila izvoda sustava \(\mathit{LKID}\) osim \(\mathit{IndL}\) vrijedi lokalna adekvatnost.
   Posljedično, ako je sekventa \(\Gamma \vdash \Delta\) dokaziva bez primjene pravila \(\mathit{IndL}\), onda je ona istinita.
 \end{theorem}
-
-\misao{Ako ne uspijem dokazati lokalnu adekvatnost za IndL, onda ću ostaviti ovaj tekst.}
 
 %%% Local Variables:
 %%% mode: LaTeX

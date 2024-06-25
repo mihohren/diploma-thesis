@@ -16,21 +16,13 @@ Definition fun_ar__PA (s : Func__PA) : nat :=
   end.
 
 Inductive Pred__PA := PA_eq.
-Definition pred_ar__PA (s : Pred__PA) : nat :=
-  match s with
-  | PA_eq => 2
-  end.
+Definition pred_ar__PA (s : Pred__PA) : nat := 2.
 
 Inductive IndPred__PA :=
 | PA_Nat
 | PA_Even
 | PA_Odd.
-Definition indpred_ar__PA (s : IndPred__PA) : nat :=
-  match s with
-  | PA_Nat => 1
-  | PA_Even => 1
-  | PA_Odd => 1
-  end.
+Definition indpred_ar__PA (s : IndPred__PA) : nat := 1.
 
 Definition Σ__PA : signature
   := {|
