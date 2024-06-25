@@ -1,7 +1,6 @@
-Require Import Base Syntax InductiveDefinitions.
-Require Import Relations RelationClasses.
-Require Import Sorting.Permutation.
-Import ListNotations.
+From CFOLID Require Import Base Syntax InductiveDefinitions.
+
+Open Scope list_scope.
 
 Section lkid.
   Context {Σ : signature}.
@@ -18,7 +17,7 @@ Section lkid.
     exists pr, Φ pr /\ indcons pr = Pi /\ exists ts, List.In (Pj; ts) (indpreds pr).
 
   Definition Prem_star := clos_refl_trans (IndPredS Σ) Prem.
-
+  
   Lemma Prem_star_refl : Reflexive Prem_star.
   Proof.
     intros P; apply rt_refl.
@@ -93,7 +92,7 @@ Section lkid.
       LKID (shift_formulas Γ ⊢ φ :: shift_formulas Δ) ->
       LKID (Γ ⊢ (FAll φ) :: Δ)
   (* Induction rules. *)
-  | IndL : forall Γ Δ
+  | Ind : forall Γ Δ
              (Pj : IndPredS Σ) (u : vec _ (indpred_ar Pj))
              (z_i : forall P, vec var (indpred_ar P))
              (z_i_nodup : forall P, VecNoDup (z_i P))
@@ -138,7 +137,7 @@ Section lkid.
       minor_premises ->
       LKID (Fj :: Γ ⊢ Δ) ->
       LKID (FIndPred Pj u :: Γ ⊢ Δ)
-  | IndR : forall Γ Δ pr σ,
+  | Prod : forall Γ Δ pr σ,
       Φ pr ->
       (forall Q us,
           In (Q; us) (preds pr) ->

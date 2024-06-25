@@ -1,10 +1,13 @@
-Require Import Relations RelationClasses.
 Require Export Utf8.
-Require Export Arith Bool Lia Program.
+Require Export Arith Bool Lia List Program.
+Require Export Relations RelationClasses.
+Require Export Sorting.Permutation.
+Require Export Logic.Classical.
 Require Export unscoped.
-Require Export ListSet.
 
 Export SigTNotations.
+Export ListNotations.
+Export Vector.VectorNotations.
 
 Require Vectors.Vector.
 Module V := Vector.
@@ -12,6 +15,7 @@ Notation vec := (V.t).
 Arguments V.nil {A}.
 Arguments V.cons {A} _ {n} _.
 Arguments V.In {A} a {n} v.
+
 
 Lemma vec_In_nil_false : forall A (a : A), V.In a V.nil -> False.
 Proof.
@@ -74,12 +78,6 @@ Proof.
   - reflexivity.
   - cbn. rewrite <- Heq. f_equal. apply IHv.
 Defined.
-
-Fixpoint vec_iota (n : nat) : vec nat n :=
-  match n with
-  | 0 => V.nil
-  | S n' => V.cons n' (vec_iota n')
-  end.
 
 Lemma vec_in_dec : forall [A], (forall x y : A, {x = y} + {x <> y}) ->
                           forall (a : A) {n} (v : vec A n),
@@ -186,18 +184,4 @@ Fixpoint finitely_generated_fun {A} (f : nat -> A) {n} (x : vec nat n) (y : vec 
   | V.nil => fun _ => f
   end y.          
 
-Section monotone_operator.
-  Context {A : Type}.
-  Context (le : relation A).
-  Context (le_order : order A le).
-  Local Notation "x <= y" := (le x y).
-
-  Definition monotone (f : A -> A) :=
-    forall x y, x <= y -> f x <= f y.
-
-  Definition prefixed_point (f : A -> A) (x : A) :=
-    x <= f x.
-End monotone_operator.
-
 Notation "A ⊆ B" := (incl A B) (no associativity, at level 10).
-

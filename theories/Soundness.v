@@ -1,5 +1,6 @@
-Require Import Base Syntax Semantics InductiveDefinitions LKID.
-From Coq Require Import Logic.Classical.
+From CFOLID Require Import Base Syntax Semantics InductiveDefinitions LKID.
+
+(* Note: some LS lemmas rely on axioms. *)
 
 Notation "Γ ⊢ Δ" := (mkSeq Γ Δ) (at level 61).
 
@@ -174,9 +175,8 @@ Section soundness.
     apply Semantic_NegExistNegAll. apply LS_NegR. apply LS_ExL. apply LS_NegL.
     apply Hsatseq.
   Qed.
-  Import SigTNotations. 
 
-  Lemma LS_IndR : forall Γ Δ pr σ,   (* NOTE: uses excluded middle *)
+  Lemma LS_IndR : forall Γ Δ pr σ,
       Φ pr ->
       (forall Q us, In (Q; us) (preds pr) ->
                Γ ⊫ (FPred Q (V.map (subst_term σ) us) :: Δ)) ->
@@ -330,7 +330,7 @@ Section soundness.
         intros xvar Hinxvar; apply H0; auto. now rewrite vec_In_of_list. }
       rewrite Hevaleq in Hnotωju. cbn in Hsat2. apply Hstandard in Hsat2. contradiction.
     }
-    intros P v HY. unfold Y.
+    unfold prefixed, subinterp. intros P v HY. unfold Y.
     destruct (premstardec Pj P) as [HpremstarPjP | HnotpremstarPjP].
     2: { constructor. }
     destruct (premstardec P Pj) as [HpremstarPPj | HnotpremstarPPj].
@@ -347,8 +347,9 @@ Section soundness.
          cbn. rewrite eval_finite_subst_on_args; auto. apply Hstandard.
          destruct HY as (pr & [Heq HΦ] & ρ'' & Hpreds & Hindpreds & Heval).
          subst; cbn in Heval; subst.
-         assert (Hpremindpreds : forall Pk, In Pk (map (fun p => p.1) (indpreds pr)) ->
-                                       Prem_star Φ Pj Pk /\ ~Prem_star Φ Pk Pj).
+         assert (Hpremindpreds : forall Pk,
+                    In Pk (map (fun p => p.1) (indpreds pr)) ->
+                    Prem_star Φ Pj Pk /\ ~Prem_star Φ Pk Pj).
          { intros Pk HinPk; split.
            - apply Prem_star_trans with (indcons pr); auto. apply Relation_Operators.rt_step.
              unfold Prem. exists pr; repeat split; auto.
@@ -360,8 +361,9 @@ Section soundness.
                cbn in Heq; subst. now (exists ts).
              + assumption. }
          
-         assert (Hindpredsω : forall Pk, In Pk (map (fun p => p.1) (indpreds pr)) ->
-                                    forall v, Y Pk v <-> φ_Φ_ω Φ M Pk v).
+         assert (Hindpredsω : forall Pk,
+                    In Pk (map (fun p => p.1) (indpreds pr)) ->
+                    forall v, Y Pk v <-> φ_Φ_ω Φ M Pk v).
          { intros Pk Hin v. pose proof Hin as Hin1.
            apply in_map_iff in Hin as ([Pkk ts] & Heq & Hin).
            cbn in Heq; subst. unfold Y.
@@ -377,8 +379,11 @@ Section soundness.
     
     assert (HmutdepPPj : mutually_dependent Φ P Pj).
     { now split. }
+    
     destruct HY as (pr & [Heq HΦ] & ρ'' & Hpreds & Hindpreds & Heval).
     subst P; cbn in Heval.
+    unfold Y in Hindpreds. subst v.
+    
     specialize (Hminor pr HΦ HmutdepPPj).
     remember (shift_formulas_by shift_factor (FPreds_from_preds (preds pr))) as Qs.
     remember (list_map
@@ -397,7 +402,9 @@ Section soundness.
       - intros x y _ _ Heq. lia.
       - apply NoDup_nodup. }
 
-    assert (Himplies : (forall Q, In Q Qs -> ρ' ⊨ Q) -> (forall G, In G Gs -> ρ' ⊨ G) -> ρ' ⊨ Fi).
+    assert (Himplies : (forall Q, In Q Qs -> ρ' ⊨ Q) ->
+                       (forall G, In G Gs -> ρ' ⊨ G) ->
+                       ρ' ⊨ Fi).
     { intros HQ HG. destruct (classic (ρ' ⊨ Fi)) as [HsatFi | HunsatFi]; auto.
       exfalso. specialize (Hminor M Hstandard ρ').
       assert (H1 : forall φ, In φ (Qs ++ Gs ++ Γ) -> ρ' ⊨ φ).
@@ -428,23 +435,25 @@ Section soundness.
         now apply Qs.
       - intros G Hin. apply in_map_iff in Hin as [[P us] [Heq Hin]].
         subst. rewrite form_subst_sanity2_vec. now apply Gs. }
-    assert (Hpremindpreds : forall Pk, In Pk (map (fun p => p.1) (indpreds pr)) ->
-                                  Prem_star Φ Pj Pk).
+    assert (Hpremindpreds : forall Pk,
+               In Pk (map (fun p => p.1) (indpreds pr)) ->
+               Prem_star Φ Pj Pk).
     { intros Pk Hin. apply in_map_iff in Hin as [[P ts] [Heq Hin]]; subst; cbn.
       assert (Hprem: Prem Φ (indcons pr) P).
       { exists pr; split; auto; split; auto. now (exists ts). }
       constructor 3 with (indcons pr).
       - apply HpremstarPjP.
       - constructor. apply Hprem. }
-    assert (forall P v, In P (map (fun p => p.1) (indpreds pr)) ->
-                   (env_finite_subst ρ' (z_i P) v) ⊨ (G_i P)).
-    { intros P v' Hin. specialize (Hpremindpreds P Hin).
-      apply in_map_iff in Hin as [[Pk ts] [Heq Hin]].
-      subst P; cbn in ts, v', Hpremindpreds.
-      specialize (Hindpreds Pk ts); cbn.
-      apply Hindpreds in Hin as HY. unfold Y in HY.
-      destruct (premstardec Pj Pk); try contradiction. admit.
-      }
+
+    assert (Hindpreds1 : forall Pk ts, In (Pk; ts) (indpreds pr) ->
+                                  env_finite_subst ρ' (z_i Pk) (V.map (eval ρ'') ts) ⊨ (G_i Pk)).
+    { intros Pk ts Hin. specialize (Hpremindpreds Pk).
+      assert (In Pk (map (fun p => p.1) (indpreds pr))).
+      { apply in_map_iff; exists (Pk; ts); split; auto. }
+      specialize (Hpremindpreds H); clear H.
+      specialize (Hindpreds Pk ts Hin). destruct (premstardec Pj Pk); intuition auto. }
+    clear Y.
+      
   Admitted.
 
   Theorem soundness : forall Γ Δ, LKID Φ (Γ ⊢ Δ) -> Γ ⊫ Δ.

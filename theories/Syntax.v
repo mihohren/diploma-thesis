@@ -1,4 +1,4 @@
-Require Import Base.
+From CFOLID Require Import Base.
 
 Structure signature := {
     FuncS : Set;
@@ -61,7 +61,7 @@ Section term.
   Lemma term_eqdec : forall u v : term, {u = v} + {u <> v}.
   Proof.
     fix term_eqdec 1.
-    intros [uv | uh tv] [vv | vh vt].
+    intros [uv | uf uargs] [vv | vf vargs].
     - destruct (Nat.eq_dec uv vv) as [E | E]; auto.
     - right; discriminate.
     - right; discriminate.
@@ -71,7 +71,12 @@ Section term.
         - tauto.
         - split; inversion 1; contradiction. }
       pose proof (V.eq_dec term decider decider_decides).
-      (* Missing: TFunc_eqdec *)
+      destruct (Nat.eq_dec (fun_ar uf) (fun_ar vf)).
+      + (* destruct (H _ uargs vargs). *) admit.
+      + right. intros Heq. apply n. inversion Heq; subst.
+        apply Eqdep_dec.inj_pair2_eq_dec in H2.
+        * reflexivity.
+        * (* Missing: TFunc_eqdec *) admit.
   Abort.
   
   Inductive TV : term -> var -> Prop :=

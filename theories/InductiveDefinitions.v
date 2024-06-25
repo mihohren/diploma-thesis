@@ -1,4 +1,4 @@
-Require Import Base Syntax Semantics.
+From CFOLID Require Import Base Syntax Semantics.
 
 Section inductive_definition_set.
   Context (Σ : signature).

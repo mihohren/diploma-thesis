@@ -1,4 +1,4 @@
-Require Import Base Syntax.
+From CFOLID Require Import Base Syntax.
 
 Section structure.
   Context {Σ : signature}.
