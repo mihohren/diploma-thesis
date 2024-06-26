@@ -16,7 +16,7 @@ Jedan je od ciljeva diplomskog rada prikazati primjene Coqa u matematici,
 zbog čega leme nećemo dokazivati \enquote{na papiru},
 već se dokaz svake leme može pronaći u repozitoriju rada.\footnote{\url{https://github.com/mihohren/diploma-thesis}}
 Zainteresiranom čitatelju predlažemo interaktivni prolazak
-kroz dokaze lema u nekoj od razvojih okolina za Coq.
+kroz dokaze lema u nekoj od razvojnih okolina za Coq.
 
 Prije no što krenemo na formalizaciju, valja prokomentirati odnos matematičkog i Coqovog vokabulara
 što se tiče riječi \enquote{skup}.
@@ -40,15 +40,15 @@ Kao i u svakom izlaganju logike, na početku je potrebno definirati sintaksu.
   i \textit{induktivne predikatne} simbole.
   \textit{Mjesnost} simbola reprezentiramo funkcijom iz odgovarajućeg skupa simbola u skup \(\mathbb{N}\),
   a označujemo ju s \(|f|\) za funkcijske, odnosno s \(|P|\) za predikatne simbole.
-  \begin{minted}{coq}
+\begin{minted}{coq}
 Structure signature := {
-  FuncS : Set;
-  fun_ar : FuncS -> nat;
-  PredS : Set;
-  pred_ar : PredS -> nat;
-  IndPredS : Set;
-  indpred_ar : IndPredS -> nat
-}.
+    FuncS : Set;
+    fun_ar : FuncS -> nat;
+    PredS : Set;
+    pred_ar : PredS -> nat;
+    IndPredS : Set;
+    indpred_ar : IndPredS -> nat;
+  }.
 \end{minted}
 \end{definition}
 \begin{example}
@@ -102,7 +102,7 @@ Definition Σ__PA : signature
 \end{example}
 \noindent U ostatku poglavlja promatramo jednu proizvoljnu, ali fiksiranu signaturu \(\Sigma\).
 Fiksiranje nekog proizvoljnog objekta je česta pojava u matematici,
-prvenstveno zato što finksirane argumente ne trebamo spominjati eksplicitno u kasnijim definicijama i iskazima.
+prvenstveno zato što fiksirane argumente ne trebamo spominjati eksplicitno u kasnijim definicijama i iskazima.
 Coq omogućuje fiksiranje naredbom \texttt{Context},
 pod uvjetom da se korisnik nalazi u okolini \texttt{Section}.\footnote{\url{https://coq.inria.fr/doc/v8.18/refman/language/core/sections.html}}
 Većina definicija i lema u ovom radu su napisane upravo unutar takvih okolina.
@@ -115,7 +115,7 @@ Većina definicija i lema u ovom radu su napisane upravo unutar takvih okolina.
     onda je \(f(t_{1}, \ldots, t_{n})\) također term.
   \end{enumerate}
 \begin{minted}{coq}
-Inductive term : Set :=
+Inductive term  : Set :=
 | var_term : var -> term 
 | TFunc : forall (f : FuncS Σ), vec term (fun_ar f) -> term.
 \end{minted}
@@ -156,8 +156,8 @@ Lemma term_ind
 \begin{minted}{coq}
 Inductive TV : term -> var -> Prop :=
 | TVVar : forall v, TV (var_term v) v
-| TVFunc : forall f args v st, V.In st args ->
-                               TV st v -> TV (TFunc f args) v.
+| TVFunc : forall f args v st,
+    V.In st args -> TV st v -> TV (TFunc f args) v.
 \end{minted}
 \end{definition}
 
@@ -278,11 +278,11 @@ a podebljani znakovi predstavljaju \(n\)-torke terma, gdje je \(n\) mjesnost odg
 \begin{minted}{coq}
 Record production :=
   mkProd {
-    preds : list {P : PredS Σ & vec (term Σ) (pred_ar P)};
-    indpreds : list {P : IndPredS Σ & vec (term Σ) (indpred_ar P)};
-    indcons : IndPredS Σ;
-    indargs : vec (term Σ) (indpred_ar indcons);
-  }.
+      preds : list {P: PredS Σ & vec (term Σ) (pred_ar P)};
+      indpreds : list {P: IndPredS Σ & vec (term Σ) (indpred_ar P)};
+      indcons : IndPredS Σ;
+      indargs : vec (term Σ) (indpred_ar indcons);
+    }.
 \end{minted}
   Prvi i drugi član četvorke zovemo \textit{premisama}, a treći i četvrti \textit{konkluzijom}.
   U ostatku rada odabiremo neki podskup skupa svih produkcija koji zovemo
@@ -301,7 +301,7 @@ U idućim primjerima definiramo produkcije za induktivne predikatne simbole u pr
     \UnaryInfC{\( \mathit{Nat}(o) \)}
   \end{prooftree}
 \begin{minted}{coq}
-Definition PA_prod_N_zero : @production Σ__PA.
+Definition PA_prod_N_zero : production Σ__PA.
   refine (mkProd nil nil PA_Nat _).
   refine [TFunc PA_zero []].
 Defined.
@@ -312,7 +312,7 @@ Defined.
     \UnaryInfC{\( \mathit{Nat}(s(x)) \)}
   \end{prooftree}
 \begin{minted}{coq}
-Definition PA_prod_N_succ : @production Σ__PA.
+Definition PA_prod_N_succ : production Σ__PA.
   refine (mkProd nil _ PA_Nat _).
   - refine (cons _ nil). exists PA_Nat; refine [var_term 0].
   - refine [TFunc PA_succ [var_term 0]].
@@ -349,7 +349,7 @@ PA_prod_N_succ =
     \UnaryInfC{\( \mathit{Even}(o) \)}
   \end{prooftree}
 \begin{minted}{coq}
-Definition PA_prod_E_zero : @production Σ__PA.
+Definition PA_prod_E_zero : production Σ__PA.
   refine (mkProd nil nil PA_Even _).
   refine [ TFunc PA_zero []].
 Defined.
@@ -360,7 +360,7 @@ Defined.
     \UnaryInfC{\( \mathit{Even}(s(x)) \)}
   \end{prooftree}
 \begin{minted}{coq}
-Definition PA_prod_E_succ : @production Σ__PA.
+Definition PA_prod_E_succ : production Σ__PA.
   refine (mkProd nil _ PA_Even _).
   - refine (cons _ nil). exists PA_Odd; refine [var_term 0].
   - refine [TFunc PA_succ [var_term 0]].
@@ -373,7 +373,7 @@ Defined.
     \UnaryInfC{\( \mathit{Odd}(s(x)) \)}
   \end{prooftree}
 \begin{minted}{coq}
-Definition PA_prod_O_succ : @production Σ__PA.
+Definition PA_prod_O_succ : production Σ__PA.
   refine (mkProd nil _ PA_Odd _).
   - refine (cons _ nil). exists PA_Even; refine [var_term 0].
   - refine [TFunc PA_succ [var_term 0]].
@@ -382,7 +382,7 @@ Defined.
   \noindent Skup prethodnih pet produkcija nazivamo
   skupom induktivnih definicija za proširenu Peanovu signaturu, s oznakom \(\Phi_{\mathit{PA}}\).
 \begin{minted}{coq}
-Inductive Φ__PA : @production Σ__PA -> Prop :=
+Inductive Φ__PA : production Σ__PA -> Prop :=
 | ID_N_zero : Φ__PA PA_prod_N_zero
 | ID_N_succ : Φ__PA PA_prod_N_succ
 | ID_E_zero : Φ__PA PA_prod_E_zero
@@ -430,7 +430,7 @@ with ODD : nat -> Prop :=
   \(\mathit{Nat}\), \(\mathit{Even}\) i \(\mathit{Odd}\)
   interpretiramo redom Coqovim predikatima \texttt{NAT}, \texttt{EVEN} i \texttt{ODD}.
 \begin{minted}{coq}
-Definition M__PA : @structure Σ__PA.
+Definition M__PA : structure Σ__PA.
   refine (Build_structure nat _ _ _).
   - intros f; destruct f.
     + intros. exact 0.
@@ -492,11 +492,11 @@ Fixpoint eval (ρ : env) (t : term Σ) : M :=
 \begin{minted}{coq}
 Fixpoint Sat (ρ : env M) (F : formula Σ) : Prop :=
   match F with
-    | FPred P args => interpP P (V.map (eval ρ) args)
-    | FIndPred P args => interpIP P (V.map (eval ρ) args)
-    | FNeg G => ~ Sat ρ G
-    | FImp F G => Sat ρ F -> Sat ρ G
-    | FAll G => forall d, Sat (d .: ρ) G
+  | FPred P args => interpP P (V.map (eval ρ) args)
+  | FIndPred P args => interpIP P (V.map (eval ρ) args)
+  | FNeg G => ~ Sat ρ G
+  | FImp F G => Sat ρ F -> Sat ρ G
+  | FAll G => forall d, Sat (d .: ρ) G
   end.
 \end{minted}
 \end{definition}
@@ -516,9 +516,9 @@ Lemma every_nat_is_even_or_odd_Sat :
   Tada vrijedi \(\rho \vDash \varphi[\sigma]\) ako i samo ako vrijedi \( (t \mapsto t^{\rho}) \, \circ \, \sigma \vDash \varphi\).
 \begin{minted}{coq}
 Lemma strong_form_subst_sanity2 :
-  forall (φ : formula Σ) (σ : var -> term Σ)
-      (M : structure Σ) (ρ : env M),
-      ρ ⊨ (subst_formula σ φ) <-> (σ >> eval ρ) ⊨ φ.
+  forall (Σ : signature) (φ : formula Σ) (σ : var -> term Σ)
+    (M : structure Σ) (ρ : env M),
+    ρ ⊨ (subst_formula σ φ) <-> (σ >> eval ρ) ⊨ φ.
 \end{minted}
   \noindent Kompoziciju supstitucije \(\sigma\) i evaluacije \(t \mapsto t^{\rho}\)
   možemo nazvati \textit{semantičkom} supstitucijom
@@ -558,7 +558,7 @@ Tada definiramo \(\varphi_{pr}(I)\) kao skup svih \(|P|\)-torki \(\mathbf{d}\) e
 \begin{minted}{coq}
 Definition φ_pr
   (pr : production Σ)
-  (interp : InterpInd) (* interpretacija I *)
+  (interp : InterpInd)
   (ds : vec M (indpred_ar (indcons pr)))
   : Prop :=
       exists (ρ : env M),
@@ -642,7 +642,7 @@ Notation "U ⊑ V" := (subinterp U V) (at level 11).
 \begin{minted}{coq}
 Definition monotone (F : InterpInd -> InterpInd) :=
   forall U V : InterpInd, U ⊑ V -> F U ⊑ F V.
-
+  
 Proposition φ_Φ_monotone : monotone φ_Φ.
 \end{minted}
 \end{proposition}
@@ -738,7 +738,7 @@ Lemma φ_Φ_ω_least_prefixed : least prefixed φ_Φ_ω.
   interpretira svaki induktivni predikatni simbol njegovim aproksimantom razine \(\omega\).
 \begin{minted}{coq}
 Definition standard_model (Φ: IndDefSet Σ) (M : structure Σ) : Prop :=
-    forall (P : IndPredS Σ) ts, interpIP P ts <-> φ_Φ_ω Φ M P ts.
+  forall (P : IndPredS Σ) ts, interpIP P ts <-> φ_Φ_ω Φ M P ts.
 \end{minted}
 \end{definition}
 \noindent Prema lemi~\ref{lemma:omega-least-prefixed}, standardni model je
@@ -747,7 +747,7 @@ najmanja struktura koja ima smisla za zadani skup induktivnih definicija.
 \begin{proposition}
   Struktura \(M_{\mathit{PA}}\) je standardni model za skup induktivnih definicija \(\Phi_{\mathit{PA}}\).
 \begin{minted}{coq}
-Lemma standard_model__PA : standard_model Φ__PA M__PA..
+Lemma standard_model__PA : standard_model Φ__PA M__PA.
 \end{minted}
 \end{proposition}
 

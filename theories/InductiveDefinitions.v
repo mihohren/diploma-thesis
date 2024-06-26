@@ -5,8 +5,8 @@ Section inductive_definition_set.
   
   Record production :=
     mkProd {
-        preds : list { P : PredS Σ & vec (term Σ) (pred_ar P) };
-        indpreds : list { P : IndPredS Σ & vec (term Σ) (indpred_ar P) };
+        preds : list {P: PredS Σ & vec (term Σ) (pred_ar P)};
+        indpreds : list {P: IndPredS Σ & vec (term Σ) (indpred_ar P)};
         indcons : IndPredS Σ;
         indargs : vec (term Σ) (indpred_ar indcons);
       }.

@@ -40,7 +40,7 @@ Section term.
         + assumption.
     Defined.
   End term_rect.
-  
+
   Section term_ind.
     Context (P : term -> Prop).
     

@@ -32,10 +32,10 @@ Kao programski jezik, Coq se sastoji od više podjezika različitih namjena, od 
 \end{description} % https://coq.discourse.group/t/what-is-the-difference-between-gallina-and-ltac/1184 
 \noindent Pogledajmo primjer za ilustraciju odnosa ta tri jezika.
 \begin{minted}{coq}
-  Lemma example_lemma: 1 + 1 = 2.
-  Proof.
-    cbn. reflexivity.
-  Qed.
+Lemma example_lemma: 1 + 1 = 2.
+Proof.
+  cbn. reflexivity.
+Qed.
 \end{minted}
 \noindent Ključne riječi \texttt{Lemma}, \texttt{Proof} i \texttt{Qed} dio su Vernaculara,
 izraz \verb|example_lemma: 1+1=2| dio je Galline,
@@ -95,10 +95,10 @@ Inductive nat : Set :=
 Jedna od osnovnih naredbi za imenovanje novih terma je naredba \texttt{Definition}.
 \begin{minted}{coq}
 Definition negb (b : bool) : bool :=
-match b with
-| false => true
-| true => false
-end.
+  match b with
+  | false => true
+  | true => false
+  end.
 \end{minted}
 \noindent U gornjem kodu definirana je funkcija \texttt{negb} čiji se argument \texttt{b} tipa \texttt{bool} destrukturira te se vraća njegova negacija, također tipa \texttt{bool}.
 Važno je napomenuti da izrazi koji počinju s \texttt{match t} (\engl{pattern matching}),
@@ -130,10 +130,8 @@ Umjesto rekurzije, koinduktivni tipovi koriste se u korekurzivnim funkcijama.
 Standardni primjer koinduktivnog tipa je beskonačna lista.
 \begin{minted}{coq}
 Set Primitive Projections.
-CoInductive Stream (A : Type) := Cons {
-      hd : A;
-      tl : Stream A;
-    }.
+CoInductive Stream (A : Type) :=
+  Cons { hd : A; tl : Stream A; }.
 \end{minted}
 Ovime smo definirali familiju tipova \texttt{Stream} indeksiranu tipskom varijablom \texttt{A}.
 Svaki \texttt{Stream} ima glavu i rep koji je također \texttt{Stream}.
@@ -213,7 +211,7 @@ Definition not (P : Prop) := forall (Q : Prop), P -> Q.
 \noindent Valja primijetiti da kod definicije predikata \texttt{not} kvantificiramo po \coqprop{},
 no za svaku propoziciju \texttt{P} je term \texttt{not P} također tipa \coqprop{}, pa
 domena funkcije \texttt{not P} uključuje sam term \texttt{not P}.
-Ovaj stil kvantifikacije omogućuje nam definiciju proizvoljnih propozicijskih veznika.\footnote{U praksi su veznici induktivno definirani.}
+Ovaj stil kvantifikacije omogućuje nam definiciju proizvoljnih propozicijskih veznika.\footnote{U praksi su veznici definirani induktivno.}
 Kažemo da je sorta \coqprop{} \textbf{nepredikativna}.
 S druge strane, sorta \coqset{} je \textbf{predikativna}, to jest \textit{ne dopušta} kvantifikaciju po \coqset{} i ostalim proizvoljno velikim tipovima.
 Kada bi sorta \coqprop{} bila predikativna,

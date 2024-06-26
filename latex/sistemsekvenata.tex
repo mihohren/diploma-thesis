@@ -63,7 +63,7 @@ Example mut_dep_E_O :
   \textit{nisu} međusobno zavisni.
 \begin{minted}{coq}
 Example not_mut_dep_N_E :
-  ~mutually_dependent Φ__PA PA_Nat PA_Even.
+  ~ mutually_dependent Φ__PA PA_Nat PA_Even.
 \end{minted}
 \end{example}
 
@@ -87,11 +87,11 @@ i bez njegova korištenja.
 Inductive LKID : sequent -> Prop := (* nastavlja se *)
 \end{minted}
 \section{Strukturalna pravila}
-Strukturalna su pravila prikazana na slici~\ref{fig:lkid-structural}, a služe baratanju strukturom sekvente.
+Strukturalna su pravila navedena na prikazu~\ref{fig:lkid-structural}, a služe baratanju strukturom sekvente.
 Iako je sekventa implementirana kao par lista formula, te liste se ponašaju kao skupovi u strukturalnim pravilima
 jer za sadržanost jedne liste u drugoj koristimo Coqov predikat \texttt{incl} koji se oslanja na predikat \texttt{In}.
 Posljedično, pravilo slabljenja \(\mathit{Wk}\) povlači pravila permutacije i kontrakcije.
-\begin{figure}[!htb]
+\begin{prikaz}[!htb]
   \centering
 
   \begin{prooftree}
@@ -122,7 +122,7 @@ Posljedično, pravilo slabljenja \(\mathit{Wk}\) povlači pravila permutacije i 
   \end{prooftree}
   
   \caption{Strukturalna pravila sustava \(\mathit{LKID}\).}\label{fig:lkid-structural}
-\end{figure}
+\end{prikaz}
 \begin{minted}[firstnumber=last]{coq}
 (* Strukturalna pravila. *)
 | Ax : forall Γ Δ φ, In φ Γ -> In φ Δ -> LKID (Γ ⊢ Δ)
@@ -186,10 +186,10 @@ Lemma ContrR : forall Γ Δ φ,
 \end{example}
 
 \section{Propozicijska pravila}
-Propozicijska su pravila prikazana na slici~\ref{fig:lkid-propositional}, a služe rasuđivanju s implikacijama i negacijama.
+Propozicijska su pravila navedena na prikazu~\ref{fig:lkid-propositional}, a služe rasuđivanju s implikacijama i negacijama.
 Kao što smo rekli, ostale propozicijske veznike shvaćamo kao pokrate.
 Ova su pravila identična u sustavima \(\mathit{LK}\) i \(\mathit{LKID}\).
-\begin{figure}[!htb]
+\begin{prikaz}[!htb]
   \centering
   \begin{prooftree}
     \AxiomC{\( \Gamma \vdash \varphi, \Delta \)}
@@ -217,7 +217,7 @@ Ova su pravila identična u sustavima \(\mathit{LK}\) i \(\mathit{LKID}\).
   \end{prooftree}
   
   \caption{Propozicijska pravila sustava \(\mathit{LKID}\).}\label{fig:lkid-propositional}
-\end{figure}
+\end{prikaz}
 \begin{minted}[firstnumber=16]{coq}
 (* Propozicijska pravila. *)
 | NegL : forall Γ Δ φ, LKID (Γ ⊢ φ :: Δ) -> LKID (FNeg φ :: Γ ⊢ Δ)
@@ -257,7 +257,7 @@ Lemma OrL : forall Γ Δ φ ψ,
 \end{example}
 
 \section{Pravila za kvantifikatore}
-Pravila za kvantifikatore prikazana su na slici~\ref{fig:lkid-quantificational}, a odnose se na univerzalnu kvantifikaciju.
+Pravila za kvantifikatore navedena su na prikazu~\ref{fig:lkid-quantificational}, a odnose se na univerzalnu kvantifikaciju.
 Ova se pravila razlikuju od analognih u sustavu \(\mathit{LK}\) zbog korištenja de Bruijnovih indeksa kod kvantifikacije.
 U lijevom pravilu koristimo supstituciju \(t \cdot \sigma_{\mathit{id}}\) u formuli \(\varphi\), gdje je \(\sigma_{\mathit{id}}\) supstitucija identiteta,
 kako bismo iskazali da se term \(t\) javlja na mjestu neke varijable \(x\).
@@ -265,7 +265,7 @@ Za desno pravilo, primijetimo da se varijabla \(0\) ne javlja u listama formula 
 Kako implicitno kvantificiramo po varijabli \(0\), a  ona se javlja
 (eventualno) samo u formuli \(\varphi\), smijemo univerzalno kvantificirati formulu \(\varphi\).
 
-\begin{figure}[!htb]
+\begin{prikaz}[!htb]
   \centering
   \begin{prooftree}
     \AxiomC{\( \varphi[t \cdot \sigma_{\mathit{id}}], \Gamma \vdash \Delta \)}
@@ -279,7 +279,7 @@ Kako implicitno kvantificiramo po varijabli \(0\), a  ona se javlja
     \UnaryInfC{\( \Gamma \vdash \forall\varphi, \Delta \)}
   \end{prooftree}
   \caption{Pravila za kvantifikatore sustava \(\mathit{LKID}\).}\label{fig:lkid-quantificational}
-\end{figure}
+\end{prikaz}
 \begin{minted}[firstnumber=24]{coq}
 (* Kvantifikatorska pravila. *)
 | AllL : forall Γ Δ φ t,
@@ -345,7 +345,7 @@ a s \(^{\uparrow k}\) označavamo supstituciju koja svaku varijablu \(n\) zamjen
 
 Ilustrirajmo pravilo indukcije primjerima u Peanovoj aritmetici.
 Kako se pravila za induktivne predikate sustava \(\mathit{LKID}\) odnose na proizvoljni skup induktivnih definicija \(\Phi\),
-označimo s \(\mathit{LKID}_{\mathit{PA}}\)  sustav koji se odnosi na skup induktivnih defincija \(\Phi_{\mathit{PA}}\).
+označimo s \(\mathit{LKID}_{\mathit{PA}}\)  sustav koji se odnosi na skup induktivnih definicija \(\Phi_{\mathit{PA}}\).
 \begin{minted}{coq}
 Definition LKID__PA := LKID Φ__PA.
 \end{minted}
@@ -381,7 +381,7 @@ Definition LKID__PA := LKID Φ__PA.
 
 \begin{minted}[firstnumber=31]{coq}
 (* Pravila indukcije. *)
-| IndL : forall Γ Δ
+| Ind : forall Γ Δ
            (Pj : IndPredS Σ) (u : vec _ (indpred_ar Pj))
            (z_i : forall P, vec var (indpred_ar P))
            (z_i_nodup : forall P, VecNoDup (z_i P))
@@ -425,7 +425,7 @@ Definition LKID__PA := LKID Φ__PA.
     in
     minor_premises ->
     LKID (Fj :: Γ ⊢ Δ) ->
-    LKID (FIndPred Pj u :: Γ ⊢ Δ)
+    LKID (FIndPred Pj u :: Γ ⊢ Δ)     
 \end{minted}
 
 \section{Produkcijska pravila}
@@ -446,7 +446,7 @@ Možemo pretpostaviti da je \(pr\) oblika:
 \end{prooftree}
 \begin{minted}[firstnumber=58]{coq}
 (* Produkcijska pravila. *)
-| IndR : forall Γ Δ pr σ,
+| Prod : forall Γ Δ pr σ,
     Φ pr ->
     (forall Q us,
         In (Q; us) (preds pr) ->
@@ -554,8 +554,8 @@ Definition Even_succ_succ_Even : formula Σ__PA :=
     \UnaryInfC{\( \vdash \forall x, Ex \rightarrow Essx \)}
   \end{prooftree}
 \begin{minted}{coq}
-Lemma provable_every_succ_of_Even_is_Odd :
-  provable LKID__PA every_succ_of_Even_is_Odd.
+Lemma provable_Even_succ_succ_Even :
+    provable LKID__PA Even_succ_succ_Even.
 \end{minted}
 \end{example}
 
@@ -634,7 +634,7 @@ Napomenimo da je \(\mathit{LKID}\) adekvatan i za nestandardne modele.
 \begin{minted}{coq}
 Definition Sat_sequent (s : sequent) : Prop :=
   let '(Γ ⊢ Δ) := s in            
-  forall (M : structure Σ), standard_model Σ Φ M -> forall (ρ : env M),
+  forall (M : structure Σ), standard_model Φ M -> forall (ρ : env M),
       (forall φ, In φ Γ -> ρ ⊨ φ) -> exists ψ, In ψ Δ /\ ρ ⊨ ψ.
 \end{minted}
 \end{definition}

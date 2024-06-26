@@ -14,7 +14,9 @@ Section lkid.
     proofsystem ([] ⊢ [φ]).
 
   Definition Prem (Pi Pj : IndPredS Σ) :=
-    exists pr, Φ pr /\ indcons pr = Pi /\ exists ts, List.In (Pj; ts) (indpreds pr).
+    exists pr, Φ pr /\
+            indcons pr = Pi /\
+            exists ts, List.In (Pj; ts) (indpreds pr).
 
   Definition Prem_star := clos_refl_trans (IndPredS Σ) Prem.
   
