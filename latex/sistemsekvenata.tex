@@ -31,7 +31,7 @@ Definition Prem (Pi Pj : IndPredS Σ) :=
              exists ts, List.In (Pj; ts) (indpreds pr).
 \end{minted}
 \end{definition}
-
+\pagebreak
 \begin{definition}
   Definiramo relaciju \(\mathit{Prem}^{\ast}\) kao refleksivno i tranzitivno zatvorenje relacije \(\mathit{Prem}\) na skupu induktivnih predikatnih simbola.
 \begin{minted}{coq}
@@ -346,7 +346,7 @@ a s \(^{\uparrow k}\) označavamo supstituciju koja svaku varijablu \(n\) zamjen
 Ilustrirajmo pravilo indukcije primjerima u Peanovoj aritmetici.
 Kako se pravila za induktivne predikate sustava \(\mathit{LKID}\) odnose na proizvoljni skup induktivnih definicija \(\Phi\),
 označimo s \(\mathit{LKID}_{\mathit{PA}}\)  sustav koji se odnosi na skup induktivnih definicija \(\Phi_{\mathit{PA}}\).
-\begin{minted}{coq}
+\begin{minted}[linenos=false]{coq}
 Definition LKID__PA := LKID Φ__PA.
 \end{minted}
 \begin{example}
@@ -444,7 +444,7 @@ Možemo pretpostaviti da je \(pr\) oblika:
   \RightLabel{\( \mathit{ (prProd) }\).}
   \BinaryInfC{\( \Gamma \vdash P \mathbf{t}[\sigma] \)}
 \end{prooftree}
-\begin{minted}[firstnumber=58]{coq}
+\begin{minted}[firstnumber=77]{coq}
 (* Produkcijska pravila. *)
 | Prod : forall Γ Δ pr σ,
     Φ pr ->
@@ -658,8 +658,8 @@ Glavni cilj ovog poglavlja bio je dokazati lokalne adekvatnosti svih pravila sus
 Cilj je postignut za sva pravila osim pravila indukcije.
 
 \begin{theorem}
-  Za pravila izvoda sustava \(\mathit{LKID}\) osim \(\mathit{IndL}\) vrijedi lokalna adekvatnost.
-  Posljedično, ako je sekventa \(\Gamma \vdash \Delta\) dokaziva bez primjene pravila \(\mathit{IndL}\), onda je ona istinita.
+  Za svako pravilo izvoda sustava \(\mathit{LKID}\) koje nije indukcijsko vrijedi lokalna adekvatnost.
+  Posljedično, ako je sekventa dokaziva bez primjene indukcijskih pravila, onda je ona istinita.
 \end{theorem}
 
 %%% Local Variables:

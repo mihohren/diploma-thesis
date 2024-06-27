@@ -66,13 +66,9 @@
 \naslov{Primjene Coq alata za dokazivanje u matematici i računarstvu}
 \brojrada{578}
 \author{Miho Hren}
-\mentor{}
 
 % makro za engleske prijevode
 \renewcommand{\engl}[1]{(\textit{#1})}
-
-% za pisati todo
-\newcommand\misao[1]{ \textcolor{red}{\textbf{Misao:} \textit{#1}} }
 
 % 
 \newcommand\coqset{\texttt{Set}}
@@ -84,7 +80,9 @@
 \zadatak{zadatak.pdf}
 
 \begin{zahvale}
-  Ovo je zahvala.
+  \begin{huge}
+    Wir m\"{u}ssen wissen --- wir werden wissen!
+  \end{huge}
 \end{zahvale}
 
 \mainmatter{}
@@ -98,6 +96,7 @@
 \include{ciklicki}
 \include{zakljucak}
 
+\bibliographystyle{fer_IEEEtran_HR}
 \bibliography{literatura}
 
 \begin{sazetak}
@@ -120,7 +119,7 @@
   first order logic with inductive definitions \(\mathit{FOL}_{\mathit{ID}}\). Furthermore,
   we defined standard models and the \(\mathit{LKID}\) proof system for \(\mathit{FOL}_{\mathit{ID}}\),
   and we proved some of their properties. We also informally presented cyclic proofs in the context of \(\mathit{FOL}_{\mathit{ID}}\).
-  We illustrated all the definitions and lemmas in this thesis with examples and formalisations in Coq.
+  We illustrated all the definitions and lemmas in this thesis with examples and formalizations in Coq.
 \end{abstract}
 
 \begin{keywords}

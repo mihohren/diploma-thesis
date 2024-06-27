@@ -267,8 +267,9 @@ te je na temelju toga napravljen ciklički dokazivač teorema \textsc{Cyclist}\f
 Za naš primjer proširene Peanove signature s produkcijama za induktivne predikatne simbole
 \(\mathit{Nat}\), \(\mathit{Even}\) i \(\mathit{Odd}\),
 definicije produkcija možemo zapisati u konfiguracijsku datoteka \texttt{fo.defs}
-na idući način.
-\begin{verbatim}
+na idući način.\par
+\begin{footnotesize}
+  \begin{verbatim}
 Nat { 
     true    => Nat(0)  | 
     Nat(x)  => Nat(s(x)) 
@@ -281,6 +282,7 @@ Odd {
     Even(x) => Odd(s(x))
 } ;
 \end{verbatim}
+\end{footnotesize}
 Zatim možemo pokrenuti dokazivač naredbom
 \begin{verbatim}
 ./fo_prove -D fo.defs -p -S "Nat(x) |- Even(x) \/ Odd(x)"
