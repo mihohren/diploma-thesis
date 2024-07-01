@@ -439,10 +439,10 @@ Možemo pretpostaviti da je \(pr\) oblika:
 \end{prooftree}
 \noindent Tada produkcijsko pravilo za produkciju \(pr\) (i proizvoljnu supstituciju \(\sigma\)) glasi:
 \begin{prooftree}
-  \AxiomC{\( \Gamma \vdash Q_{1} \mathbf{u}_{1}[\sigma], \Delta \quad \ldots \quad \Gamma \vdash Q_{n}\mathbf{u}_{n}[\sigma]\)}
-  \AxiomC{\( \Gamma \vdash P_{1} \mathbf{v}_{1}[\sigma], \Delta \quad \ldots \quad \Gamma \vdash P_{m} \mathbf{v}_{m}[\sigma] \)}
+  \AxiomC{\( \Gamma \vdash Q_{1} \mathbf{u}_{1}[\sigma], \Delta \quad \ldots \quad \Gamma \vdash Q_{n}\mathbf{u}_{n}[\sigma], \Delta\)}
+  \AxiomC{\( \Gamma \vdash P_{1} \mathbf{v}_{1}[\sigma], \Delta \quad \ldots \quad \Gamma \vdash P_{m} \mathbf{v}_{m}[\sigma], \Delta \)}
   \RightLabel{\( \mathit{ (prProd) }\).}
-  \BinaryInfC{\( \Gamma \vdash P \mathbf{t}[\sigma] \)}
+  \BinaryInfC{\( \Gamma \vdash P \mathbf{t}[\sigma], \Delta \)}
 \end{prooftree}
 \begin{minted}[firstnumber=77]{coq}
 (* Produkcijska pravila. *)

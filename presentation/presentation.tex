@@ -354,27 +354,56 @@ Definition Sat_sequent (s : sequent) : Prop :=
   \end{block}
 
   \begin{block}{Pravilo}
-    \begin{footnotesize}
+    \begin{scriptsize}
       \begin{prooftree}
-        \AxiomC{\( \Gamma \vdash Q_{1} \mathbf{u}_{1}[\sigma], \Delta \quad \ldots \quad \Gamma \vdash Q_{n}\mathbf{u}_{n}[\sigma]\)}
-        \AxiomC{\( \Gamma \vdash P_{1} \mathbf{v}_{1}[\sigma], \Delta \quad \ldots \quad \Gamma \vdash P_{m} \mathbf{v}_{m}[\sigma] \)}
-        \BinaryInfC{\( \Gamma \vdash P \mathbf{t}[\sigma] \)}
+        \AxiomC{\( \Gamma \vdash Q_{1} \mathbf{u}_{1}[\sigma], \Delta \quad \ldots \quad \Gamma \vdash Q_{n}\mathbf{u}_{n}[\sigma], \Delta\)}
+        \AxiomC{\( \Gamma \vdash P_{1} \mathbf{v}_{1}[\sigma], \Delta \quad \ldots \quad \Gamma \vdash P_{m} \mathbf{v}_{m}[\sigma], \Delta \)}
+        \BinaryInfC{\( \Gamma \vdash P \mathbf{t}[\sigma], \Delta \)}
       \end{prooftree}
-    \end{footnotesize}
+    \end{scriptsize}
   \end{block}
 
   \begin{block}{Primjer}
-    \begin{prooftree}
-    \AxiomC{\( \Gamma \vdash \mathit{Odd}(x), \Delta \)}
-    \RightLabel{(\texttt{PA\_prod\_E\_succ}\textit{Prod})}
-    \UnaryInfC{\( \Gamma \vdash \mathit{Even}(s(x)), \Delta \)}
-  \end{prooftree}
+    \begin{minipage}[t]{0.48\linewidth}
+      \begin{prooftree}
+        \AxiomC{\( \mathit{Odd}(x) \)}
+        % \RightLabel{(\texttt{PA\_prod\_E\_succ})}
+        \UnaryInfC{\( \mathit{Even}(s(x)) \)}
+      \end{prooftree}
+    \end{minipage}
+    \begin{minipage}[t]{0.48\linewidth}
+      \begin{prooftree}
+        \AxiomC{\( \Gamma \vdash \mathit{Odd}(x), \Delta \)}
+        \UnaryInfC{\( \Gamma \vdash \mathit{Even}(s(x)), \Delta \)}
+      \end{prooftree}
+    \end{minipage}
   \end{block}
 \end{frame}
 
 \begin{frame}
   \frametitle{Sistem sekvenata: pravila indukcije}
-  
+  \begin{block}{Primjer}
+    \begin{prooftree}
+    \AxiomC{\( \Gamma \vdash G(o), \Delta \)}
+    \AxiomC{\( G(x), \Gamma \vdash G(s(x)), \Delta \)}
+    \AxiomC{\( G(t), \Gamma \vdash \Delta \)}
+    \RightLabel{\( \mathit{(NatInd)} \)}
+    \TrinaryInfC{\( \mathit{Nat}(t), \Gamma \vdash \Delta \)}
+  \end{prooftree}
+\end{block}
+\begin{block}{Primjer primjene pravila \textit{NatInd}}
+  \begin{scriptsize}
+    \begin{prooftree}
+      \AxiomC{\(\vdots\)}
+      \UnaryInfC{\(\vdash Eo \lor Oo, Ex \lor Ox\)}
+      \AxiomC{\(\vdots\)}
+      \UnaryInfC{\( Ey \lor Oy \vdash Esy \lor Osy, Ex \lor Ox \)}
+      \AxiomC{\(\vdots\)}
+      \UnaryInfC{\( Ex \lor Ox \vdash Ex \lor Ox\)}
+      \TrinaryInfC{\( Nx \vdash Ex \lor Ox \)}
+    \end{prooftree}
+  \end{scriptsize}
+\end{block}
 \end{frame}
 
 \begin{frame}
