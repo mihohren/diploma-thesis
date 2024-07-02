@@ -150,7 +150,6 @@ Definition M__PA : structure Σ__PA.
     + exact (ODD (V.hd args)).
 Defined.
 
-
 Lemma NAT_φ_Φ_ω: forall n, φ_Φ_ω Φ__PA M__PA PA_Nat [n].
   induction n.
   - exists 1. unfold φ_Φ_n, φ_Φ, φ_P. exists PA_prod_N_zero, (conj eq_refl ID_N_zero), id.
@@ -366,12 +365,13 @@ Proof.
 Qed.
 
 Definition every_nat_is_even_or_odd : formula Σ__PA :=
+  let x := var_term 0 in
   FAll
     (FImp
-       (FIndPred PA_Nat [var_term 0])
+       (FIndPred PA_Nat [x])
        (FOr
-          (FIndPred PA_Even [var_term 0])
-          (FIndPred PA_Odd  [var_term 0]))).
+          (FIndPred PA_Even [x])
+          (FIndPred PA_Odd  [x]))).
 
 Lemma every_nat_is_even_or_odd_Sat :
   forall (ρ : env M__PA), ρ ⊨ every_nat_is_even_or_odd.
